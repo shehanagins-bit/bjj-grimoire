@@ -172,6 +172,28 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ce-btn-save:active{filter:brightness(1.1)}
 .ce-btn-share{flex:1;padding:13px;border-radius:10px;text-align:center;font-size:11px;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.12em;text-transform:uppercase;background:#131313;color:rgba(198,196,223,0.4);border:0.5px solid rgba(255,255,255,0.08)}
 
+/* CHAIN CARD in Quest */
+.cc-collapsed{background:#131313;border:0.5px solid rgba(200,168,75,0.15);border-left:2px solid #c8a84b;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+.cc-collapsed:active{border-color:rgba(200,168,75,0.4)}
+.cc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cc-tag{font-size:7px;letter-spacing:0.1em;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:rgba(200,168,75,0.1);color:#c8a84b;border:0.5px solid rgba(200,168,75,0.2)}
+.cc-title{font-family:'Cinzel',serif;font-size:13px;color:#f4ead8;font-weight:500;margin-bottom:4px}
+.cc-subtitle{font-size:10px;color:rgba(198,196,223,0.3);font-family:serif}
+.cc-expand-hint{font-size:8px;color:rgba(198,196,223,0.15);margin-top:6px}
+.cc-expanded{background:#131313;border:0.5px solid rgba(200,168,75,0.25);border-left:2px solid #c8a84b;padding:14px;margin-bottom:8px;display:none}
+.cc-exp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cc-exp-title{font-family:'Cinzel',serif;font-size:14px;color:#f4ead8;font-weight:500}
+.cc-step{display:flex;gap:10px;align-items:flex-start}
+.cc-step-left{display:flex;flex-direction:column;align-items:center}
+.cc-step-dot{width:8px;height:8px;border-radius:50%;background:#c8a84b;margin-top:4px;flex-shrink:0}
+.cc-step-dot.last{background:#2e8b57}
+.cc-step-line{width:1px;flex:1;background:rgba(200,168,75,0.15);min-height:20px;margin:3px 0}
+.cc-step-content{flex:1;padding-bottom:6px}
+.cc-step-name{font-family:'Cinzel',serif;font-size:11px;color:#f4ead8;margin-bottom:2px}
+.cc-step-phase{font-size:8px;color:rgba(198,196,223,0.2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+.cc-step-note{font-size:10px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic;line-height:1.5;padding:6px 8px;background:rgba(200,168,75,0.04);border-left:1px solid rgba(200,168,75,0.15);margin-top:2px}
+.cc-action-row{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:10px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.06)}
+
 .oracle-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold-d);margin-bottom:10px}
 .oracle-text{font-size:16px;line-height:1.8;color:var(--text);font-style:italic}
 .oracle-text span{color:var(--arch-color,var(--gold));font-style:normal;font-weight:600}
@@ -2062,28 +2084,21 @@ function buildSkillTreeHTML(data, ad) {
         <button onclick="dismissTutorial('chain')" style="position:absolute;top:6px;right:8px;background:none;border:none;color:rgba(198,196,223,0.3);font-size:14px;cursor:pointer;padding:2px 4px;line-height:1">×</button>
       </div>
       <!-- Graph canvas -->
-      <div style="position:relative;width:100%;max-width:420px;margin:0 auto;padding:8px 0 4px">
+      <div style="position:relative;width:100%;max-width:420px;margin:0 auto;padding:8px 0 50px">
         <canvas id="graph-canvas" style="display:block;width:100%;touch-action:none"></canvas>
         <div id="graph-icons" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
       </div>
-      <!-- Oracle CTA — appears when user has built connections -->
+      <!-- Chain connection status bar -->
       <div id="st-oracle-cta" style="display:none;margin:0 16px 8px">
-        <div style="display:flex;gap:8px">
-          <button onclick="fireChainOracle()"
-            style="flex:1;padding:14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#1a1000;font-weight:700;border:none;cursor:pointer;background:linear-gradient(135deg,#ffe088 0%,#e9c349 40%,#c8900a 100%);position:relative;overflow:hidden;transition:filter 0.15s"
-            onmouseover="this.style.filter='brightness(1.08)'"
-            onmouseout="this.style.filter=''">
-            <span style="position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,0.1),transparent);pointer-events:none"></span>
-            ✦ Consult the Oracle
-          </button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="st-edge-count" style="flex:1;font-family:serif;font-size:10px;color:rgba(198,196,223,0.25);font-style:italic"></div>
           <button onclick="clearChainConnections()"
-            style="padding:14px 16px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.3);background:none;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer;transition:all 0.15s"
+            style="padding:8px 14px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.3);background:none;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer;transition:all 0.15s;flex-shrink:0"
             onmouseover="this.style.color='rgba(198,196,223,0.6)';this.style.borderColor='rgba(255,255,255,0.2)'"
             onmouseout="this.style.color='rgba(198,196,223,0.3)';this.style.borderColor='rgba(255,255,255,0.08)'">
             Clear
           </button>
         </div>
-        <div id="st-edge-count" style="font-family:serif;font-size:10px;color:rgba(198,196,223,0.25);font-style:italic;text-align:center;margin-top:6px"></div>
       </div>
       <!-- Node detail panel -->
       <div id="st-detail" style="display:none;margin:0 16px 4px;background:#131313;border:0.5px solid ${ad.color}44;border-left:2px solid ${ad.color};padding:14px"></div>
@@ -2224,17 +2239,96 @@ function buildSkillTreeHTML(data, ad) {
         <div style="margin-bottom:20px">
           <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-block;width:14px;height:1px;background:rgba(198,196,223,0.12)"></span>
-            What did you drill in class?
+            What did you work on?
             <span style="flex:1;height:1px;background:rgba(198,196,223,0.06)"></span>
           </div>
 
-          <!-- Phase pills (multi-select) -->
-          <div id="drill-phase-pills" style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap"></div>
+          <!-- Drill type selector (4 tabs) -->
+          <div id="drill-type-selector" style="display:flex;gap:4px;margin-bottom:10px">
+            <button onclick="setDrillType('chain')" id="drill-type-chain"
+              style="flex:1;padding:9px 4px;background:#1a1205;border:0.5px solid rgba(200,168,75,0.3);color:#c8a84b;font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all 0.15s;text-align:center">
+              ⛓ Chain
+            </button>
+            <button onclick="setDrillType('positional')" id="drill-type-positional"
+              style="flex:1;padding:9px 4px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:rgba(198,196,223,0.35);font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all 0.15s;text-align:center">
+              ◎ Position
+            </button>
+            <button onclick="setDrillType('technique')" id="drill-type-technique"
+              style="flex:1;padding:9px 4px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:rgba(198,196,223,0.35);font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all 0.15s;text-align:center">
+              ✦ Technique
+            </button>
+            <button onclick="setDrillType('eco')" id="drill-type-eco"
+              style="flex:1;padding:9px 4px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:rgba(198,196,223,0.35);font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all 0.15s;text-align:center">
+              ♟ Eco Game
+            </button>
+          </div>
 
-          <!-- Drill notes text area -->
-          <textarea id="drill-notes-input" rows="3" placeholder="What techniques did you work on?"
-            oninput="onDrillNotesInput()"
-            style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:13px;font-family:'Crimson Pro',serif;padding:10px 12px;resize:none;outline:none;line-height:1.5;transition:border-color 0.15s"></textarea>
+          <!-- ATTACK CHAIN drill mode -->
+          <div id="drill-mode-chain" style="display:block">
+            <div id="chaincard-added-list" style="margin-bottom:8px"></div>
+            <button onclick="drillChainGoToBuilder()"
+              style="width:100%;padding:12px 10px;background:#1a1205;border:0.5px solid rgba(200,168,75,0.25);color:#c8a84b;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px">
+              <span style="font-size:14px">⛓</span> Build attack chain
+            </button>
+            <textarea id="drill-notes-input" rows="2" placeholder="Notes on the chain you worked on..."
+              oninput="onDrillNotesInput()"
+              style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;font-family:'Crimson Pro',serif;padding:10px 12px;resize:none;outline:none;line-height:1.5;transition:border-color 0.15s"></textarea>
+          </div>
+
+          <!-- POSITIONAL drill mode -->
+          <div id="drill-mode-positional" style="display:none">
+            <div style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:8px">What position did you drill from?</div>
+            <div id="drill-positional-selected" style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap"></div>
+            <input type="text" id="drill-position-search" placeholder="Search positions..."
+              oninput="onPositionSearch(this.value)"
+              onfocus="onPositionSearch(this.value)"
+              onblur="setTimeout(()=>{const el=document.getElementById('drill-position-dropdown');if(el)el.style.display='none'},200)"
+              style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;padding:10px 12px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px"/>
+            <div id="drill-position-dropdown" style="display:none;position:relative;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.1);max-height:160px;overflow-y:auto;z-index:10;margin-bottom:6px"></div>
+            <div id="drill-positional-pills" style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap"></div>
+            <textarea id="drill-positional-notes" rows="2" placeholder="What was the scenario? e.g. escaping mount, retaining guard..."
+              oninput="onDrillNotesInput()"
+              style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;font-family:'Crimson Pro',serif;padding:10px 12px;resize:none;outline:none;line-height:1.5;transition:border-color 0.15s"></textarea>
+          </div>
+
+          <!-- TECHNIQUE focus drill mode -->
+          <div id="drill-mode-technique" style="display:none">
+            <div style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:8px">What specific technique did you drill?</div>
+            <div id="drill-technique-pills" style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap"></div>
+            <input type="text" id="drill-technique-search" placeholder="Search techniques..."
+              oninput="onDrillTechSearch(this.value)"
+              onfocus="onDrillTechSearch(this.value)"
+              onblur="setTimeout(()=>{const el=document.getElementById('drill-tech-dropdown');if(el)el.style.display='none'},200)"
+              style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;padding:10px 12px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px"/>
+            <div id="drill-tech-dropdown" style="display:none;position:relative;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.1);max-height:160px;overflow-y:auto;z-index:10;margin-bottom:8px"></div>
+            <textarea id="drill-technique-notes" rows="2" placeholder="Notes on what you worked on..."
+              oninput="onDrillNotesInput()"
+              style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;font-family:'Crimson Pro',serif;padding:10px 12px;resize:none;outline:none;line-height:1.5;transition:border-color 0.15s"></textarea>
+          </div>
+
+          <!-- ECO GAME drill mode -->
+          <div id="drill-mode-eco" style="display:none">
+            <div id="ecogame-added-list" style="margin-bottom:8px"></div>
+
+            <!-- Oracle response area -->
+            <div id="quest-oracle-wrap" style="display:none;margin-bottom:8px">
+              <div id="quest-oracle-response" style="background:#131313;border:0.5px solid rgba(255,255,255,0.06);padding:14px"></div>
+            </div>
+
+            <!-- Community search results area -->
+            <div id="quest-community-wrap" style="display:none;margin-bottom:8px">
+              <div id="quest-community-results" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+
+            <!-- Action buttons -->
+            <div id="ecogame-action-btns" style="display:flex;flex-direction:column;gap:6px">
+              <button onclick="drillEcoGoToBuilder()"
+                style="width:100%;padding:12px 10px;background:#1a1205;border:0.5px solid rgba(200,168,75,0.25);color:#c8a84b;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px">
+                <span style="font-size:14px">♟</span> Build on Chain tab
+              </button>
+              <button onclick="searchCommunityFromQuest()" id="quest-community-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:none;border:0.5px solid rgba(255,255,255,0.1);color:rgba(198,196,223,0.35);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Cinzel',serif;width:100%;transition:all 0.15s">Search community games</button>
+            </div>
+          </div>
         </div>
 
         <!-- ═══ SECTION 2: ROLL FOCUS ═══ -->
@@ -2244,6 +2338,7 @@ function buildSkillTreeHTML(data, ad) {
             Roll focus
             <span style="flex:1;height:1px;background:rgba(198,196,223,0.06)"></span>
           </div>
+          <div style="font-size:9px;color:rgba(198,196,223,0.2);font-family:serif;font-style:italic;margin-bottom:10px">What are you hunting for in live rounds?</div>
 
           <!-- Active focus items (rendered dynamically) -->
           <div id="rollfocus-items-list"></div>
@@ -2273,59 +2368,7 @@ function buildSkillTreeHTML(data, ad) {
           </div>
         </div>
 
-        <!-- ═══ SECTION 3: ECO GAME ═══ -->
-        <div id="quest-ecogame-section" style="margin-bottom:20px">
-          <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
-            <span style="display:inline-block;width:14px;height:1px;background:rgba(198,196,223,0.12)"></span>
-            Eco game
-            <span style="flex:1;height:1px;background:rgba(198,196,223,0.06)"></span>
-          </div>
-
-          <!-- Added games (from chain/Oracle/community) -->
-          <div id="ecogame-added-list"></div>
-
-          <!-- Inline game builder (collapsed by default) -->
-          <div id="ecogame-builder" style="display:none;background:#131313;border:0.5px solid rgba(255,255,255,0.06);padding:14px;margin-bottom:8px">
-            <div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px">Build a game</div>
-
-            <!-- Phase picker for game -->
-            <div id="ecogame-phase-pills" style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap"></div>
-
-            <input type="text" id="ecogame-name" placeholder="Game name" style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;padding:8px 10px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px"/>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-              <input type="text" id="ecogame-start" placeholder="Start position" style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:11px;padding:8px 10px;outline:none;font-family:'Crimson Pro',serif"/>
-              <input type="text" id="ecogame-win" placeholder="Win condition" style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:11px;padding:8px 10px;outline:none;font-family:'Crimson Pro',serif"/>
-            </div>
-
-            <input type="text" id="ecogame-constraints" placeholder="Constraints (optional)" style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:11px;padding:8px 10px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px"/>
-            <input type="text" id="ecogame-cue" placeholder="Attention cue (optional)" style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:11px;padding:8px 10px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:8px"/>
-
-            <div style="display:flex;gap:8px">
-              <button onclick="saveInlineEcoGame()" style="flex:1;padding:10px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer">Add game</button>
-              <button onclick="toggleEcoGameBuilder(false)" style="padding:10px 14px;background:none;border:0.5px solid rgba(255,255,255,0.1);font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(198,196,223,0.3);cursor:pointer">Cancel</button>
-            </div>
-          </div>
-
-          <!-- Oracle response area -->
-          <div id="quest-oracle-wrap" style="display:none;margin-bottom:8px">
-            <div id="quest-oracle-response" style="background:#131313;border:0.5px solid rgba(255,255,255,0.06);padding:14px"></div>
-          </div>
-
-          <!-- Community search results area -->
-          <div id="quest-community-wrap" style="display:none;margin-bottom:8px">
-            <div id="quest-community-results" style="display:flex;flex-direction:column;gap:8px"></div>
-          </div>
-
-          <!-- Three action buttons -->
-          <div id="ecogame-action-btns" style="display:flex;flex-direction:column;gap:6px">
-            <button onclick="askOracleFromQuest()" id="quest-oracle-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:linear-gradient(135deg,rgba(233,195,73,0.08),rgba(233,195,73,0.02));border:0.5px solid rgba(233,195,73,0.2);color:#e9c349;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Cinzel',serif;width:100%;transition:all 0.15s">✦ Ask the Oracle</button>
-            <button onclick="searchCommunityFromQuest()" id="quest-community-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:none;border:0.5px solid rgba(255,255,255,0.1);color:rgba(198,196,223,0.35);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Cinzel',serif;width:100%;transition:all 0.15s">Search community games</button>
-            <button id="ecogame-add-btn" onclick="toggleEcoGameBuilder(true)" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:none;border:0.5px dashed rgba(255,255,255,0.1);color:rgba(198,196,223,0.25);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Cinzel',serif;width:100%;transition:all 0.15s">+ Create eco game</button>
-          </div>
-        </div>
-
-        <!-- ═══ SECTION 4: AFTER ROLLING ═══ -->
+        <!-- ═══ SECTION 3: AFTER ROLLING ═══ -->
         <div id="quest-reflection-section" style="margin-bottom:20px">
           <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-block;width:14px;height:1px;background:rgba(198,196,223,0.12)"></span>
@@ -3188,11 +3231,16 @@ function renderQuestTab(){
   const dateEl = document.getElementById('log-date-label');
   if(dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 
-  renderDrillPhasePills();
+  // Restore drill type and render appropriate pills
+  setDrillType(stDrillType || 'chain');
 
-  // Restore drill notes if any
+  // Restore drill notes for all modes
   const notesEl = document.getElementById('drill-notes-input');
   if(notesEl && stDrillNotes) notesEl.value = stDrillNotes;
+  const posNotesEl = document.getElementById('drill-positional-notes');
+  if(posNotesEl && stDrillPositionalNotes) posNotesEl.value = stDrillPositionalNotes;
+  const techNotesEl = document.getElementById('drill-technique-notes');
+  if(techNotesEl && stDrillTechNotes) techNotesEl.value = stDrillTechNotes;
 
   renderEcoGameList();
   updateRollFocusSection();
@@ -3219,6 +3267,11 @@ function clearQuestCard(){
 
 let stDrillPhases = [];    // ['Guard','Passing'] — toggled phase pills
 let stDrillNotes = '';     // free-text drill notes
+let stDrillType = 'chain'; // 'chain' | 'positional' | 'technique' | 'eco'
+let stDrillPositions = []; // ['Mount','Side Control'] — positional drill selections
+let stDrillPositionalNotes = ''; // notes for positional drill
+let stDrillTechniques = []; // ['Arm drag','Kimura'] — technique focus selections
+let stDrillTechNotes = '';  // notes for technique focus
 let stRollFocusItems = [];  // [{technique, phase, cue, icon, source, landed:0, attempted:0, id}]
 let stRollFocus = null;     // legacy compat — derived from first item
 let stIntentionOutcome = null;  // legacy compat
@@ -3227,6 +3280,7 @@ let stFocusAttempted = 0;
 let stRollFocusIdCounter = 0;
 let stReflectionRollCount = 3;
 let stEcoGames = [];       // [{game_name, phase, player_a_start, player_b_start, constraints, win_condition, attention_cue, ...}]
+let stChainCards = [];     // [{title, tags, steps:[{technique, phase, note}]}]
 let stEcoGameBuilderPhase = '';  // phase selected in inline builder
 let stExposureLog = {};    // {phaseName: {count, lastDate}} — cumulative exposure per phase
 
@@ -3259,13 +3313,225 @@ function toggleDrillPhase(phase){
   else stDrillPhases.push(phase);
   renderDrillPhasePills();
   updateSaveBtn();
-  // Try to generate roll focus suggestion from drilled phases
-  if(stDrillPhases.length > 0 && !stRollFocus) renderRollFocusSuggestion();
 }
 
 function onDrillNotesInput(){
-  const el = document.getElementById('drill-notes-input');
-  if(el) stDrillNotes = el.value;
+  // Sync whichever textarea is active based on drill type
+  if(stDrillType === 'chain'){
+    const el = document.getElementById('drill-notes-input');
+    if(el) stDrillNotes = el.value;
+  } else if(stDrillType === 'positional'){
+    const el = document.getElementById('drill-positional-notes');
+    if(el) stDrillPositionalNotes = el.value;
+  } else if(stDrillType === 'technique'){
+    const el = document.getElementById('drill-technique-notes');
+    if(el) stDrillTechNotes = el.value;
+  }
+  updateSaveBtn();
+}
+
+// --- DRILL TYPE SWITCHING ---
+
+function setDrillType(type){
+  stDrillType = type;
+  const modes = ['chain','positional','technique','eco'];
+  modes.forEach(m => {
+    const div = document.getElementById('drill-mode-' + m);
+    if(div) div.style.display = (m === type) ? 'block' : 'none';
+    const btn = document.getElementById('drill-type-' + m);
+    if(btn){
+      if(m === type){
+        btn.style.background = '#1a1205';
+        btn.style.borderColor = 'rgba(200,168,75,0.3)';
+        btn.style.color = '#c8a84b';
+      } else {
+        btn.style.background = '#131313';
+        btn.style.borderColor = 'rgba(255,255,255,0.08)';
+        btn.style.color = 'rgba(198,196,223,0.35)';
+      }
+    }
+  });
+  // Render content for the selected mode
+  if(type === 'chain') renderChainCardList();
+  if(type === 'positional'){ renderPositionalPills(); renderPositionalSelected(); }
+  if(type === 'technique') renderDrillTechPills();
+  if(type === 'eco') renderEcoGameList();
+  updateSaveBtn();
+}
+
+// --- ATTACK CHAIN DRILL MODE ---
+
+function drillChainGoToBuilder(){
+  switchSTTab(0); // Go to Chain tab
+}
+
+function drillEcoGoToBuilder(){
+  switchSTTab(0); // Go to Chain tab — use + Eco Game button there
+}
+
+// --- POSITIONAL DRILL ---
+
+const ALL_POSITIONS = [
+  'Mount','Side Control','Back','Closed Guard','Half Guard','Open Guard',
+  'Turtle','North-South','Knee on Belly','Deep Half',
+  'Butterfly Guard','De La Riva','Reverse De La Riva','Spider Guard',
+  'Lasso Guard','X-Guard','Single Leg X','Rubber Guard',
+  'Z-Guard','Lockdown','Quarter Guard','Headquarters',
+  '50/50','Leg Entanglement','Ashi Garami','Inside Sankaku',
+  'Crucifix','Truck','Body Triangle','Rear Mount',
+  'Kesa Gatame','Reverse Kesa','Modified Side Control',
+  'Gift Wrap','Twister Side Control','Wrestling Stance','Seated Guard'
+];
+
+// Quick-tap suggestions (most common)
+const QUICK_POSITIONS = ['Mount','Side Control','Back','Closed Guard','Half Guard','Open Guard'];
+
+function renderPositionalSelected(){
+  const el = document.getElementById('drill-positional-selected');
+  if(!el) return;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  if(stDrillPositions.length === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = stDrillPositions.map(name =>
+    `<button onclick="removePositionalPill('${name.replace(/'/g,"\\'")}')"
+      style="padding:5px 10px;font-size:8px;letter-spacing:0.06em;background:${ad.color}22;border:0.5px solid ${ad.color};color:${ad.color};cursor:pointer;font-family:'Cinzel',serif;display:flex;align-items:center;gap:4px;transition:all 0.15s">
+      ${name} <span style="font-size:10px;opacity:0.5">✕</span>
+    </button>`
+  ).join('');
+}
+
+function renderPositionalPills(){
+  const el = document.getElementById('drill-positional-pills');
+  if(!el) return;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  // Show only quick-tap suggestions that aren't already selected
+  const available = QUICK_POSITIONS.filter(p => !stDrillPositions.includes(p));
+  if(available.length === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:8px;color:rgba(198,196,223,0.15);margin-bottom:4px;font-family:serif;font-style:italic">Quick add:</div>' +
+    available.map(p =>
+    `<button onclick="addPositionalPill('${p}')"
+      style="padding:5px 8px;font-size:7px;letter-spacing:0.08em;text-transform:uppercase;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.3);cursor:pointer;font-family:'Cinzel',serif;transition:all 0.15s">
+      ${p}
+    </button>`
+  ).join('');
+}
+
+function addPositionalPill(name){
+  if(!stDrillPositions.includes(name)) stDrillPositions.push(name);
+  renderPositionalPills();
+  renderPositionalSelected();
+  updateSaveBtn();
+}
+
+function removePositionalPill(name){
+  stDrillPositions = stDrillPositions.filter(p => p !== name);
+  renderPositionalPills();
+  renderPositionalSelected();
+  updateSaveBtn();
+}
+
+function onPositionSearch(value){
+  const dropdown = document.getElementById('drill-position-dropdown');
+  if(!dropdown) return;
+  const q = (value||'').toLowerCase().trim();
+  if(!q){
+    dropdown.style.display = 'none';
+    return;
+  }
+  const results = ALL_POSITIONS.filter(p =>
+    p.toLowerCase().includes(q) && !stDrillPositions.includes(p)
+  );
+  if(results.length === 0){
+    dropdown.style.display = 'none';
+    return;
+  }
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = results.slice(0, 10).map(p =>
+    `<div onclick="selectPositionFromSearch('${p.replace(/'/g,"\\'")}')"
+      style="padding:10px 12px;cursor:pointer;font-size:12px;color:#f4ead8;font-family:'Crimson Pro',serif;border-bottom:0.5px solid rgba(255,255,255,0.04);transition:background 0.1s"
+      onmouseenter="this.style.background='rgba(200,168,75,0.08)'"
+      onmouseleave="this.style.background='transparent'">
+      ${p}
+    </div>`
+  ).join('');
+}
+
+function selectPositionFromSearch(name){
+  if(!stDrillPositions.includes(name)) stDrillPositions.push(name);
+  const input = document.getElementById('drill-position-search');
+  if(input) input.value = '';
+  const dropdown = document.getElementById('drill-position-dropdown');
+  if(dropdown) dropdown.style.display = 'none';
+  renderPositionalPills();
+  renderPositionalSelected();
+  updateSaveBtn();
+}
+
+// --- TECHNIQUE FOCUS DRILL ---
+
+function renderDrillTechPills(){
+  const el = document.getElementById('drill-technique-pills');
+  if(!el) return;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  if(stDrillTechniques.length === 0){
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = stDrillTechniques.map(t =>
+    `<button onclick="removeDrillTech('${t.replace(/'/g,"\\'")}')"
+      style="padding:5px 10px;font-size:8px;letter-spacing:0.06em;background:${ad.color}22;border:0.5px solid ${ad.color};color:${ad.color};cursor:pointer;font-family:'Cinzel',serif;display:flex;align-items:center;gap:4px;transition:all 0.15s">
+      ${t} <span style="font-size:10px;opacity:0.5">✕</span>
+    </button>`
+  ).join('');
+}
+
+function removeDrillTech(name){
+  stDrillTechniques = stDrillTechniques.filter(t => t !== name);
+  renderDrillTechPills();
+  updateSaveBtn();
+}
+
+function onDrillTechSearch(value){
+  const dropdown = document.getElementById('drill-tech-dropdown');
+  if(!dropdown) return;
+  const q = (value||'').toLowerCase().trim();
+  if(!q){
+    dropdown.style.display = 'none';
+    return;
+  }
+  // Search all techniques across all phases
+  const results = [];
+  Object.entries(TECHNIQUES).forEach(([phase, techs]) => {
+    techs.forEach(t => {
+      if(t.name.toLowerCase().includes(q) && !stDrillTechniques.includes(t.name)){
+        results.push({name: t.name, phase: phase});
+      }
+    });
+  });
+  if(results.length === 0){
+    dropdown.style.display = 'none';
+    return;
+  }
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = results.slice(0, 12).map(r =>
+    `<div onclick="selectDrillTech('${r.name.replace(/'/g,"\\'")}')"
+      style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid rgba(255,255,255,0.04);transition:background 0.1s"
+      onmouseenter="this.style.background='rgba(200,168,75,0.08)'"
+      onmouseleave="this.style.background='transparent'">
+      <span style="font-size:12px;color:#f4ead8;font-family:'Crimson Pro',serif">${r.name}</span>
+      <span style="font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(198,196,223,0.25);font-family:'Cinzel',serif">${r.phase}</span>
+    </div>`
+  ).join('');
+}
+
+function selectDrillTech(name){
+  if(!stDrillTechniques.includes(name)){
+    stDrillTechniques.push(name);
+  }
+  const input = document.getElementById('drill-technique-search');
+  if(input) input.value = '';
+  const dropdown = document.getElementById('drill-tech-dropdown');
+  if(dropdown) dropdown.style.display = 'none';
+  renderDrillTechPills();
   updateSaveBtn();
 }
 
@@ -3280,6 +3546,86 @@ function renderEcoGameList(){
 function removeEcoGame(idx){
   stEcoGames.splice(idx, 1);
   renderEcoGameList();
+  updateSaveBtn();
+}
+
+// --- CHAIN CARD RENDERING IN QUEST ---
+
+let chainCardIdCounter = 0;
+
+function renderChainCardList(){
+  const el = document.getElementById('chaincard-added-list');
+  if(!el) return;
+  el.innerHTML = stChainCards.map((card, idx) => renderChainCard(card, idx)).join('');
+}
+
+function renderChainCard(card, questIdx){
+  const id = chainCardIdCounter++;
+  const stepCount = card.steps ? card.steps.length : 0;
+  const preview = card.steps ? card.steps.map(s=>s.technique).join(' → ') : '';
+  const ad = stCurrentArchData || AD.BERSERKER;
+
+  // Build expanded steps HTML
+  const stepsHtml = (card.steps||[]).map((s,i) => {
+    const isLast = i === (card.steps.length - 1);
+    return `<div class="cc-step">
+      <div class="cc-step-left">
+        <div class="cc-step-dot${isLast?' last':''}"></div>
+        ${!isLast ? '<div class="cc-step-line"></div>' : ''}
+      </div>
+      <div class="cc-step-content">
+        <div class="cc-step-name">${s.technique}</div>
+        <div class="cc-step-phase">${s.phase}</div>
+        ${s.note ? '<div class="cc-step-note">'+s.note+'</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div id="cc-card-${id}">
+      <!-- COLLAPSED -->
+      <div class="cc-collapsed" id="cc-col-${id}" onclick="expandChainCard(${id})">
+        <div class="cc-top">
+          <span class="cc-tag">Attack chain · ${stepCount} links</span>
+          <button onclick="event.stopPropagation();removeChainCard(${questIdx})" style="font-size:10px;color:rgba(198,196,223,0.15);cursor:pointer;padding:2px 4px;background:none;border:none;font-family:'Cinzel',serif;line-height:1">✕</button>
+        </div>
+        <div class="cc-title">${card.title || 'Untitled Chain'}</div>
+        <div class="cc-subtitle">${preview}</div>
+        <div class="cc-expand-hint">Tap to expand ↓</div>
+      </div>
+
+      <!-- EXPANDED -->
+      <div class="cc-expanded" id="cc-exp-${id}">
+        <div class="cc-exp-hdr">
+          <div class="cc-exp-title">${card.title || 'Untitled Chain'}</div>
+          <button onclick="event.stopPropagation();removeChainCard(${questIdx})" style="font-size:10px;color:rgba(198,196,223,0.15);cursor:pointer;padding:2px 4px;background:none;border:none;font-family:'Cinzel',serif;line-height:1">✕</button>
+        </div>
+        ${card.tags && card.tags.length ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">'+card.tags.map(t=>'<span class="cc-tag">'+t+'</span>').join('')+'</div>' : ''}
+        ${stepsHtml}
+        <div class="cc-action-row">
+          <button onclick="collapseChainCard(${id})" style="font-size:9px;color:rgba(198,196,223,0.3);background:none;border:0.5px solid rgba(255,255,255,0.08);padding:6px 12px;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.08em;text-transform:uppercase;border-radius:4px">Collapse ↑</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function expandChainCard(id){
+  const col = document.getElementById('cc-col-'+id);
+  const exp = document.getElementById('cc-exp-'+id);
+  if(col) col.style.display = 'none';
+  if(exp) exp.style.display = 'block';
+}
+
+function collapseChainCard(id){
+  const col = document.getElementById('cc-col-'+id);
+  const exp = document.getElementById('cc-exp-'+id);
+  if(exp) exp.style.display = 'none';
+  if(col) col.style.display = 'block';
+}
+
+function removeChainCard(idx){
+  stChainCards.splice(idx, 1);
+  renderChainCardList();
   updateSaveBtn();
 }
 
@@ -3522,13 +3868,9 @@ function addCommunityGameFromQuest(gameData, phase){
     });
   }
 
-  // Add phase to drill pills
-  if(phase && !stDrillPhases.includes(phase)){
-    stDrillPhases.push(phase);
-    renderDrillPhasePills();
-  }
-
-  renderEcoGameList();
+  // Switch to eco drill tab so user can see the added game
+  stDrillType = 'eco';
+  setDrillType('eco');
   updateSaveBtn();
   showToast('Game added to session');
 }
@@ -3558,7 +3900,7 @@ function removeLessonItem(){} // no-op, kept for compat
 function updateSaveBtn(){
   const btn = document.getElementById('quest-save-btn');
   if(!btn) return;
-  const hasDrill = stDrillPhases.length > 0 || (stDrillNotes && stDrillNotes.trim().length > 0);
+  const hasDrill = stDrillPhases.length > 0 || (stDrillNotes && stDrillNotes.trim().length > 0) || stDrillPositions.length > 0 || (stDrillPositionalNotes && stDrillPositionalNotes.trim().length > 0) || stDrillTechniques.length > 0 || (stDrillTechNotes && stDrillTechNotes.trim().length > 0);
   const hasGame = stEcoGames.length > 0;
   const hasContent = hasDrill || hasGame || stRollFocus || stReflectionRollCount > 0;
   btn.style.opacity = hasContent ? '1' : '0.35';
@@ -3631,7 +3973,7 @@ function renderRollFocusItems(){
           <div style="font-size:14px;color:#f4ead8;font-family:'Cinzel',serif;line-height:1.3">${item.technique}</div>
           <div style="font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:${ad.color}88;margin-top:2px">${item.phase || ''}</div>
         </div>
-        <button onclick="event.stopPropagation();removeRollFocusItem('${item.id}')" style="background:none;border:none;color:rgba(198,196,223,0.25);cursor:pointer;font-size:14px;padding:4px 8px;flex-shrink:0">✕</button>
+        <button onclick="event.stopPropagation();removeRollFocusItem('${item.id}')" style="background:rgba(200,50,50,0.08);border:0.5px solid rgba(200,50,50,0.2);color:#c05050;cursor:pointer;font-size:10px;padding:6px 10px;flex-shrink:0;font-family:'Cinzel',serif;letter-spacing:0.06em;border-radius:3px;min-width:44px;min-height:36px;display:flex;align-items:center;justify-content:center">✕ Remove</button>
       </div>
 
       ${item.cue ? `
@@ -3670,7 +4012,14 @@ function generateRollFocusSuggestion(){
   const weakPhases = phases.filter(p => phaseExposure[p] === minExposure);
   const phaseIcons = {Standing:'\u{1F463}',Takedown:'\u2193',Guard:'\u21BA',Passing:'\u2B1C',Pinning:'\u{1F4CC}',Submission:'\u{1F480}'};
 
-  const tonightPhases = stDrillPhases.length > 0 ? stDrillPhases : [];
+  // Collect tonight's phases from all drill modes
+  let tonightPhases = stDrillPhases.length > 0 ? [...stDrillPhases] : [];
+  // Add phases from technique focus drills
+  stDrillTechniques.forEach(techName => {
+    Object.entries(TECHNIQUES).forEach(([phase, techs]) => {
+      if(techs.some(t => t.name === techName) && !tonightPhases.includes(phase)) tonightPhases.push(phase);
+    });
+  });
   const tonightIsWeak = weakPhases.some(wp => tonightPhases.includes(wp));
 
   if(tonightPhases.length > 0 && (tonightIsWeak || Math.random() < 0.7)){
@@ -3827,7 +4176,7 @@ function changeRollCount(d){
 // --- SAVE SESSION ---
 
 function saveFullSession(){
-  const hasDrill = stDrillPhases.length > 0 || (stDrillNotes && stDrillNotes.trim());
+  const hasDrill = stDrillPhases.length > 0 || (stDrillNotes && stDrillNotes.trim()) || stDrillPositions.length > 0 || (stDrillPositionalNotes && stDrillPositionalNotes.trim()) || stDrillTechniques.length > 0 || (stDrillTechNotes && stDrillTechNotes.trim());
   const hasGame = stEcoGames.length > 0;
   const hasRolling = stReflectionRollCount > 0 || stIntentionOutcome;
   if(!hasDrill && !hasGame && !hasRolling) return;
@@ -3839,6 +4188,18 @@ function saveFullSession(){
     stExposureLog[phase].count++;
     stExposureLog[phase].lastDate = today;
     stHeatmap[phase] = (stHeatmap[phase]||0) + 1;
+  });
+
+  // Update exposure from technique focus drills (look up phase from TECHNIQUES)
+  stDrillTechniques.forEach(techName => {
+    Object.entries(TECHNIQUES).forEach(([phase, techs]) => {
+      if(techs.some(t => t.name === techName)){
+        if(!stExposureLog[phase]) stExposureLog[phase] = {count:0, lastDate:''};
+        stExposureLog[phase].count++;
+        stExposureLog[phase].lastDate = today;
+        stHeatmap[phase] = (stHeatmap[phase]||0) + 1;
+      }
+    });
   });
 
   // Update exposure from eco games too
@@ -3886,9 +4247,15 @@ function saveFullSession(){
   stSessionHistory.unshift({
     date: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}),
     type: type,
+    drillType: stDrillType,
     drillPhases: [...stDrillPhases],
     drillNotes: stDrillNotes,
+    drillPositions: [...stDrillPositions],
+    drillPositionalNotes: stDrillPositionalNotes,
+    drillTechniques: [...stDrillTechniques],
+    drillTechNotes: stDrillTechNotes,
     ecoGames: stEcoGames.map(g => ({game_name:g.game_name, phase:g.phase, player_a_start:g.player_a_start, win_condition:g.win_condition, attention_cue:g.attention_cue})),
+    chainCards: stChainCards.map(c => ({title:c.title, tags:c.tags, steps:c.steps})),
     rollFocusItems: stRollFocusItems.map(i => ({technique:i.technique, phase:i.phase, cue:i.cue||'', landed:i.landed, attempted:i.attempted})),
     // Legacy compat: also store lessons array for codex history renderer
     lessons: stDrillPhases.map(p => ({technique: stDrillNotes, phase: p, note:''})),
@@ -3967,12 +4334,18 @@ function showSessionComplete(xp, type){
 function resetQuestFlow(){
   stDrillPhases = [];
   stDrillNotes = '';
+  stDrillType = 'chain';
+  stDrillPositions = [];
+  stDrillPositionalNotes = '';
+  stDrillTechniques = [];
+  stDrillTechNotes = '';
   stRollFocus = null;
   stIntentionOutcome = null;
   stFocusLanded = 0;
   stFocusAttempted = 0;
   stReflectionRollCount = 3;
   stEcoGames = [];
+  stChainCards = [];
   stEcoGameBuilderPhase = '';
   stLessonItems = [];
   lessonIdCounter = 0;
@@ -5078,14 +5451,57 @@ function openChainProceed(type){
 // --- CARD EDITOR SCREEN ---
 
 function buildChainSequence(){
-  // Gather all techniques across all phases in chain order
-  const phaseOrder = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  // Only include phases the user actually connected via userEdges
+  // Walk the edge list to build an ordered sequence of phases
   const chain = stCurrentResultData?.chain || [];
+  const nodes = graphState.nodes || {};
+
+  if(userEdges.length === 0){
+    // No connections — if a single node is selected, use just that
+    if(graphState.selected && nodes[graphState.selected]){
+      const n = nodes[graphState.selected];
+      const techs = n.techs?.length ? n.techs : (n.tech ? [n.tech] : []);
+      return techs.map(t => ({technique: t, phase: n.phase}));
+    }
+    // Fallback: use all active (glowing) nodes
+    const activePhases = Object.values(nodes).filter(n => n.active && n.tech);
+    if(activePhases.length > 0){
+      const phaseOrder = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+      const sorted = activePhases.sort((a,b) => phaseOrder.indexOf(a.phase) - phaseOrder.indexOf(b.phase));
+      const steps = [];
+      sorted.forEach(n => {
+        const techs = n.techs?.length ? n.techs : [n.tech];
+        techs.forEach(t => steps.push({technique: t, phase: n.phase}));
+      });
+      return steps;
+    }
+    return [];
+  }
+
+  // Walk edges to build ordered phase list (no duplicates, respecting connection order)
+  // Find the start of the chain — the phase that appears as first in an edge but not as second in any other
+  const allFirsts = userEdges.map(e => e[0]);
+  const allSeconds = userEdges.map(e => e[1]);
+  let startPhase = allFirsts.find(f => !allSeconds.includes(f)) || userEdges[0][0];
+
+  const orderedPhases = [startPhase];
+  const edgeMap = {};
+  userEdges.forEach(([a,b]) => { edgeMap[a] = b; });
+
+  let current = startPhase;
+  while(edgeMap[current]){
+    const next = edgeMap[current];
+    if(orderedPhases.includes(next)) break; // prevent infinite loop
+    orderedPhases.push(next);
+    current = next;
+  }
+
+  // Build steps from ordered phases, pulling techniques from graph nodes
   const steps = [];
-  phaseOrder.forEach(phase => {
-    const node = chain.find(c => c.phase === phase);
-    if(!node) return;
-    const techs = (node.techniques && node.techniques.length) ? node.techniques : (node.technique ? [node.technique] : []);
+  orderedPhases.forEach(phase => {
+    const n = nodes[phase];
+    if(!n) return;
+    const techs = n.techs?.length ? n.techs : (n.tech ? [n.tech] : []);
     techs.forEach(t => steps.push({technique: t, phase: phase}));
   });
   return steps;
@@ -5099,9 +5515,13 @@ function openChainCardEditor(type){
   const steps = buildChainSequence();
   if(steps.length === 0){ showToast('Add techniques to your chain first'); return; }
 
-  const isEco = type === 'eco';
-  const placeholder = isEco ? 'Name your eco game...' : 'Name your attack chain...';
-  const oracleText = isEco ? 'Oracle can refine this into an ecological game' : 'Oracle can generate an eco game from this chain';
+  if(type === 'eco'){
+    openEcoGameEditor(steps);
+    return;
+  }
+
+  const placeholder = 'Name your attack chain...';
+  const oracleText = 'Oracle can generate an eco game from this chain';
 
   // Phase tags
   const allPhases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
@@ -5141,7 +5561,7 @@ function openChainCardEditor(type){
 
       <div class="ce-oracle-strip">
         <span class="ce-oracle-text">${oracleText}</span>
-        <button class="ce-oracle-btn" onclick="chainEditorConsultOracle('${type}')">Consult</button>
+        <button class="ce-oracle-btn" onclick="chainEditorConsultOracle('chain')">Consult</button>
       </div>
 
       <div class="ce-section-label">Sequence + notes</div>
@@ -5150,12 +5570,181 @@ function openChainCardEditor(type){
       </div>
     </div>
     <div class="ce-save-row">
-      <button class="ce-btn-save" onclick="saveChainCard('${type}')">Save to Grimoire</button>
-      <button class="ce-btn-share" onclick="shareChainCard('${type}')">Share</button>
+      <button class="ce-btn-save" onclick="saveChainCard('chain')">Save to Grimoire</button>
+      <button class="ce-btn-share" onclick="addChainCardToQuest('chain')">+ Add to Quest</button>
     </div>`;
 
   editor.style.display = 'block';
   editor.scrollTop = 0;
+}
+
+function openEcoGameEditor(steps){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const editor = document.getElementById('chain-editor-screen');
+  if(!editor) return;
+
+  // Pre-fill context from chain
+  const phases = [...new Set(steps.map(s=>s.phase))];
+  const techNames = steps.map(s=>s.technique);
+  const chainDesc = techNames.join(' → ');
+  const firstPhase = phases[0] || 'Guard';
+
+  // Build suggested start position from first step
+  const suggestedStart = steps.length > 0 ? steps[0].technique + ' position' : '';
+
+  const allPhases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  const archName = stCurrentResultData?.archetype || ad.name;
+  const levels = ['Beginner','Intermediate','Advanced'];
+
+  const fieldStyle = 'width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:"Crimson Pro",serif;padding:10px 12px;outline:none;transition:border-color 0.15s;margin-bottom:8px;';
+  const labelStyle = 'font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.3);margin-bottom:4px;font-family:"Cinzel",serif;';
+  const inputStyle = fieldStyle + 'font-size:12px;';
+  const textareaStyle = fieldStyle + 'font-size:11px;resize:none;line-height:1.5;';
+
+  editor.innerHTML = `
+    <div class="ce-back" onclick="closeChainCardEditor()">
+      <span class="ce-back-arrow">←</span>
+      <span class="ce-back-label">Chain</span>
+    </div>
+    <div class="ce-body">
+      <input class="ce-title-input" id="eco-ed-name" placeholder="Name your eco game..." />
+
+      <div class="ce-tags" id="ce-tags">
+        ${allPhases.map(p=>`<span class="ce-tag${phases.includes(p)?' selected':''}" onclick="toggleCeTag(this)">${p}</span>`).join('')}
+        <span class="ce-tag selected" onclick="toggleCeTag(this)">${archName}</span>
+        ${levels.map(l=>`<span class="ce-tag" onclick="toggleCeTag(this)">${l}</span>`).join('')}
+      </div>
+
+      <div style="font-size:9px;color:rgba(198,196,223,0.2);font-family:serif;font-style:italic;margin:12px 0 8px;padding:8px 10px;border-left:2px solid ${ad.color}44;background:rgba(0,0,0,0.15)">
+        Chain: ${chainDesc}
+      </div>
+
+      <div style="${labelStyle}">Problem — What skill does this game develop?</div>
+      <textarea id="eco-ed-problem" rows="2" placeholder="e.g. Developing smooth transitions through the chain..." style="${textareaStyle}"></textarea>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="${labelStyle}">Player A Start</div>
+          <input id="eco-ed-start-a" placeholder="e.g. ${suggestedStart}" style="${inputStyle}"/>
+        </div>
+        <div>
+          <div style="${labelStyle}">Player B Start</div>
+          <input id="eco-ed-start-b" placeholder="Partner's starting position..." style="${inputStyle}"/>
+        </div>
+      </div>
+
+      <div style="${labelStyle}">Continuous Goal — What should Player A keep doing?</div>
+      <textarea id="eco-ed-continuous" rows="2" placeholder="e.g. Maintain pressure and chain transitions without stalling..." style="${textareaStyle}"></textarea>
+
+      <div style="${labelStyle}">Terminal Goal — When does the round end?</div>
+      <input id="eco-ed-terminal" placeholder="e.g. Complete the full chain to submission" style="${inputStyle}"/>
+
+      <div style="${labelStyle}">Partner's Resistance — How does Player B respond?</div>
+      <textarea id="eco-ed-resistance" rows="2" placeholder="e.g. 50% resistance, defending transitions but not fully countering..." style="${textareaStyle}"></textarea>
+
+      <div style="${labelStyle}">Constraints</div>
+      <input id="eco-ed-constraints" placeholder="e.g. No jumping guard, must chain in order" style="${inputStyle}"/>
+
+      <div style="${labelStyle}">Win Condition</div>
+      <input id="eco-ed-win" placeholder="e.g. Complete chain to final position" style="${inputStyle}"/>
+
+      <div style="${labelStyle}">Attention Cue — What to focus on</div>
+      <input id="eco-ed-cue" placeholder="e.g. Feel the weight shift before each transition" style="${inputStyle}"/>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="${labelStyle}">Round Length</div>
+          <input id="eco-ed-round" value="3 minutes" style="${inputStyle}"/>
+        </div>
+        <div>
+          <div style="${labelStyle}">Skill That Emerges</div>
+          <input id="eco-ed-skill" placeholder="e.g. Chain fluency" style="${inputStyle}"/>
+        </div>
+      </div>
+    </div>
+    <div class="ce-save-row">
+      <button class="ce-btn-save" onclick="saveEcoGameFromEditor()">Save to Grimoire</button>
+      <button class="ce-btn-share" onclick="addEcoGameFromEditor()">+ Add to Quest</button>
+    </div>`;
+
+  editor.style.display = 'block';
+  editor.scrollTop = 0;
+}
+
+function getEcoEditorData(){
+  const name = document.getElementById('eco-ed-name')?.value?.trim() || '';
+  const tags = [...document.querySelectorAll('#ce-tags .ce-tag.selected')].map(t=>t.textContent.trim());
+  const phase = tags.find(t => ['Standing','Takedown','Guard','Passing','Pinning','Submission'].includes(t)) || '';
+  return {
+    game_name: name,
+    phase: phase,
+    tags: tags,
+    problem: document.getElementById('eco-ed-problem')?.value?.trim() || '',
+    player_a_start: document.getElementById('eco-ed-start-a')?.value?.trim() || '',
+    player_b_start: document.getElementById('eco-ed-start-b')?.value?.trim() || '',
+    continuous_goal: document.getElementById('eco-ed-continuous')?.value?.trim() || '',
+    terminal_goal: document.getElementById('eco-ed-terminal')?.value?.trim() || '',
+    player_b_goal: document.getElementById('eco-ed-resistance')?.value?.trim() || '',
+    constraints: document.getElementById('eco-ed-constraints')?.value?.trim() || '',
+    win_condition: document.getElementById('eco-ed-win')?.value?.trim() || '',
+    attention_cue: document.getElementById('eco-ed-cue')?.value?.trim() || '',
+    round_length: document.getElementById('eco-ed-round')?.value?.trim() || '3 minutes',
+    skill_emerges: document.getElementById('eco-ed-skill')?.value?.trim() || '',
+    bot_type: 'Custom'
+  };
+}
+
+async function saveEcoGameFromEditor(){
+  const data = getEcoEditorData();
+  if(!data.game_name){ showToast('Please name your eco game first'); return; }
+
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const profile = stUserProfile || {};
+
+  try{
+    const { error } = await sbClient.from('community_games').insert({
+      technique: data.game_name,
+      phase: data.phase || 'General',
+      tags: data.tags.map(t=>t.toLowerCase()),
+      game_data: {
+        card_type: 'eco_game',
+        game_name: data.game_name,
+        problem: data.problem,
+        player_a_start: data.player_a_start,
+        player_b_start: data.player_b_start,
+        continuous_goal: data.continuous_goal,
+        terminal_goal: data.terminal_goal,
+        player_b_goal: data.player_b_goal,
+        constraints: data.constraints,
+        win_condition: data.win_condition,
+        attention_cue: data.attention_cue,
+        skill_emerges: data.skill_emerges,
+        round_length: data.round_length,
+        archetype: stCurrentResultData?.archetype || ad.name
+      },
+      creator_name: profile.name || ad.name + ' Player',
+      creator_belt: profile.belt || 'white',
+      creator_archetype: ad.name,
+      creator_chain: (stCurrentResultData?.chain||[]).map(c=>c.technique),
+      upvotes: 0,
+      usage_count: 0
+    });
+
+    if(error){ showToast('Save error: '+error.message); return; }
+    stBadgeCounters.games_shared = (stBadgeCounters.games_shared||0) + 1;
+    updateCodexBadges();
+    closeChainCardEditor();
+    showToast('✦ Saved to Grimoire!');
+  }catch(e){
+    showToast('Error: '+(e.message||e));
+  }
+}
+
+function addEcoGameFromEditor(){
+  const data = getEcoEditorData();
+  if(!data.game_name){ showToast('Please name your eco game first'); return; }
+  addCommunityGameFromQuest(data, data.phase);
+  closeChainCardEditor();
 }
 
 function closeChainCardEditor(){
@@ -5193,24 +5782,59 @@ async function chainConsultOracle(type){
   detail.style.display = 'block';
 
   if(type === 'eco'){
-    // Generate an eco game from the full chain
-    detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic;text-align:center;padding:20px 0">The Oracle is designing an ecological game for your chain\u2026</div>';
-
     const ECO_PREAMBLE = 'You design ecological BJJ training games using a constraints-led approach (Greg Souders / Standard Jiu-Jitsu / Rob Gray perception-action coupling). Start with a PROBLEM. Use invariants. Use constraints to shape behavior. Attention cue must be EXTERNAL perceptual focus.';
-    const prompt = ECO_PREAMBLE + '\n\nDesign ONE ecological game that trains the FULL chain sequence: ' + chainDesc + '.\nArchetype: ' + ad.name + '. Full chain: ' + fullChain + '.\n\nThe game should capture the flow between these positions — the continuous goal should be about maintaining connection through all transitions.\n\nReturn ONLY this JSON:\n{\n  "game_name": "short name (max 4 words)",\n  "player_a_start": "exact starting position",\n  "player_b_start": "partner starting position",\n  "continuous_goal": "what Player A maintains throughout",\n  "terminal_goal": "what Player A achieves to win/reset",\n  "player_b_goal": "partner resistance goal",\n  "constraints": "2-3 constraints",\n  "win_condition": "clear trigger for reset",\n  "continuity": "Reset or Continuous",\n  "attention_cue": "EXTERNAL perceptual focus",\n  "skill_emerges": "what skill develops",\n  "round_length": "e.g. 3 minutes"\n}';
+    const ECO_JSON = '{"game_name":"short name (max 4 words)","player_a_start":"exact starting position","player_b_start":"partner starting position","continuous_goal":"what Player A maintains throughout","terminal_goal":"what Player A achieves to win/reset","player_b_goal":"partner resistance goal","constraints":"2-3 constraints","win_condition":"clear trigger for reset","continuity":"Reset or Continuous","attention_cue":"EXTERNAL perceptual focus","skill_emerges":"what skill develops","round_length":"e.g. 3 minutes"}';
 
-    try{
-      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders,body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:700,messages:[{role:'user',content:prompt}]})});
-      const d = await r.json();
-      const game = extractAndParseJSON(d.content?.[0]?.text || '{}');
-      game.bot_type = 'Oracle';
-      game.phase = steps[steps.length-1].phase;
-      stLastOracleGame = game;
-      stLastOracleTech = steps[0].technique;
-      stLastOraclePhase = steps[0].phase;
-      detail.innerHTML = '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">Chain Eco Game: ' + chainDesc + '</div>' + renderGrimoireCard(game);
-    }catch(e){
-      detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">Oracle error: '+(e.message||e)+'</div>';
+    if(steps.length <= 2){
+      // Simple chain (1-2 steps) — single eco game
+      detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic;text-align:center;padding:20px 0">The Oracle is designing an eco game\u2026</div>';
+      const prompt = ECO_PREAMBLE + '\n\nDesign ONE ecological game for: ' + chainDesc + '.\nArchetype: ' + ad.name + '.\n\nReturn ONLY this JSON:\n' + ECO_JSON;
+      try{
+        const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders,body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:700,messages:[{role:'user',content:prompt}]})});
+        const d = await r.json();
+        const game = extractAndParseJSON(d.content?.[0]?.text || '{}');
+        game.bot_type = 'Oracle'; game.phase = steps[0].phase;
+        stLastOracleGame = game;
+        detail.innerHTML = '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">' + chainDesc + '</div>' + renderGrimoireCard(game);
+      }catch(e){ detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">Oracle error: '+(e.message||e)+'</div>'; }
+    } else {
+      // Complex chain (3+ steps) — split into per-transition eco games
+      // Build adjacent pairs
+      const pairs = [];
+      for(let i = 0; i < steps.length - 1; i++){
+        pairs.push({from: steps[i], to: steps[i+1]});
+      }
+
+      detail.innerHTML = '<div style="padding:14px 0;text-align:center"><div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">Your chain has ' + steps.length + ' links — the Oracle is creating ' + pairs.length + ' focused eco games,</div><div style="font-size:10px;color:rgba(198,196,223,0.25);font-family:serif;margin-top:4px">one for each transition, to keep constraints tight.</div></div>';
+
+      try{
+        const gamePromises = pairs.map(p => {
+          const teA = (TECHNIQUES[p.from.phase]||[]).find(t => t.name === p.from.technique);
+          const teB = (TECHNIQUES[p.to.phase]||[]).find(t => t.name === p.to.technique);
+          const ctx = (teA ? '\n"'+p.from.technique+'": Start: '+teA.start+'. Cue: '+teA.cue : '') + (teB ? '\n"'+p.to.technique+'": Start: '+teB.start+'. Cue: '+teB.cue : '');
+          const singlePrompt = ECO_PREAMBLE + ctx + '\n\nDesign a game for the TRANSITION from "'+p.from.technique+'" ('+p.from.phase+') to "'+p.to.technique+'" ('+p.to.phase+'). Player ALREADY HAS "'+p.from.technique+'". Game is about getting to "'+p.to.technique+'".\nArchetype: '+ad.name+'.\n\nReturn ONLY JSON:\n'+ECO_JSON+'\n\nMax 20 words per field.';
+          return fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders,body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:700,messages:[{role:'user',content:singlePrompt}]})})
+            .then(r=>r.json())
+            .then(d=>{
+              const game = extractAndParseJSON(d.content?.[0]?.text || '{}');
+              game.connection = p.from.technique + ' \u2192 ' + p.to.technique;
+              game.bot_type = 'Oracle';
+              game.phase = p.to.phase;
+              return game;
+            })
+            .catch(e=>({connection: p.from.technique+' \u2192 '+p.to.technique, game_name:'Game unavailable', problem:e.message||'Error'}));
+        });
+
+        const games = await Promise.all(gamePromises);
+        detail.innerHTML = '<div style="font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:'+ad.color+'66;margin-bottom:8px;text-align:center">'+games.length+' eco games for your chain</div>' +
+          games.map(game => {
+            stLastOracleGame = game;
+            return '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid rgba(255,255,255,0.06)">' +
+              '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:'+ad.color+'88;margin-bottom:4px">'+(game.connection||'')+'</div>' +
+              renderGrimoireCard(game) +
+            '</div>';
+          }).join('');
+      }catch(e){ detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">Oracle error: '+(e.message||e)+'</div>'; }
     }
   } else {
     // Generate an attack chain card with transition notes
@@ -5291,7 +5915,7 @@ function openChainCardEditorPrefilled(type, title, oracleSteps){
     </div>
     <div class="ce-save-row">
       <button class="ce-btn-save" onclick="saveChainCard('${type}')">Save to Grimoire</button>
-      <button class="ce-btn-share" onclick="shareChainCard('${type}')">Share</button>
+      <button class="ce-btn-share" onclick="addChainCardToQuest('${type}')">+ Add to Quest</button>
     </div>`;
 
   editor.style.display = 'block';
@@ -5397,26 +6021,45 @@ async function saveChainCard(type){
   }
 }
 
-async function shareChainCard(type){
+function addChainCardToQuest(type){
   const data = getEditorData(type);
   if(!data.title){ showToast('Please name your card first'); return; }
 
-  // Build a shareable text
-  const lines = [data.title, ''];
-  data.steps.forEach((s,i) => {
-    lines.push((i+1)+'. '+s.technique+' ('+s.phase+')');
-    if(s.note) lines.push('   '+s.note);
-  });
-  if(data.tags.length) lines.push('', 'Tags: '+data.tags.join(', '));
-  lines.push('', 'Built with Grimwaza');
-
-  const text = lines.join('\n');
-
-  if(navigator.share){
-    try{ await navigator.share({title:data.title, text}); }catch(e){}
+  if(type === 'eco'){
+    // Build an eco game object from the editor data and add to quest
+    const game = {
+      game_name: data.title,
+      phase: data.steps[0]?.phase || 'General',
+      player_a_start: data.steps.map(s=>s.technique).join(' → '),
+      continuous_goal: 'Flow through chain sequence',
+      terminal_goal: 'Complete full sequence',
+      constraints: data.tags.join(', '),
+      win_condition: 'Complete chain to final position',
+      attention_cue: data.steps.find(s=>s.note)?.note || 'Maintain connection through transitions',
+      bot_type: 'Custom',
+      round_length: '3 minutes'
+    };
+    addCommunityGameFromQuest(game, data.steps[0]?.phase || '');
   } else {
-    try{ await navigator.clipboard.writeText(text); showToast('Copied to clipboard!'); }catch(e){ showToast('Could not share'); }
+    // Add as ONE chain card with all steps inside it
+    const alreadyHas = stChainCards.some(c => c.title === data.title);
+    if(!alreadyHas){
+      stChainCards.push({
+        title: data.title,
+        tags: data.tags,
+        steps: data.steps
+      });
+    }
+    renderChainCardList();
+    updateSaveBtn();
   }
+
+  closeChainCardEditor();
+  stDrillType = 'chain';
+  switchSTTab(2); // Jump to Quest tab
+  // Ensure chain drill mode is visible so card shows up
+  setTimeout(() => setDrillType('chain'), 50);
+  showToast('✦ Added to Quest!');
 }
 
 
@@ -5669,13 +6312,23 @@ function updateCodexHistory(){
     // Handle old format (lessons array) and new format (drillPhases + drillNotes)
     const drillPhases = s.drillPhases || [];
     const drillNotes = s.drillNotes || '';
+    const drillPositions = s.drillPositions || [];
+    const drillTechniques = s.drillTechniques || [];
     const lessons = s.lessons || (s.techs||[]).map(t=>({technique:t.tech, phase:'', note:t.note}));
     const ecoGames = s.ecoGames || [];
 
-    // Summary line: phases if available, else technique names from lessons
-    const summaryText = drillPhases.length > 0
-      ? drillPhases.join(' · ') + (drillNotes ? ' — ' + drillNotes.substring(0,40) + (drillNotes.length>40?'...':'') : '')
-      : lessons.map(l=>l.technique).join(' · ');
+    // Summary line based on drill type
+    let summaryText = '';
+    const dt = s.drillType || 'chain';
+    if(dt === 'positional' && drillPositions.length > 0){
+      summaryText = '◎ ' + drillPositions.join(' · ') + (s.drillPositionalNotes ? ' — ' + s.drillPositionalNotes.substring(0,40) : '');
+    } else if(dt === 'technique' && drillTechniques.length > 0){
+      summaryText = '✦ ' + drillTechniques.join(' · ') + (s.drillTechNotes ? ' — ' + s.drillTechNotes.substring(0,40) : '');
+    } else if(drillPhases.length > 0){
+      summaryText = drillPhases.join(' · ') + (drillNotes ? ' — ' + drillNotes.substring(0,40) + (drillNotes.length>40?'...':'') : '');
+    } else {
+      summaryText = lessons.map(l=>l.technique).join(' · ');
+    }
 
     const typeLabel = s.type === 'drill' ? 'Drill' : s.type === 'full' ? 'Class' : 'Session';
     const outcomeColors = {landed:'#4aaa28', attempted:ad.color, no_chance:'rgba(198,196,223,0.3)'};
@@ -5877,11 +6530,6 @@ function addGameToQuest(game){
 
   const phase = game.phase || (stLastOraclePhase || '');
 
-  // Add phase to drill pills if present
-  if(phase && !stDrillPhases.includes(phase)){
-    stDrillPhases.push(phase);
-  }
-
   // Add eco game to list
   const alreadyHasGame = stEcoGames.some(g => g.game_name === game.game_name);
   if(!alreadyHasGame){
@@ -5898,8 +6546,10 @@ function addGameToQuest(game){
     });
   }
 
-  // Switch to quest tab and re-render
+  // Switch to quest tab with eco drill tab active
+  stDrillType = 'eco';
   switchSTTab(2);
+  setTimeout(() => setDrillType('eco'), 50);
 }
 
 function editQuestGame(key){
@@ -6905,6 +7555,7 @@ function renderGraphIcons(){
     const techs = n.techs || [];
     const techLabel = n.tech || '';
     const isMulti = techs.length > 1;
+    const isExpanded = chainNodeExpanded[n.phase] || false;
     const nodeR = n.r * scaleX;
     const techOffset = nodeR + 28;
 
@@ -6916,16 +7567,33 @@ function renderGraphIcons(){
         transition:color 0.3s, filter 0.3s">${PHASE_ICONS[n.phase]||'circle'}</span>
     </div>`;
 
-    if(isMulti){
-      // EXPANDED NODE — multiple techniques stacked with dots and arrows
+    if(isMulti && isExpanded){
+      // EXPANDED MULTI-NODE — full technique stack with inline ✕ remove buttons
       const itemsHtml = techs.map((t,i) =>
         `${i>0?'<div class="chain-multi-arrow">↓</div>':''}
-         <div class="chain-multi-item"><div class="chain-multi-dot"></div><div class="chain-multi-name">${t}</div></div>`
+         <div class="chain-multi-item">
+           <div class="chain-multi-dot"></div>
+           <div class="chain-multi-name">${t}</div>
+           <button onclick="event.stopPropagation();removeTechFromPhase('${n.phase}','${t.replace(/'/g,"\\'")}')"
+             style="width:14px;height:14px;border-radius:50%;border:0.5px solid rgba(200,50,50,0.25);background:rgba(200,50,50,0.08);color:#c05050;font-size:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;margin-left:auto;line-height:1">✕</button>
+         </div>`
       ).join('');
       html += `<div class="chain-multi-wrap" style="left:${px}px;top:${py + techOffset}px">
-        <div class="chain-multi-phase">${n.phase}</div>
+        <div class="chain-multi-phase" onclick="event.stopPropagation();toggleChainNodeExpand('${n.phase}')" style="cursor:pointer">${n.phase} · ${techs.length} <span style="font-size:7px;color:#c8a84b">▲</span></div>
         ${itemsHtml}
         <div class="chain-multi-btns">
+          <button class="chain-node-btn cb-swap" onclick="event.stopPropagation();openChainSwapPicker('${n.phase}')" title="Swap">↺</button>
+          <button class="chain-node-btn cb-add" onclick="event.stopPropagation();openChainAddPicker('${n.phase}')" title="Add technique">+</button>
+        </div>
+      </div>`;
+    } else if(isMulti && !isExpanded){
+      // COLLAPSED MULTI-NODE — first technique + count badge, tap to expand
+      html += `<div style="position:absolute;left:${px}px;top:${py + techOffset}px;transform:translateX(-50%);text-align:center;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div style="white-space:nowrap;cursor:pointer" onclick="event.stopPropagation();toggleChainNodeExpand('${n.phase}')">
+          <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.04em;color:#c8a84b;transition:color 0.3s">${techLabel}</span>
+          <span style="font-size:7px;color:#c8a84b;background:rgba(200,168,75,0.15);border:0.5px solid rgba(200,168,75,0.3);border-radius:8px;padding:1px 4px;margin-left:3px;vertical-align:middle">·${techs.length}</span>
+        </div>
+        <div class="chain-node-btns">
           <button class="chain-node-btn cb-swap" onclick="event.stopPropagation();openChainSwapPicker('${n.phase}')" title="Swap">↺</button>
           <button class="chain-node-btn cb-add" onclick="event.stopPropagation();openChainAddPicker('${n.phase}')" title="Add technique">+</button>
         </div>
@@ -6952,6 +7620,13 @@ function renderGraphIcons(){
     }
     return html;
   }).join('');
+}
+
+// Track which multi-tech nodes are expanded
+const chainNodeExpanded = {};
+function toggleChainNodeExpand(phase){
+  chainNodeExpanded[phase] = !chainNodeExpanded[phase];
+  renderGraphIcons();
 }
 
 function restart(){

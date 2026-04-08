@@ -109,6 +109,69 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* ORACLE */
 .oracle-block{background:var(--surface);border-left:2px solid var(--arch-color,var(--gold));padding:20px 24px;margin-bottom:6px;animation:fadeUp 0.5s 0.3s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+/* CHAIN BUILDER — node buttons, expanded nodes, action bar, card editor */
+.chain-node-btns{display:flex;gap:4px;justify-content:center;pointer-events:auto;margin-top:2px}
+.chain-node-btn{width:20px;height:20px;border-radius:50%;border:0.5px solid #2a2a3e;background:#1a1a2e;display:flex;align-items:center;justify-content:center;font-size:10px;color:#6b7280;cursor:pointer;transition:all 0.15s;padding:0;font-family:'Cinzel',serif;line-height:1}
+.chain-node-btn.cb-add{color:#c8a84b;border-color:rgba(200,168,75,0.3);font-size:12px;font-weight:700}
+.chain-node-btn.cb-add:active{background:#1a1205;border-color:#c8a84b}
+.chain-node-btn.cb-swap{font-size:10px}
+.chain-node-btn.cb-swap:active{background:#1a1a2e;border-color:rgba(198,196,223,0.3)}
+.chain-multi-wrap{position:absolute;background:#0f0f1c;border:0.5px solid #c8a84b;border-radius:10px;padding:6px 8px 4px;min-width:90px;transform:translateX(-50%);pointer-events:auto;z-index:5;animation:fadeIn 0.15s ease}
+.chain-multi-phase{font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#4a5568;text-align:center;margin-bottom:4px}
+.chain-multi-item{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.chain-multi-dot{width:5px;height:5px;border-radius:50%;background:#c8a84b;flex-shrink:0}
+.chain-multi-name{font-size:9px;color:#e8e0d0;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
+.chain-multi-arrow{font-size:8px;color:#4a5568;margin-left:10px;margin-bottom:1px}
+.chain-multi-btns{display:flex;justify-content:center;gap:5px;margin-top:4px;border-top:0.5px solid #2a2a3e;padding-top:4px}
+.chain-actions-bar{display:flex;gap:8px;margin:4px 16px 0;padding:0}
+.chain-action-btn{flex:1;padding:12px;border-radius:10px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;font-family:'Cinzel',serif;letter-spacing:0.08em;text-transform:uppercase;transition:filter 0.15s}
+.chain-action-btn:active{filter:brightness(1.15)}
+.chain-btn-atk{background:#1a1205;border:0.5px solid rgba(200,168,75,0.4);color:#c8a84b}
+.chain-btn-eco{background:#0a1e10;border:0.5px solid rgba(46,139,87,0.4);color:#4ade80}
+.chain-proceed-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.15s ease}
+.chain-proceed-box{background:#0d0d0d;border:0.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px;width:90%;max-width:320px}
+.chain-proceed-title{font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#f4ead8;margin-bottom:6px;text-align:center}
+.chain-proceed-sub{font-size:10px;color:rgba(198,196,223,0.35);text-align:center;margin-bottom:16px;font-family:serif;font-style:italic}
+.chain-proceed-opt{padding:14px;border-radius:10px;cursor:pointer;margin-bottom:8px;text-align:center;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;transition:filter 0.15s}
+.chain-proceed-opt:active{filter:brightness(1.15)}
+.chain-proceed-oracle{background:#1a1020;border:0.5px solid rgba(107,63,160,0.4);color:#c084fc}
+.chain-proceed-create{background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:rgba(198,196,223,0.5)}
+
+/* CARD EDITOR */
+.chain-editor{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0e0e0e;z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 100px;animation:fadeIn 0.15s ease}
+.ce-back{display:flex;align-items:center;gap:6px;padding:14px 16px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.06)}
+.ce-back-arrow{font-size:14px;color:#c8a84b}
+.ce-back-label{font-size:11px;color:rgba(198,196,223,0.4);letter-spacing:0.08em;text-transform:uppercase;font-family:'Cinzel',serif}
+.ce-body{padding:16px}
+.ce-title-input{background:#131313;border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;font-size:14px;color:#f4ead8;width:100%;margin-bottom:12px;font-family:'Cinzel',serif;letter-spacing:0.03em}
+.ce-title-input::placeholder{color:rgba(198,196,223,0.2)}
+.ce-title-input:focus{outline:none;border-color:rgba(200,168,75,0.4)}
+.ce-tags{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.ce-tag{font-size:10px;padding:4px 10px;border-radius:16px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:rgba(198,196,223,0.35);cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.15s}
+.ce-tag.selected{border-color:rgba(200,168,75,0.5);color:#c8a84b;background:rgba(200,168,75,0.08)}
+.ce-oracle-strip{background:#1a1020;border:0.5px solid rgba(107,63,160,0.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.ce-oracle-text{font-size:11px;color:#9b6fd4;font-family:serif;font-style:italic}
+.ce-oracle-btn{font-size:10px;color:#c084fc;border:0.5px solid rgba(107,63,160,0.4);padding:4px 10px;border-radius:6px;cursor:pointer;background:none;font-family:'Cinzel',serif;letter-spacing:0.06em;text-transform:uppercase}
+.ce-section-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:10px;font-family:'Cinzel',serif}
+.ce-step{display:flex;gap:10px;align-items:flex-start}
+.ce-step-left{display:flex;flex-direction:column;align-items:center}
+.ce-step-dot{width:10px;height:10px;border-radius:50%;background:#c8a84b;margin-top:4px;flex-shrink:0}
+.ce-step-dot.green{background:#2e8b57}
+.ce-step-line{width:1px;flex:1;background:rgba(255,255,255,0.06);min-height:32px;margin:4px 0}
+.ce-step-content{flex:1;padding-bottom:8px}
+.ce-step-name{font-size:12px;color:#f4ead8;font-weight:500;font-family:'Cinzel',serif;margin-bottom:3px}
+.ce-step-phase{font-size:9px;color:rgba(198,196,223,0.25);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.ce-note{background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px;font-size:11px;color:rgba(198,196,223,0.5);width:100%;font-family:serif;resize:none;line-height:1.5;min-height:44px}
+.ce-note::placeholder{color:rgba(198,196,223,0.15)}
+.ce-note:focus{outline:none;border-color:rgba(200,168,75,0.3)}
+.ce-save-row{display:flex;gap:8px;padding:12px 16px 20px;position:sticky;bottom:0;background:linear-gradient(to top,#0e0e0e 60%,transparent)}
+.ce-btn-save{flex:1;padding:13px;border-radius:10px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.12em;text-transform:uppercase;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);color:#1a1000;border:none;transition:filter 0.15s}
+.ce-btn-save:active{filter:brightness(1.1)}
+.ce-btn-share{flex:1;padding:13px;border-radius:10px;text-align:center;font-size:11px;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.12em;text-transform:uppercase;background:#131313;color:rgba(198,196,223,0.4);border:0.5px solid rgba(255,255,255,0.08)}
+
 .oracle-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold-d);margin-bottom:10px}
 .oracle-text{font-size:16px;line-height:1.8;color:var(--text);font-style:italic}
 .oracle-text span{color:var(--arch-color,var(--gold));font-style:normal;font-weight:600}
@@ -202,6 +265,54 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .upvote-btn.active { color: #c8960a; background: rgba(200,150,10,0.1); border-color: #c8960a; }
 .community-btn { font-family: 'Cinzel', serif; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; background: none; border: 0.5px solid rgba(200,150,10,0.2); color: rgba(200,150,10,0.6); padding: 6px 10px; cursor: pointer; transition: all 0.2s; }
 .community-btn:hover { color: #c8960a; border-color: #c8960a; }
+
+/* ECO CARD — COLLAPSED */
+.eco-collapsed { background:#0f0f1c; border:0.5px solid #2a2a3e; border-left:2px solid #2e8b57; border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer; transition:border 0.2s; }
+.eco-collapsed .eco-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+.eco-collapsed .eco-tags { display:flex; gap:6px; align-items:center; }
+.eco-tag-green { font-size:10px; padding:2px 8px; border-radius:6px; background:#0a1e10; color:#4ade80; letter-spacing:0.06em; text-transform:uppercase; }
+.eco-tag-phase { font-size:10px; padding:2px 8px; border-radius:6px; background:#1a1a2e; border:0.5px solid #2a2a3e; color:#8892a4; letter-spacing:0.06em; text-transform:uppercase; }
+.eco-tag-bot { font-size:10px; padding:2px 8px; border-radius:6px; background:#1a1a2e; border:0.5px solid #2a2a3e; color:#8892a4; }
+.eco-bot-label { font-size:11px; color:#4a5568; }
+.eco-title { font-size:17px; color:#e8e0d0; font-weight:500; margin-bottom:6px; }
+.eco-cue { font-size:13px; color:#2e8b57; font-style:italic; line-height:1.4; margin-bottom:12px; border-left:2px solid #2e8b57; padding-left:10px; }
+.eco-footer { display:flex; justify-content:space-between; align-items:center; }
+.eco-meta { display:flex; gap:10px; }
+.eco-meta-item { font-size:12px; color:#6b7280; }
+.eco-expand-hint { font-size:11px; color:#4a5568; }
+.eco-quest-btn { background:#c8a84b; color:#0d0d1a; font-size:11px; font-weight:600; padding:6px 14px; border-radius:8px; cursor:pointer; border:none; font-family:'Cinzel',serif; letter-spacing:0.06em; }
+
+/* ECO CARD — EXPANDED */
+.eco-expanded { background:#0f0f1c; border:0.5px solid #2e8b57; border-left:2px solid #2e8b57; border-radius:12px; overflow:hidden; margin-bottom:10px; }
+.eco-expanded-hdr { padding:14px 14px 10px; border-bottom:0.5px solid #1e1e30; }
+.eco-expanded-title { font-size:17px; color:#e8e0d0; font-weight:500; margin-bottom:6px; }
+.eco-expanded-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.eco-swipe-container { position:relative; overflow:hidden; }
+.eco-swipe-track { display:flex; transition:transform 0.3s ease; }
+.eco-swipe-section { min-width:100%; padding:16px 14px; }
+.eco-section-label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#4a5568; margin-bottom:8px; }
+.eco-section-body { font-size:14px; color:#d1ccc0; line-height:1.6; }
+.eco-two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px; }
+.eco-col-block { background:#1a1a2e; border-radius:8px; padding:10px; }
+.eco-col-label { font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:#4a5568; margin-bottom:6px; }
+.eco-col-body { font-size:13px; color:#d1ccc0; line-height:1.5; }
+.eco-cue-expanded { font-size:14px; color:#2e8b57; font-style:italic; line-height:1.5; border-left:2px solid #2e8b57; padding-left:12px; margin-top:14px; }
+.eco-format-row { display:flex; gap:8px; margin-top:8px; }
+.eco-format-item { background:#1a1a2e; border-radius:8px; padding:10px 14px; text-align:center; flex:1; }
+.eco-format-val { font-size:16px; color:#e8e0d0; font-weight:500; }
+.eco-format-lbl { font-size:10px; color:#4a5568; text-transform:uppercase; letter-spacing:0.08em; margin-top:3px; }
+.eco-dots { display:flex; justify-content:center; gap:6px; padding:8px 0 4px; }
+.eco-dot { width:6px; height:6px; border-radius:50%; background:#2a2a3e; cursor:pointer; transition:background 0.2s; border:none; }
+.eco-dot.active { background:#2e8b57; }
+.eco-dot-labels { display:flex; justify-content:space-around; padding:0 14px 12px; }
+.eco-dot-label { font-size:10px; color:#4a5568; text-align:center; transition:color 0.2s; }
+.eco-dot-label.active { color:#2e8b57; }
+.eco-swipe-nav { display:flex; justify-content:space-between; padding:0 14px 14px; align-items:center; }
+.eco-nav-btn { font-size:12px; color:#c8a84b; cursor:pointer; background:none; border:none; padding:6px 0; font-family:'Cinzel',serif; }
+.eco-nav-btn.disabled { color:#2a2a3e; pointer-events:none; }
+.eco-action-row { display:flex; justify-content:space-between; align-items:center; padding:10px 14px 14px; border-top:0.5px solid #1e1e30; }
+.eco-upvote { font-size:13px; color:#6b7280; }
+.eco-collapse-btn { font-size:12px; color:#4a5568; cursor:pointer; background:none; border:none; font-family:'Cinzel',serif; }
 
 .game-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .game-editor-modal { background: #0e0e0e; border: 1px solid rgba(200,150,10,0.3); border-radius: 2px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; }
@@ -564,7 +675,7 @@ function previewResult(){
 // --- TUTORIAL BANNERS ---
 const TUTORIAL_TIPS = {
   chain: "Connect any links in your attack chain — you don't need to complete the whole thing. Tap two connected phases to consult the Oracle for ecological games that sharpen that part of your game.",
-  grimoire: "Swap techniques in your attack chain by tapping any node. Browse community games or create your own — positional drills with constraints that build real skill.",
+  grimoire: "Explore positions to find techniques, eco games, and attack chains. Switch to For You for personalized content. Tap any technique to swap it into your chain or consult the Oracle.",
   quest: "Log your training session here. Pick phases you drilled, set roll focus techniques, add eco games, then reflect on your rounds.",
   codex: "Your training history at a glance. Tap the heatmap phases to see technique-level stats. Scroll down for session history and badges."
 };
@@ -1976,6 +2087,15 @@ function buildSkillTreeHTML(data, ad) {
       </div>
       <!-- Node detail panel -->
       <div id="st-detail" style="display:none;margin:0 16px 4px;background:#131313;border:0.5px solid ${ad.color}44;border-left:2px solid ${ad.color};padding:14px"></div>
+      <!-- Chain action buttons -->
+      <div class="chain-actions-bar" id="chain-action-bar">
+        <button class="chain-action-btn chain-btn-atk" onclick="openChainProceed('chain')">+ Attack Chain</button>
+        <button class="chain-action-btn chain-btn-eco" onclick="openChainProceed('eco')">+ Eco Game</button>
+      </div>
+
+      <!-- Card editor screen (slides over chain) -->
+      <div class="chain-editor" id="chain-editor-screen"></div>
+
       <!-- Session prompt -->
       <div id="st-session-prompt" style="margin:8px 16px 16px;background:#131313;border:0.5px solid rgba(233,195,73,0.2);padding:14px" onclick="switchSTTab(2)">
         <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
@@ -1997,27 +2117,84 @@ function buildSkillTreeHTML(data, ad) {
         <button onclick="dismissTutorial('grimoire')" style="position:absolute;top:6px;right:8px;background:none;border:none;color:rgba(198,196,223,0.3);font-size:14px;cursor:pointer;padding:2px 4px;line-height:1">×</button>
       </div>
       <div id="grimoire-home" style="padding:16px">
-        <!-- Discover / For You -->
-        <div onclick="openDiscoverPage()" style="background:linear-gradient(135deg,#1a1408,#131313);border:0.5px solid ${ad.color}33;padding:16px 14px;cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden">
-          <div style="position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle at top right,${ad.color}15,transparent 70%)"></div>
-          <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:${ad.color}88;margin-bottom:4px">✦ Discover</div>
-          <div style="font-size:14px;color:#f4ead8;font-family:'Cinzel',serif;margin-bottom:4px">Games For You</div>
-          <div style="font-size:9px;color:rgba(198,196,223,0.35)">Community games matched to your archetype & chain</div>
+        <!-- Explore / For You toggle -->
+        <div style="display:flex;gap:6px;margin-bottom:10px" id="grimoire-view-toggle">
+          <button onclick="switchGrimoireView('explore')" id="grim-toggle-explore" style="padding:7px 16px;border-radius:20px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-family:'Cinzel',serif;cursor:pointer;background:${ad.color};color:#0e0e0e;border:none;font-weight:600">Explore</button>
+          <button onclick="switchGrimoireView('foryou')" id="grim-toggle-foryou" style="padding:7px 16px;border-radius:20px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-family:'Cinzel',serif;cursor:pointer;background:#131313;color:rgba(198,196,223,0.35);border:0.5px solid rgba(255,255,255,0.08)">For You</button>
         </div>
 
-        <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:12px">Browse by category</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          ${Object.keys(TECHNIQUES).map(cat=>`
-            <div onclick="openGrimoireCategory('${cat}')" style="background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid ${ad.color}66;padding:14px 12px;cursor:pointer">
-              <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#f4ead8;margin-bottom:2px">${cat}</div>
-              <div style="font-size:8px;color:rgba(198,196,223,0.3)">${TECHNIQUES[cat].length} techniques</div>
-            </div>`).join('')}
+        <!-- Filter pills -->
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px;scrollbar-width:none" id="grimoire-filter-row">
+          ${['All','Attack Chains','Eco Games','Quest Cards','Videos'].map((f,i)=>`
+            <button onclick="setGrimoireFilter('${f}')" class="grim-filter" data-filter="${f}" style="padding:5px 12px;border-radius:20px;font-size:9px;white-space:nowrap;cursor:pointer;flex-shrink:0;font-family:'Cinzel',serif;letter-spacing:0.06em;${i===0?'background:#1a1205;border:1px solid '+ad.color+';color:'+ad.color:'background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.3)'}">${f}</button>`).join('')}
+        </div>
+
+        <!-- EXPLORE VIEW -->
+        <div id="grimoire-explore-view">
+          <!-- 6 Category Cards -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+            ${[
+              {cat:'Standing', icon:'⚔', accent:'#c8a84b', bg:'#1a1205'},
+              {cat:'Takedown', icon:'⤵', accent:'#2b6cb0', bg:'#0a1428'},
+              {cat:'Guard', icon:'🛡', accent:'#2e8b57', bg:'#0f2a1a'},
+              {cat:'Passing', icon:'↗', accent:'#6b3fa0', bg:'#1a0e2a'},
+              {cat:'Pinning', icon:'⊕', accent:'#e8621a', bg:'#1a1205'},
+              {cat:'Submission', icon:'✦', accent:'#e84747', bg:'#1a0808'}
+            ].map(c=>`
+              <div onclick="openGrimoireCategory('${c.cat}')" style="background:linear-gradient(135deg,${c.bg},#131313);border:0.5px solid ${c.accent}44;padding:16px 14px;cursor:pointer;position:relative;overflow:hidden;min-height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+                <div style="position:absolute;top:0;left:0;width:100%;height:2px;background:${c.accent}"></div>
+                <div style="font-size:18px;margin-bottom:6px">${c.icon}</div>
+                <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#f4ead8;font-weight:500">${c.cat}</div>
+                <div style="font-size:8px;color:rgba(198,196,223,0.3);margin-top:2px" id="grim-count-${c.cat.toLowerCase()}">${(TECHNIQUES[c.cat]||[]).length} techniques</div>
+              </div>`).join('')}
+          </div>
+
+          <!-- Curated / Trending section -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25)">Trending</div>
+            <div style="font-size:8px;color:${ad.color};cursor:pointer" onclick="switchGrimoireView('foryou')">See all →</div>
+          </div>
+          <div id="grimoire-trending" style="display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Loading community content...</div>
+          </div>
+
+          <!-- + Create button -->
+          <div onclick="openGrimoireCreate()" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#131313;border:0.5px solid ${ad.color}44;padding:12px;cursor:pointer;margin-top:16px">
+            <span style="font-size:16px;color:${ad.color}">+</span>
+            <span style="font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color};font-family:'Cinzel',serif">Create Content</span>
+          </div>
+        </div>
+
+        <!-- FOR YOU VIEW (hidden by default) -->
+        <div id="grimoire-foryou-view" style="display:none">
+          <div id="grimoire-foryou-feed" style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Personalizing your feed...</div>
+          </div>
         </div>
       </div>
       <div id="grimoire-category" style="display:none;padding:16px;padding-bottom:200px">
-        <button onclick="backToGrimoireHome()" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.3);background:none;border:0.5px solid rgba(255,255,255,0.06);padding:6px 10px;cursor:pointer;margin-bottom:12px">← Back</button>
-        <div id="grimoire-cat-title" style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px"></div>
+        <div onclick="backToGrimoireHome()" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer">
+          <span style="font-size:11px;color:${ad.color}">←</span>
+          <span style="font-size:10px;color:rgba(198,196,223,0.3);letter-spacing:0.06em">Grimoire</span>
+        </div>
+        <div id="grimoire-cat-title" style="font-size:16px;color:#f4ead8;font-family:'Cinzel',serif;margin-bottom:4px"></div>
+        <div id="grimoire-cat-count" style="font-size:9px;color:rgba(198,196,223,0.25);margin-bottom:14px"></div>
+
+        <!-- Category filter pills -->
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px;scrollbar-width:none" id="grimoire-cat-filters">
+          ${['All','Eco Games','Attack Chains','Videos'].map((f,i)=>`
+            <button onclick="setGrimCatFilter('${f}')" class="grim-cat-filter" data-filter="${f}" style="padding:5px 12px;border-radius:20px;font-size:9px;white-space:nowrap;cursor:pointer;flex-shrink:0;font-family:'Cinzel',serif;letter-spacing:0.06em;${i===0?'background:#1a1205;border:1px solid '+ad.color+';color:'+ad.color:'background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.3)'}">${f}</button>`).join('')}
+        </div>
+
+        <!-- Technique list -->
+        <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:8px">Techniques</div>
         <div id="grimoire-tech-list"></div>
+
+        <!-- Category-scoped community content -->
+        <div id="grimoire-cat-content" style="margin-top:16px;padding-top:16px;border-top:0.5px solid rgba(255,255,255,0.04)">
+          <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:8px">Community Content</div>
+          <div id="grimoire-cat-feed" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
       </div>
       <div id="grimoire-detail" style="display:none;padding:16px">
         <button onclick="backToGrimoireCategory()" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.3);background:none;border:0.5px solid rgba(255,255,255,0.06);padding:6px 10px;cursor:pointer;margin-bottom:12px">← Back</button>
@@ -2606,36 +2783,22 @@ function renderCommunityFeed() {
   };
 
   feedContainer.innerHTML = stCommunityGames.map((game, idx) => {
-    const beltColor = beltColors[game.creator_belt?.toLowerCase()] || '#ddd';
-    const hasVoted = stUserVotes[game.id] || false;
     const gd = game.game_data || {};
-    const oracleBody = renderOracleGame(gd, false, false);
-
-    return `
-      <div class="community-card">
-        <div class="videos-coming-badge">Videos coming soon</div>
-        <div class="community-card-header">
-          <div class="community-card-title">${gd.game_name || 'Community Game'}</div>
-          <div class="creator-badge">
-            <span class="belt-dot belt-${game.creator_belt?.toLowerCase() || 'white'}" style="background:${beltColor}"></span>
-            <span>${game.creator_name}</span>
-          </div>
-        </div>
-
-        <div class="community-card-content">
-          ${oracleBody}
-        </div>
-
-        <div class="community-card-footer">
-          <button class="upvote-btn ${hasVoted ? 'active' : ''}" onclick="upvoteGame('${game.id}'); renderCommunityFeed();">
-            ♥ <span>${game.upvotes || 0}</span>
-          </button>
-          <button class="community-btn" onclick="addGameToQuest(${JSON.stringify(gd).replace(/"/g, '&quot;')})">
-            + Add to Quest
-          </button>
-        </div>
-      </div>
-    `;
+    // Build a normalized game object for the new card renderer
+    const cardGame = {
+      game_name: gd.game_name || 'Community Game',
+      phase: game.phase || game.technique || 'General',
+      cue: gd.attention_cue || gd.cue || '',
+      start: gd.start_position || gd.start || '',
+      player_a: gd.player_a || gd.playerA || '',
+      player_b: gd.player_b || gd.playerB || '',
+      win: gd.win_condition || gd.win || '',
+      format: gd.format || 'Reset',
+      duration: gd.round_duration || gd.duration || '3 min',
+      bot_type: game.creator_name || 'Community',
+      upvotes: game.upvotes || 0
+    };
+    return renderGrimoireCard(cardGame);
   }).join('');
 }
 
@@ -2665,26 +2828,25 @@ async function openDiscoverPage() {
   const beltColors = { 'white':'#ddd', 'blue':'#2196F3', 'purple':'#9C27B0', 'brown':'#795548', 'black':'#333' };
 
   feedEl.innerHTML = gamesToShow.map(game => {
-    const beltColor = beltColors[game.creator_belt?.toLowerCase()] || '#ddd';
-    const hasVoted = stUserVotes[game.id] || false;
     const gd = game.game_data || {};
-    const oracleBody = renderOracleGame(gd, false, false);
-    return `
-      <div style="background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid ${ad.color}66;padding:14px;scroll-snap-align:start">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <div style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:${ad.color}88">${game.technique} · ${game.phase}</div>
-          <div style="display:flex;align-items:center;gap:4px">
-            <span style="width:6px;height:6px;border-radius:50%;background:${beltColor};display:inline-block"></span>
-            <span style="font-size:8px;color:rgba(198,196,223,0.4)">${game.creator_name}</span>
-          </div>
-        </div>
-        ${oracleBody}
-        ${(game.tags && game.tags.length) ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${game.tags.map(t=>`<span style="font-size:7px;letter-spacing:0.08em;text-transform:uppercase;padding:2px 6px;background:rgba(255,255,255,0.04);color:rgba(198,196,223,0.35)">${t}</span>`).join('')}</div>` : ''}
-        <div style="display:flex;gap:8px;align-items:center">
-          <button onclick="upvoteGame('${game.id}').then(()=>openDiscoverPage())" style="font-size:10px;background:none;border:0.5px solid ${hasVoted?ad.color+'66':'rgba(255,255,255,0.08)'};color:${hasVoted?ad.color:'rgba(198,196,223,0.4)'};padding:4px 10px;cursor:pointer">♥ ${game.upvotes||0}</button>
-          <button onclick="addGameToQuest(${JSON.stringify(gd).replace(/"/g,'&quot;')})" style="font-size:8px;letter-spacing:0.1em;text-transform:uppercase;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;color:#1a1000;padding:5px 10px;cursor:pointer;font-family:'Cinzel',serif;font-weight:700">+ Quest</button>
-        </div>
-      </div>`;
+    const cardGame = {
+      game_name: gd.game_name || 'Community Game',
+      phase: game.phase || game.technique || 'General',
+      attention_cue: gd.attention_cue || gd.cue || '',
+      player_a_start: gd.player_a_start || gd.start || '',
+      player_b_start: gd.player_b_start || '',
+      continuous_goal: gd.continuous_goal || gd.player_a_goal || '',
+      terminal_goal: gd.terminal_goal || '',
+      player_b_goal: gd.player_b_goal || '',
+      constraints: gd.constraints || '',
+      win_condition: gd.win_condition || gd.win || '',
+      continuity: gd.continuity || gd.format || 'Reset',
+      round_length: gd.round_length || gd.round_duration || '3 min',
+      bot_type: game.creator_name || 'Community',
+      skill_emerges: gd.skill_emerges || '',
+      upvotes: game.upvotes || 0
+    };
+    return renderGrimoireCard(cardGame);
   }).join('');
 }
 
@@ -2876,6 +3038,7 @@ function switchSTTab(idx){
   // Show tutorial banner for this tab
   const tabKeys = ['chain','grimoire','quest','codex'];
   showTutorialBanner(tabKeys[idx]);
+  if(idx===1) loadGrimoireTrending();
   if(idx===2) renderQuestTab();
   if(idx===0 && graphState.needsRedraw){
     graphState.needsRedraw = false;
@@ -3111,46 +3274,7 @@ function onDrillNotesInput(){
 function renderEcoGameList(){
   const el = document.getElementById('ecogame-added-list');
   if(!el) return;
-  const ad = stCurrentArchData || AD.BERSERKER;
-
-  el.innerHTML = stEcoGames.map((game, idx) => `
-    <div style="background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid ${ad.color};padding:12px 14px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color}88;display:flex;align-items:center;gap:6px">
-          <span class="material-symbols-outlined" style="font-size:12px">sports_martial_arts</span>
-          ${game.game_name || 'Eco Game'}
-        </div>
-        <button onclick="removeEcoGame(${idx})" style="font-size:10px;color:rgba(198,196,223,0.15);cursor:pointer;padding:2px 4px;background:none;border:none;font-family:'Cinzel',serif">✕</button>
-      </div>
-      ${game.phase ? `<div style="display:inline-block;font-size:6px;letter-spacing:0.12em;text-transform:uppercase;padding:2px 8px;background:${ad.color}22;color:${ad.color};border:0.5px solid ${ad.color}44;margin-bottom:8px">${game.phase}</div>` : ''}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-        ${game.player_a_start ? `
-        <div style="padding:6px 8px;border-left:1.5px solid ${ad.color}44">
-          <div style="font-size:6px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:2px">Start</div>
-          <div style="font-size:10px;color:rgba(198,196,223,0.5);line-height:1.3">${game.player_a_start}</div>
-        </div>` : ''}
-        ${game.win_condition ? `
-        <div style="padding:6px 8px;border-left:1.5px solid rgba(74,170,40,0.4)">
-          <div style="font-size:6px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:2px">Win condition</div>
-          <div style="font-size:10px;color:rgba(198,196,223,0.5);line-height:1.3">${game.win_condition}</div>
-        </div>` : ''}
-      </div>
-      ${game.player_b_start ? `
-      <div style="padding:6px 8px;border-left:1.5px solid rgba(198,196,223,0.1);margin-bottom:6px">
-        <div style="font-size:6px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:2px">Partner starts</div>
-        <div style="font-size:10px;color:rgba(198,196,223,0.5);line-height:1.3">${game.player_b_start}</div>
-      </div>` : ''}
-      ${game.constraints ? `
-      <div style="padding:6px 8px;border-left:1.5px solid rgba(200,150,10,0.3);margin-bottom:6px">
-        <div style="font-size:6px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:2px">Constraints</div>
-        <div style="font-size:10px;color:rgba(198,196,223,0.5);line-height:1.3">${game.constraints}</div>
-      </div>` : ''}
-      ${game.attention_cue ? `
-      <div style="padding:6px 8px;border-left:1.5px solid ${ad.color};margin-top:4px">
-        <div style="font-size:6px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:2px">Attention cue</div>
-        <div style="font-size:10px;color:${ad.color};font-style:italic;line-height:1.3">${game.attention_cue}</div>
-      </div>` : ''}
-    </div>`).join('');
+  el.innerHTML = stEcoGames.map((game, idx) => renderGrimoireCard(game, false, 'quest', idx)).join('');
 }
 
 function removeEcoGame(idx){
@@ -3265,10 +3389,10 @@ Use functional language not technique names where possible. No metaphors. Real B
       let raw = d.content?.[0]?.text || '{}';
       const game = extractAndParseJSON(raw);
       game.phase = stDrillPhases[0] || '';
+      game.bot_type = 'Oracle';
       stLastOracleGame = game;
       stLastOraclePhase = game.phase;
-      resp.innerHTML = renderOracleGame(game, false, true) + `
-        <button onclick="addOracleGameFromQuest()" style="margin-top:8px;width:100%;padding:10px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer">+ Add to session</button>`;
+      resp.innerHTML = renderGrimoireCard(game, true);
     } catch(e2){
       resp.textContent = d.content?.[0]?.text || 'The Oracle is silent.';
     }
@@ -3910,27 +4034,50 @@ async function loadCustomTechniques(phase) {
   } catch(e) { return []; }
 }
 
+let stGrimCatFilter = 'All';
+
+function setGrimCatFilter(filter){
+  stGrimCatFilter = filter;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  document.querySelectorAll('.grim-cat-filter').forEach(btn=>{
+    const f = btn.getAttribute('data-filter');
+    if(f===filter){
+      btn.style.background='#1a1205'; btn.style.border='1px solid '+ad.color; btn.style.color=ad.color;
+    } else {
+      btn.style.background='#131313'; btn.style.border='0.5px solid rgba(255,255,255,0.06)'; btn.style.color='rgba(198,196,223,0.3)';
+    }
+  });
+  loadGrimCatContent(stCurrentGrimCat);
+}
+
 async function openGrimoireCategory(cat){
   stCurrentGrimCat = cat;
-  const ad = stCurrentArchData;
+  const ad = stCurrentArchData || AD.BERSERKER;
   document.getElementById('grimoire-home').style.display='none';
   document.getElementById('grimoire-category').style.display='block';
   document.getElementById('grimoire-detail').style.display='none';
   document.getElementById('grimoire-discover').style.display='none';
-  document.getElementById('grimoire-cat-title').textContent=cat;
-  const techs = TECHNIQUES[cat]||[];
 
-  // Render fundamentals first
-  let html = techs.map(t=>`
+  const titleEl = document.getElementById('grimoire-cat-title');
+  const countEl = document.getElementById('grimoire-cat-count');
+  if(titleEl) titleEl.textContent=cat;
+  const techs = TECHNIQUES[cat]||[];
+  if(countEl) countEl.textContent = techs.length + ' techniques';
+
+  // Render technique list with archetype dots
+  let html = techs.map(t=>{
+    const archColor = ARCH_COLORS[t.arch] || ad.color;
+    return `
     <div onclick="openGrimoireTech('${cat}','${t.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);margin-bottom:4px;cursor:pointer">
       <div style="flex:1">
         <div style="font-size:12px;color:#f4ead8">${t.name}</div>
       </div>
-      <span style="width:7px;height:7px;border-radius:50%;background:${ARCH_COLORS[t.arch]||ad.color};display:inline-block;flex-shrink:0"></span>
+      <span style="width:7px;height:7px;border-radius:50%;background:${archColor};display:inline-block;flex-shrink:0"></span>
       <span style="font-size:12px;color:rgba(198,196,223,0.3)">›</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
-  // Add technique button at bottom
+  // Add technique button
   html += `
     <div id="custom-techs-section"></div>
     <div onclick="openAddTechniqueModal('${cat}')" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:none;border:1px dashed rgba(200,150,10,0.25);margin-top:12px;cursor:pointer">
@@ -3955,6 +4102,24 @@ async function openGrimoireCategory(cat){
             <span style="font-size:12px;color:rgba(198,196,223,0.3)">›</span>
           </div>`).join('')}`;
     }
+  }
+
+  // Load category-scoped community content
+  loadGrimCatContent(cat);
+}
+
+async function loadGrimCatContent(cat){
+  const feedEl = document.getElementById('grimoire-cat-feed');
+  if(!feedEl) return;
+  try {
+    const { data, error } = await supabase.from('community_games').select('*').eq('phase',cat).order('upvotes',{ascending:false}).limit(10);
+    if(error || !data || data.length===0){
+      feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No community content for '+cat+' yet</div>';
+      return;
+    }
+    feedEl.innerHTML = data.map(g => renderGrimoireCard(g)).join('');
+  } catch(e){
+    feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Browse techniques above</div>';
   }
 }
 
@@ -4031,6 +4196,290 @@ function openGrimoireTech(cat, techName){
       renderCommunityFeed();
     });
   }, 100);
+}
+
+let stGrimoireView = 'explore';
+let stGrimoireFilter = 'All';
+
+function switchGrimoireView(view){
+  stGrimoireView = view;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const exploreBtn = document.getElementById('grim-toggle-explore');
+  const foryouBtn = document.getElementById('grim-toggle-foryou');
+  const exploreView = document.getElementById('grimoire-explore-view');
+  const foryouView = document.getElementById('grimoire-foryou-view');
+  if(view==='explore'){
+    if(exploreBtn){ exploreBtn.style.background=ad.color; exploreBtn.style.color='#0e0e0e'; exploreBtn.style.border='none'; exploreBtn.style.fontWeight='600'; }
+    if(foryouBtn){ foryouBtn.style.background='#131313'; foryouBtn.style.color='rgba(198,196,223,0.35)'; foryouBtn.style.border='0.5px solid rgba(255,255,255,0.08)'; foryouBtn.style.fontWeight='400'; }
+    if(exploreView) exploreView.style.display='block';
+    if(foryouView) foryouView.style.display='none';
+  } else {
+    if(foryouBtn){ foryouBtn.style.background=ad.color; foryouBtn.style.color='#0e0e0e'; foryouBtn.style.border='none'; foryouBtn.style.fontWeight='600'; }
+    if(exploreBtn){ exploreBtn.style.background='#131313'; exploreBtn.style.color='rgba(198,196,223,0.35)'; exploreBtn.style.border='0.5px solid rgba(255,255,255,0.08)'; exploreBtn.style.fontWeight='400'; }
+    if(exploreView) exploreView.style.display='none';
+    if(foryouView) foryouView.style.display='block';
+    loadForYouFeed();
+  }
+}
+
+function setGrimoireFilter(filter){
+  stGrimoireFilter = filter;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  document.querySelectorAll('.grim-filter').forEach(btn=>{
+    const f = btn.getAttribute('data-filter');
+    if(f===filter){
+      btn.style.background='#1a1205'; btn.style.border='1px solid '+ad.color; btn.style.color=ad.color;
+    } else {
+      btn.style.background='#131313'; btn.style.border='0.5px solid rgba(255,255,255,0.06)'; btn.style.color='rgba(198,196,223,0.3)';
+    }
+  });
+  // Refresh whichever view is active
+  if(stGrimoireView==='foryou') loadForYouFeed();
+  else loadGrimoireTrending();
+}
+
+async function loadGrimoireTrending(){
+  const el = document.getElementById('grimoire-trending');
+  if(!el) return;
+  try {
+    const { data, error } = await supabase.from('community_games').select('*').order('upvotes',{ascending:false}).limit(5);
+    if(error || !data || data.length===0){
+      el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No community content yet — be the first to create!</div>';
+      return;
+    }
+    el.innerHTML = data.map(g => renderGrimoireCard(g)).join('');
+  } catch(e){
+    el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Browse categories above to explore techniques</div>';
+  }
+}
+
+async function loadForYouFeed(){
+  const el = document.getElementById('grimoire-foryou-feed');
+  if(!el) return;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const archKey = ad.key || 'BERSERKER';
+  try {
+    const { data, error } = await supabase.from('community_games').select('*').order('upvotes',{ascending:false}).limit(20);
+    if(error || !data || data.length===0){
+      el.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:24px;margin-bottom:8px">✦</div><div style="font-size:12px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic">No content yet. Create eco games and quest cards to build your feed.</div></div>';
+      return;
+    }
+    // Sort: archetype matches first
+    const sorted = data.sort((a,b)=>{
+      const aMatch = (a.archetype||'').toUpperCase()===archKey ? 1 : 0;
+      const bMatch = (b.archetype||'').toUpperCase()===archKey ? 1 : 0;
+      return bMatch - aMatch || (b.upvotes||0) - (a.upvotes||0);
+    });
+    el.innerHTML = sorted.map(g => renderGrimoireCard(g)).join('');
+  } catch(e){
+    el.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:12px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic">Connect to explore community content</div></div>';
+  }
+}
+
+let ecoCardIdCounter = 0;
+const ecoCardGameRegistry = {};
+
+// mode: 'default' = +Quest btn, 'oracle' = +Add to session btn, 'quest' = ✕ Remove btn (with quest idx)
+function renderGrimoireCard(game, showAddToSession=false, mode='default', questIdx=null){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const id = ecoCardIdCounter++;
+  ecoCardGameRegistry[id] = game;
+  const phase = game.phase || game.technique || 'General';
+  const name = game.game_name || game.name || 'Eco Game';
+  const cue = game.attention_cue || game.cue || '';
+  const startA = game.player_a_start || '';
+  const startB = game.player_b_start || '';
+  const startPos = game.start_position || (startA ? 'Player A: '+startA+(startB ? ' — Player B: '+startB : '') : '');
+  const contGoal = game.continuous_goal || game.player_a_goal || '';
+  const termGoal = game.terminal_goal || '';
+  const partnerRes = game.player_b_goal || '';
+  const constraints = game.constraints || '';
+  const win = game.win_condition || game.win || '';
+  const format = game.continuity || game.format || 'Reset';
+  const duration = game.round_length || game.round_duration || game.duration || '3 min';
+  const bot = game.bot_type || game.source || game.creator_name || 'Standard JJ Bot';
+  const skill = game.skill_emerges || '';
+
+  // Build swipe sections dynamically — only include sections with content
+  const sections = [];
+  sections.push({label:'Start Position', body:`
+    ${startA || startB ? `
+      <div class="eco-two-col">
+        <div class="eco-col-block">
+          <div class="eco-col-label">Player A</div>
+          <div class="eco-col-body">${startA || 'Standard position'}</div>
+        </div>
+        <div class="eco-col-block">
+          <div class="eco-col-label">Player B</div>
+          <div class="eco-col-body">${startB || 'Standard position'}</div>
+        </div>
+      </div>` : `<div class="eco-section-body">${startPos || 'Standard starting position for '+phase}</div>`}`});
+
+  if(contGoal) sections.push({label:'Continuous Goal', body:`
+    <div class="eco-section-body">${contGoal}</div>
+    <div style="font-size:10px;color:#4a5568;margin-top:6px;font-style:italic">Maintain throughout the round</div>`});
+
+  if(termGoal) sections.push({label:'Terminal Goal', body:`
+    <div class="eco-section-body">${termGoal}</div>
+    <div style="font-size:10px;color:#4a5568;margin-top:6px;font-style:italic">Achieve to win the round</div>`});
+
+  if(partnerRes) sections.push({label:"Partner's Resistance", body:`
+    <div class="eco-section-body">${partnerRes}</div>`});
+
+  if(constraints) sections.push({label:'Constraints', body:`
+    <div class="eco-section-body">${(()=>{
+      const parts = constraints.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+      if(parts.length <= 1) return constraints;
+      return parts.map(p=>'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="color:#2e8b57;flex-shrink:0">—</span><span>'+p+'</span></div>').join('');
+    })()}</div>`});
+
+  sections.push({label:'Win Condition', body:`
+    <div class="eco-section-body">${win || 'Complete the objective'}</div>
+    ${cue ? `<div class="eco-cue-expanded">${cue}</div>` : ''}
+    ${skill ? `<div style="margin-top:10px;font-size:12px;color:#4a5568;font-style:italic">Skill that emerges: ${skill}</div>` : ''}`});
+
+  const totalSections = sections.length;
+  const dotLabels = sections.map(s => s.label.split(' ')[0]); // Short labels for dots
+
+  let addBtnHtml;
+  if(mode === 'quest' && questIdx !== null){
+    addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();removeEcoGame(${questIdx})" style="background:rgba(200,50,50,0.15);border-color:rgba(200,50,50,0.3);color:#e05555">✕ Remove</button>`;
+  } else if(showAddToSession || mode === 'oracle'){
+    addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();addOracleGameFromQuest()">+ Add to session</button>`;
+  } else {
+    addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();ecoCardAddToQuest(${id})">+ Quest</button>`;
+  }
+
+  const editBtnHtml = `<button class="eco-collapse-btn" onclick="event.stopPropagation();ecoCardEdit(${id})" style="color:#c8a84b">✎ Edit</button>`;
+
+  return `
+    <div id="eco-card-${id}">
+      <!-- COLLAPSED STATE — just title + attention cue -->
+      <div class="eco-collapsed" id="eco-col-${id}" onclick="expandEcoCard(${id})">
+        <div class="eco-top">
+          <div class="eco-tags">
+            <span class="eco-tag-green">Eco game</span>
+            <span class="eco-tag-phase">${phase}</span>
+          </div>
+          <span class="eco-bot-label">${bot}</span>
+        </div>
+        <div class="eco-title">${name}</div>
+        ${cue ? `<div class="eco-cue">${cue}</div>` : ''}
+        <div class="eco-footer">
+          <div class="eco-meta">
+            <span class="eco-meta-item">${duration}</span>
+            <span class="eco-meta-item">${format}</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="eco-expand-hint">Tap to expand ↓</span>
+            ${addBtnHtml}
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPANDED STATE — swipeable sections -->
+      <div class="eco-expanded" id="eco-exp-${id}" style="display:none">
+        <div class="eco-expanded-hdr">
+          <div class="eco-expanded-title">${name}</div>
+          <div class="eco-expanded-tags">
+            <span class="eco-tag-green">Eco game</span>
+            <span class="eco-tag-phase">${phase}</span>
+            <span class="eco-tag-bot">${bot}</span>
+          </div>
+        </div>
+
+        <div class="eco-swipe-container">
+          <div class="eco-swipe-track" id="eco-track-${id}">
+            ${sections.map(s => `
+              <div class="eco-swipe-section">
+                <div class="eco-section-label">${s.label}</div>
+                ${s.body}
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <div class="eco-dots" id="eco-dots-${id}">
+          ${sections.map((_,i) => `<button class="eco-dot${i===0?' active':''}" onclick="ecoSwipeTo(${id},${i},${totalSections})"></button>`).join('')}
+        </div>
+        <div class="eco-dot-labels" id="eco-lbls-${id}">
+          ${dotLabels.map((l,i) => `<span class="eco-dot-label${i===0?' active':''}">${l}</span>`).join('')}
+        </div>
+
+        <div class="eco-swipe-nav">
+          <button class="eco-nav-btn disabled" id="eco-prev-${id}" onclick="ecoSwipeNav(${id},-1,${totalSections})">← Prev</button>
+          <button class="eco-nav-btn" id="eco-next-${id}" onclick="ecoSwipeNav(${id},1,${totalSections})">Next →</button>
+        </div>
+
+        <div class="eco-action-row">
+          <span class="eco-upvote">♥ ${game.upvotes||0}</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            ${editBtnHtml}
+            <button class="eco-collapse-btn" onclick="collapseEcoCard(${id})">Collapse ↑</button>
+            ${addBtnHtml}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// Eco card swipe state tracker
+const ecoSwipeState = {};
+
+function expandEcoCard(id){
+  document.getElementById('eco-col-'+id).style.display='none';
+  document.getElementById('eco-exp-'+id).style.display='block';
+  ecoSwipeState[id] = 0;
+  ecoSwipeTo(id, 0, 99);
+}
+
+function collapseEcoCard(id){
+  document.getElementById('eco-exp-'+id).style.display='none';
+  document.getElementById('eco-col-'+id).style.display='block';
+}
+
+function ecoSwipeTo(id, idx, total){
+  ecoSwipeState[id] = idx;
+  const track = document.getElementById('eco-track-'+id);
+  if(track) track.style.transform = 'translateX(-'+(idx*100)+'%)';
+
+  const dotsEl = document.getElementById('eco-dots-'+id);
+  if(dotsEl){
+    dotsEl.querySelectorAll('.eco-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+  }
+  const lblsEl = document.getElementById('eco-lbls-'+id);
+  if(lblsEl){
+    lblsEl.querySelectorAll('.eco-dot-label').forEach((l,i) => l.classList.toggle('active', i===idx));
+  }
+  const actualTotal = dotsEl ? dotsEl.querySelectorAll('.eco-dot').length : total;
+  const prev = document.getElementById('eco-prev-'+id);
+  const next = document.getElementById('eco-next-'+id);
+  if(prev) prev.classList.toggle('disabled', idx===0);
+  if(next) next.classList.toggle('disabled', idx>=actualTotal-1);
+}
+
+function ecoSwipeNav(id, dir, total){
+  const cur = ecoSwipeState[id] || 0;
+  const dotsEl = document.getElementById('eco-dots-'+id);
+  const actualTotal = dotsEl ? dotsEl.querySelectorAll('.eco-dot').length : total;
+  const next = Math.max(0, Math.min(actualTotal-1, cur+dir));
+  ecoSwipeTo(id, next, actualTotal);
+}
+
+function ecoCardAddToQuest(id){
+  const game = ecoCardGameRegistry[id];
+  if(!game) return;
+  addCommunityGameFromQuest(game, game.phase || '');
+}
+
+function ecoCardEdit(id){
+  const game = ecoCardGameRegistry[id];
+  if(!game) return;
+  openGameEditor(game, game.game_name || 'Game', game.phase || '', 'edit');
+}
+
+function openGrimoireCreate(){
+  // For now, route to the eco game builder
+  showToast('Content creation coming soon — use Quest tab to create eco games');
 }
 
 function backToGrimoireHome(){
@@ -4208,10 +4657,12 @@ Use functional language not technique names where possible. No metaphors. Real B
     try{
       let raw = d.content?.[0]?.text || '{}';
       const game = extractAndParseJSON(raw);
+      game.bot_type = 'Oracle';
+      game.phase = phase || 'Unknown';
       stLastOracleGame = game;
       stLastOracleTech = techName;
       stLastOraclePhase = phase || 'Unknown';
-      resp.innerHTML = renderOracleGame(game, false);
+      resp.innerHTML = renderGrimoireCard(game);
     }catch(e2){
       resp.textContent = d.content?.[0]?.text || 'The Oracle is silent.';
     }
@@ -4269,10 +4720,12 @@ Use functional language. No metaphors. Real BJJ terminology.`;
     try{
       let raw = d.content?.[0]?.text || '{}';
       const game = extractAndParseJSON(raw);
+      game.bot_type = 'Oracle';
+      game.phase = phase || 'Unknown';
       stLastOracleGame = game;
       stLastOracleTech = techName;
       stLastOraclePhase = phase || 'Unknown';
-      resp.innerHTML = renderOracleGame(game, true);
+      resp.innerHTML = renderGrimoireCard(game);
     }catch(e){
       resp.textContent = d.content?.[0]?.text || 'The Oracle is silent.';
     }
@@ -4292,16 +4745,18 @@ function addToChain(cat, techName){
   const chain = stCurrentResultData.chain||[];
   const existingIdx = chain.findIndex(c=>c.phase===cat);
   if(existingIdx>=0){
-    const existing = chain[existingIdx].technique;
+    const node = chain[existingIdx];
+    const existing = node.technique;
     if(existing===techName) return;
     if(confirm('Replace '+existing+' with '+techName+' in your '+cat+' slot?')){
-      chain[existingIdx].technique = techName;
-      if(graphState.nodes[cat]) graphState.nodes[cat].tech = techName;
+      node.technique = techName;
+      node.techniques = [techName]; // reset multi-tech when swapping from Grimoire
+      if(graphState.nodes[cat]){ graphState.nodes[cat].tech = techName; graphState.nodes[cat].techs = [techName]; }
       graphState.needsRedraw = true;
     }
   } else {
-    chain.push({phase:cat,technique:techName,state:'secondary'});
-    if(graphState.nodes[cat]) graphState.nodes[cat].tech = techName;
+    chain.push({phase:cat,technique:techName,techniques:[techName],state:'secondary'});
+    if(graphState.nodes[cat]){ graphState.nodes[cat].tech = techName; graphState.nodes[cat].techs = [techName]; }
     graphState.needsRedraw = true;
   }
   // Update the button on the current page instantly
@@ -4315,6 +4770,654 @@ function addToChain(cat, techName){
 }
 
 function refreshChainDisplay(){ if(stCurrentResultData&&stCurrentArchData) initGraph(stCurrentResultData,stCurrentArchData); }
+
+function openChainTechPicker(phase){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const phaseTechs = TECHNIQUES[phase] || [];
+  const chain = (stCurrentResultData?.chain || []);
+  const currentNode = chain.find(c => c.phase === phase);
+  const currentTech = currentNode ? currentNode.technique : '';
+
+  // Build the overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'chain-tech-picker-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn 0.15s ease';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+
+  const techListHtml = phaseTechs.map(t => {
+    const isCurrent = t.name === currentTech;
+    const archColor = AD[t.arch?.toUpperCase()]?.color || ad.color;
+    return `<button onclick="selectChainTech('${phase}','${t.name.replace(/'/g,"\\'")}');document.getElementById('chain-tech-picker-overlay')?.remove()"
+      style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:${isCurrent ? ad.color+'15' : '#131313'};border:0.5px solid ${isCurrent ? ad.color+'44' : 'rgba(255,255,255,0.06)'};border-left:2px solid ${isCurrent ? ad.color : archColor+'66'};cursor:pointer;text-align:left;font-family:'Cinzel',serif;transition:background 0.15s"
+      onmouseover="this.style.background='${ad.color}15'" onmouseout="this.style.background='${isCurrent ? ad.color+'15' : '#131313'}'">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;color:${isCurrent ? ad.color : '#f4ead8'};letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCurrent ? '✓ ' : ''}${t.name}</div>
+        <div style="font-size:8px;color:rgba(198,196,223,0.3);margin-top:2px;text-transform:uppercase;letter-spacing:0.1em">${t.arch || ''}</div>
+      </div>
+      <div style="font-size:8px;color:rgba(198,196,223,0.2);flex-shrink:0;max-width:120px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.game || ''}</div>
+    </button>`;
+  }).join('');
+
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:480px;max-height:70vh;background:#0d0d0d;border-top:1px solid ${ad.color}44;overflow:hidden;display:flex;flex-direction:column;animation:slideUp 0.2s ease">
+      <div style="padding:16px 16px 12px;border-bottom:0.5px solid rgba(255,255,255,0.06);flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color}">${phase}</div>
+            <div style="font-size:9px;color:rgba(198,196,223,0.35);margin-top:4px">${currentTech ? 'Current: '+currentTech : 'No technique set'} — tap to swap</div>
+          </div>
+          <button onclick="document.getElementById('chain-tech-picker-overlay')?.remove()" style="background:none;border:none;color:rgba(198,196,223,0.3);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">×</button>
+        </div>
+      </div>
+      <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:1px;padding:4px 0">
+        ${techListHtml}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function selectChainTech(phase, techName){
+  if(!stCurrentResultData) return;
+  const chain = stCurrentResultData.chain || [];
+  const existingIdx = chain.findIndex(c => c.phase === phase);
+  if(existingIdx >= 0){
+    const node = chain[existingIdx];
+    if(node.techniques && node.techniques.length > 1){
+      // Multi-tech node — replace the primary (first) technique
+      node.techniques[0] = techName;
+      node.technique = techName;
+    } else {
+      if(node.technique === techName) return;
+      node.technique = techName;
+      node.techniques = [techName];
+    }
+  } else {
+    chain.push({phase: phase, technique: techName, techniques: [techName], state: 'secondary'});
+  }
+  // Update graph node
+  if(graphState.nodes[phase]){
+    graphState.nodes[phase].tech = techName;
+    graphState.nodes[phase].techs = chain.find(c=>c.phase===phase)?.techniques || [techName];
+  }
+  persistChain();
+  drawGraph();
+  renderGraphIcons();
+  updateOracleButton();
+  showToast(techName + ' set for ' + phase);
+}
+
+// --- MULTI-TECHNIQUE NODE SUPPORT ---
+
+function persistChain(){
+  try { localStorage.setItem('bjj_result', JSON.stringify(stCurrentResultData)); } catch(e){}
+}
+
+// Get all techniques for a phase (as array)
+function getPhaseMultiTechs(phase){
+  const chain = stCurrentResultData?.chain || [];
+  const node = chain.find(c => c.phase === phase);
+  if(!node) return [];
+  if(node.techniques && Array.isArray(node.techniques) && node.techniques.length > 0) return node.techniques;
+  return node.technique ? [node.technique] : [];
+}
+
+// Add a second (or third etc.) technique to a phase node
+function addTechToPhase(phase, techName){
+  if(!stCurrentResultData) return;
+  const chain = stCurrentResultData.chain || [];
+  let node = chain.find(c => c.phase === phase);
+  if(!node){
+    node = {phase, technique: techName, techniques: [techName], state: 'secondary'};
+    chain.push(node);
+  } else {
+    if(!node.techniques) node.techniques = node.technique ? [node.technique] : [];
+    if(node.techniques.includes(techName)){ showToast(techName+' already in '+phase); return; }
+    node.techniques.push(techName);
+    // Primary stays the first one
+    node.technique = node.techniques[0];
+  }
+  // Update graph
+  if(graphState.nodes[phase]){
+    graphState.nodes[phase].tech = node.technique;
+    graphState.nodes[phase].techs = [...node.techniques];
+  }
+  persistChain();
+  drawGraph();
+  renderGraphIcons();
+  updateOracleButton();
+  showToast(techName + ' added to ' + phase);
+}
+
+// Swap a specific technique in a multi-tech node
+function swapTechInPhase(phase, oldTech, newTech){
+  if(!stCurrentResultData) return;
+  const chain = stCurrentResultData.chain || [];
+  const node = chain.find(c => c.phase === phase);
+  if(!node || !node.techniques) return;
+  const idx = node.techniques.indexOf(oldTech);
+  if(idx < 0) return;
+  node.techniques[idx] = newTech;
+  node.technique = node.techniques[0];
+  if(graphState.nodes[phase]){
+    graphState.nodes[phase].tech = node.technique;
+    graphState.nodes[phase].techs = [...node.techniques];
+  }
+  persistChain();
+  drawGraph();
+  renderGraphIcons();
+  updateOracleButton();
+  showToast(oldTech + ' → ' + newTech);
+}
+
+// Remove a technique from a multi-tech node
+function removeTechFromPhase(phase, techName){
+  if(!stCurrentResultData) return;
+  const chain = stCurrentResultData.chain || [];
+  const node = chain.find(c => c.phase === phase);
+  if(!node || !node.techniques) return;
+  node.techniques = node.techniques.filter(t => t !== techName);
+  if(node.techniques.length === 0){
+    // Remove the node entirely
+    const idx = chain.indexOf(node);
+    if(idx >= 0) chain.splice(idx, 1);
+    if(graphState.nodes[phase]){ graphState.nodes[phase].tech = ''; graphState.nodes[phase].techs = []; }
+  } else {
+    node.technique = node.techniques[0];
+    if(graphState.nodes[phase]){
+      graphState.nodes[phase].tech = node.technique;
+      graphState.nodes[phase].techs = [...node.techniques];
+    }
+  }
+  persistChain();
+  drawGraph();
+  renderGraphIcons();
+  updateOracleButton();
+}
+
+// + button picker — add another technique to this phase
+function openChainAddPicker(phase){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const phaseTechs = TECHNIQUES[phase] || [];
+  const existing = getPhaseMultiTechs(phase);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'chain-tech-picker-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn 0.15s ease';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+
+  const techListHtml = phaseTechs.map(t => {
+    const isExisting = existing.includes(t.name);
+    const archColor = AD[t.arch?.toUpperCase()]?.color || ad.color;
+    if(isExisting) return `<div style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:${ad.color}10;border:0.5px solid ${ad.color}22;border-left:2px solid ${ad.color};opacity:0.5">
+      <div style="flex:1"><div style="font-size:11px;color:${ad.color};letter-spacing:0.04em;font-family:'Cinzel',serif">✓ ${t.name}</div>
+      <div style="font-size:8px;color:rgba(198,196,223,0.2);margin-top:2px;text-transform:uppercase;letter-spacing:0.1em">${t.arch||''}</div></div></div>`;
+    return `<button onclick="addTechToPhase('${phase}','${t.name.replace(/'/g,"\\'")}');document.getElementById('chain-tech-picker-overlay')?.remove()"
+      style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid ${archColor}66;cursor:pointer;text-align:left;font-family:'Cinzel',serif;transition:background 0.15s"
+      onmouseover="this.style.background='${ad.color}15'" onmouseout="this.style.background='#131313'">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;color:#f4ead8;letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</div>
+        <div style="font-size:8px;color:rgba(198,196,223,0.3);margin-top:2px;text-transform:uppercase;letter-spacing:0.1em">${t.arch||''}</div>
+      </div>
+    </button>`;
+  }).join('');
+
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:480px;max-height:70vh;background:#0d0d0d;border-top:1px solid ${ad.color}44;overflow:hidden;display:flex;flex-direction:column;animation:slideUp 0.2s ease">
+      <div style="padding:16px 16px 12px;border-bottom:0.5px solid rgba(255,255,255,0.06);flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color}">+ Add to ${phase}</div>
+            <div style="font-size:9px;color:rgba(198,196,223,0.35);margin-top:4px">${existing.length ? existing.join(', ') + ' already added' : 'Pick a technique'}</div>
+          </div>
+          <button onclick="document.getElementById('chain-tech-picker-overlay')?.remove()" style="background:none;border:none;color:rgba(198,196,223,0.3);font-size:18px;cursor:pointer;padding:4px 8px;line-height:1">×</button>
+        </div>
+      </div>
+      <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:1px;padding:4px 0">
+        ${techListHtml}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// Swap picker for multi-tech nodes — first choose which technique to swap, then pick replacement
+function openChainSwapPicker(phase){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const existing = getPhaseMultiTechs(phase);
+  if(existing.length <= 1){ openChainTechPicker(phase); return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'chain-tech-picker-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn 0.15s ease';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+
+  const listHtml = existing.map(t => `
+    <button onclick="document.getElementById('chain-tech-picker-overlay')?.remove();openChainSwapTarget('${phase}','${t.replace(/'/g,"\\'")}')"
+      style="display:flex;align-items:center;gap:10px;width:100%;padding:14px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid ${ad.color};cursor:pointer;text-align:left;font-family:'Cinzel',serif;transition:background 0.15s"
+      onmouseover="this.style.background='${ad.color}15'" onmouseout="this.style.background='#131313'">
+      <div style="font-size:12px;color:#f4ead8;letter-spacing:0.04em">${t}</div>
+      <div style="margin-left:auto;font-size:9px;color:rgba(198,196,223,0.25)">tap to swap →</div>
+    </button>`).join('') +
+    existing.map(t => `
+    <button onclick="removeTechFromPhase('${phase}','${t.replace(/'/g,"\\'")}');document.getElementById('chain-tech-picker-overlay')?.remove()"
+      style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:rgba(200,50,50,0.05);border:0.5px solid rgba(200,50,50,0.15);cursor:pointer;text-align:left;font-family:'Cinzel',serif"
+      onmouseover="this.style.background='rgba(200,50,50,0.1)'" onmouseout="this.style.background='rgba(200,50,50,0.05)'">
+      <div style="font-size:10px;color:#c05050;letter-spacing:0.04em">✕ Remove ${t}</div>
+    </button>`).join('');
+
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:480px;max-height:60vh;background:#0d0d0d;border-top:1px solid ${ad.color}44;overflow:hidden;display:flex;flex-direction:column;animation:slideUp 0.2s ease">
+      <div style="padding:16px 16px 12px;border-bottom:0.5px solid rgba(255,255,255,0.06);flex-shrink:0">
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color}">${phase} — which to swap?</div>
+        <div style="font-size:9px;color:rgba(198,196,223,0.35);margin-top:4px">Pick the technique you want to replace</div>
+      </div>
+      <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:1px;padding:4px 0">
+        ${listHtml}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// Step 2 of multi-swap: pick the replacement technique
+function openChainSwapTarget(phase, oldTech){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const phaseTechs = TECHNIQUES[phase] || [];
+  const existing = getPhaseMultiTechs(phase);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'chain-tech-picker-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn 0.15s ease';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+
+  const techListHtml = phaseTechs.filter(t=>!existing.includes(t.name)).map(t => {
+    const archColor = AD[t.arch?.toUpperCase()]?.color || ad.color;
+    return `<button onclick="swapTechInPhase('${phase}','${oldTech.replace(/'/g,"\\'")}','${t.name.replace(/'/g,"\\'")}');document.getElementById('chain-tech-picker-overlay')?.remove()"
+      style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid ${archColor}66;cursor:pointer;text-align:left;font-family:'Cinzel',serif;transition:background 0.15s"
+      onmouseover="this.style.background='${ad.color}15'" onmouseout="this.style.background='#131313'">
+      <div style="flex:1"><div style="font-size:11px;color:#f4ead8;letter-spacing:0.04em">${t.name}</div>
+      <div style="font-size:8px;color:rgba(198,196,223,0.3);margin-top:2px;text-transform:uppercase;letter-spacing:0.1em">${t.arch||''}</div></div>
+    </button>`;
+  }).join('');
+
+  overlay.innerHTML = `
+    <div style="width:100%;max-width:480px;max-height:70vh;background:#0d0d0d;border-top:1px solid ${ad.color}44;overflow:hidden;display:flex;flex-direction:column;animation:slideUp 0.2s ease">
+      <div style="padding:16px 16px 12px;border-bottom:0.5px solid rgba(255,255,255,0.06);flex-shrink:0">
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color}">Replace: ${oldTech}</div>
+        <div style="font-size:9px;color:rgba(198,196,223,0.35);margin-top:4px">Pick new technique for ${phase}</div>
+      </div>
+      <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:1px;padding:4px 0">
+        ${techListHtml}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// --- CHAIN ACTION BUTTONS: + Attack Chain / + Eco Game ---
+
+function openChainProceed(type){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const label = type === 'chain' ? 'Attack Chain' : 'Eco Game';
+  const overlay = document.createElement('div');
+  overlay.className = 'chain-proceed-overlay';
+  overlay.id = 'chain-proceed-overlay';
+  overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div class="chain-proceed-box">
+      <div class="chain-proceed-title">+ ${label}</div>
+      <div class="chain-proceed-sub">How would you like to proceed?</div>
+      <div class="chain-proceed-opt chain-proceed-oracle" onclick="document.getElementById('chain-proceed-overlay')?.remove();chainConsultOracle('${type}')">
+        ✦ Consult the Oracle
+      </div>
+      <div class="chain-proceed-opt chain-proceed-create" onclick="document.getElementById('chain-proceed-overlay')?.remove();openChainCardEditor('${type}')">
+        Create your own
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// --- CARD EDITOR SCREEN ---
+
+function buildChainSequence(){
+  // Gather all techniques across all phases in chain order
+  const phaseOrder = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  const chain = stCurrentResultData?.chain || [];
+  const steps = [];
+  phaseOrder.forEach(phase => {
+    const node = chain.find(c => c.phase === phase);
+    if(!node) return;
+    const techs = (node.techniques && node.techniques.length) ? node.techniques : (node.technique ? [node.technique] : []);
+    techs.forEach(t => steps.push({technique: t, phase: phase}));
+  });
+  return steps;
+}
+
+function openChainCardEditor(type){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const editor = document.getElementById('chain-editor-screen');
+  if(!editor) return;
+
+  const steps = buildChainSequence();
+  if(steps.length === 0){ showToast('Add techniques to your chain first'); return; }
+
+  const isEco = type === 'eco';
+  const placeholder = isEco ? 'Name your eco game...' : 'Name your attack chain...';
+  const oracleText = isEco ? 'Oracle can refine this into an ecological game' : 'Oracle can generate an eco game from this chain';
+
+  // Phase tags
+  const allPhases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  const usedPhases = [...new Set(steps.map(s=>s.phase))];
+  const archName = stCurrentResultData?.archetype || ad.name;
+  const levels = ['Beginner','Intermediate','Advanced'];
+
+  // Steps HTML
+  const stepsHtml = steps.map((s,i) => {
+    const isLast = i === steps.length - 1;
+    return `<div class="ce-step">
+      <div class="ce-step-left">
+        <div class="ce-step-dot${isLast?' green':''}"></div>
+        ${!isLast ? '<div class="ce-step-line"></div>' : ''}
+      </div>
+      <div class="ce-step-content">
+        <div class="ce-step-name">${s.technique}</div>
+        <div class="ce-step-phase">${s.phase}</div>
+        <textarea class="ce-note" data-step="${i}" placeholder="Add a note — how do you get here?"></textarea>
+      </div>
+    </div>`;
+  }).join('');
+
+  editor.innerHTML = `
+    <div class="ce-back" onclick="closeChainCardEditor()">
+      <span class="ce-back-arrow">←</span>
+      <span class="ce-back-label">Chain</span>
+    </div>
+    <div class="ce-body">
+      <input class="ce-title-input" id="ce-title" placeholder="${placeholder}" />
+
+      <div class="ce-tags" id="ce-tags">
+        ${allPhases.map(p=>`<span class="ce-tag${usedPhases.includes(p)?' selected':''}" onclick="toggleCeTag(this)">${p}</span>`).join('')}
+        <span class="ce-tag selected" onclick="toggleCeTag(this)">${archName}</span>
+        ${levels.map(l=>`<span class="ce-tag" onclick="toggleCeTag(this)">${l}</span>`).join('')}
+      </div>
+
+      <div class="ce-oracle-strip">
+        <span class="ce-oracle-text">${oracleText}</span>
+        <button class="ce-oracle-btn" onclick="chainEditorConsultOracle('${type}')">Consult</button>
+      </div>
+
+      <div class="ce-section-label">Sequence + notes</div>
+      <div style="margin-bottom:16px">
+        ${stepsHtml}
+      </div>
+    </div>
+    <div class="ce-save-row">
+      <button class="ce-btn-save" onclick="saveChainCard('${type}')">Save to Grimoire</button>
+      <button class="ce-btn-share" onclick="shareChainCard('${type}')">Share</button>
+    </div>`;
+
+  editor.style.display = 'block';
+  editor.scrollTop = 0;
+}
+
+function closeChainCardEditor(){
+  const editor = document.getElementById('chain-editor-screen');
+  if(editor) editor.style.display = 'none';
+}
+
+function toggleCeTag(el){
+  el.classList.toggle('selected');
+}
+
+function getEditorData(type){
+  const title = document.getElementById('ce-title')?.value?.trim() || '';
+  const tags = [...document.querySelectorAll('#ce-tags .ce-tag.selected')].map(t=>t.textContent.trim());
+  const notes = [...document.querySelectorAll('.ce-note')].map(n=>({step:parseInt(n.dataset.step), note:n.value.trim()}));
+  const steps = buildChainSequence();
+  // Merge notes into steps
+  notes.forEach(n=>{ if(steps[n.step]) steps[n.step].note = n.note; });
+  return {title, tags, steps, type};
+}
+
+// --- ORACLE CONSULT FROM CHAIN ACTIONS ---
+
+async function chainConsultOracle(type){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const steps = buildChainSequence();
+  if(steps.length === 0){ showToast('Add techniques to your chain first'); return; }
+
+  const detail = document.getElementById('st-detail');
+  const apiKey = getAnthropicKey(); if(!apiKey) return;
+  const apiHeaders = {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+  const chainDesc = steps.map(s=>s.technique+' ('+s.phase+')').join(' → ');
+  const fullChain = (stCurrentResultData?.chain||[]).map(c=>c.phase+': '+c.technique).join(' → ');
+
+  detail.style.display = 'block';
+
+  if(type === 'eco'){
+    // Generate an eco game from the full chain
+    detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic;text-align:center;padding:20px 0">The Oracle is designing an ecological game for your chain\u2026</div>';
+
+    const ECO_PREAMBLE = 'You design ecological BJJ training games using a constraints-led approach (Greg Souders / Standard Jiu-Jitsu / Rob Gray perception-action coupling). Start with a PROBLEM. Use invariants. Use constraints to shape behavior. Attention cue must be EXTERNAL perceptual focus.';
+    const prompt = ECO_PREAMBLE + '\n\nDesign ONE ecological game that trains the FULL chain sequence: ' + chainDesc + '.\nArchetype: ' + ad.name + '. Full chain: ' + fullChain + '.\n\nThe game should capture the flow between these positions — the continuous goal should be about maintaining connection through all transitions.\n\nReturn ONLY this JSON:\n{\n  "game_name": "short name (max 4 words)",\n  "player_a_start": "exact starting position",\n  "player_b_start": "partner starting position",\n  "continuous_goal": "what Player A maintains throughout",\n  "terminal_goal": "what Player A achieves to win/reset",\n  "player_b_goal": "partner resistance goal",\n  "constraints": "2-3 constraints",\n  "win_condition": "clear trigger for reset",\n  "continuity": "Reset or Continuous",\n  "attention_cue": "EXTERNAL perceptual focus",\n  "skill_emerges": "what skill develops",\n  "round_length": "e.g. 3 minutes"\n}';
+
+    try{
+      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders,body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:700,messages:[{role:'user',content:prompt}]})});
+      const d = await r.json();
+      const game = extractAndParseJSON(d.content?.[0]?.text || '{}');
+      game.bot_type = 'Oracle';
+      game.phase = steps[steps.length-1].phase;
+      stLastOracleGame = game;
+      stLastOracleTech = steps[0].technique;
+      stLastOraclePhase = steps[0].phase;
+      detail.innerHTML = '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">Chain Eco Game: ' + chainDesc + '</div>' + renderGrimoireCard(game);
+    }catch(e){
+      detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">Oracle error: '+(e.message||e)+'</div>';
+    }
+  } else {
+    // Generate an attack chain card with transition notes
+    detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic;text-align:center;padding:20px 0">The Oracle is building your attack chain card\u2026</div>';
+
+    const prompt = 'You are an expert BJJ instructor creating an attack chain card. The chain sequence is:\n' + chainDesc + '\nArchetype: ' + ad.name + '.\n\nFor each transition between techniques, write a short practical note (1-2 sentences) explaining HOW to get from one technique to the next — the key grip change, hip movement, or timing cue.\n\nReturn ONLY this JSON:\n{\n  "chain_name": "short memorable name for this chain (max 5 words)",\n  "steps": [\n    {"technique": "technique name", "phase": "phase name", "note": "transition note — how to get here from the previous step"}\n  ]\n}\n\nFirst step note should describe the opening setup. Real BJJ terminology. Be specific about grips and body position.';
+
+    try{
+      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders,body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+      const d = await r.json();
+      const card = extractAndParseJSON(d.content?.[0]?.text || '{}');
+
+      // Open the editor pre-filled with Oracle's notes
+      openChainCardEditorPrefilled('chain', card.chain_name || '', card.steps || []);
+      detail.style.display = 'none';
+    }catch(e){
+      detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">Oracle error: '+(e.message||e)+'</div>';
+    }
+  }
+}
+
+// Open editor pre-filled with Oracle data
+function openChainCardEditorPrefilled(type, title, oracleSteps){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const editor = document.getElementById('chain-editor-screen');
+  if(!editor) return;
+
+  const steps = buildChainSequence();
+  if(steps.length === 0) return;
+
+  // Merge Oracle notes into steps by matching technique names
+  oracleSteps.forEach(os => {
+    const match = steps.find(s => s.technique.toLowerCase() === (os.technique||'').toLowerCase());
+    if(match) match.note = os.note || '';
+  });
+
+  const isEco = type === 'eco';
+  const placeholder = isEco ? 'Name your eco game...' : 'Name your attack chain...';
+  const oracleText = isEco ? 'Oracle can refine this into an ecological game' : 'Oracle can generate an eco game from this chain';
+  const allPhases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  const usedPhases = [...new Set(steps.map(s=>s.phase))];
+  const archName = stCurrentResultData?.archetype || ad.name;
+  const levels = ['Beginner','Intermediate','Advanced'];
+
+  const stepsHtml = steps.map((s,i) => {
+    const isLast = i === steps.length - 1;
+    return `<div class="ce-step">
+      <div class="ce-step-left">
+        <div class="ce-step-dot${isLast?' green':''}"></div>
+        ${!isLast ? '<div class="ce-step-line"></div>' : ''}
+      </div>
+      <div class="ce-step-content">
+        <div class="ce-step-name">${s.technique}</div>
+        <div class="ce-step-phase">${s.phase}</div>
+        <textarea class="ce-note" data-step="${i}" placeholder="Add a note — how do you get here?">${s.note||''}</textarea>
+      </div>
+    </div>`;
+  }).join('');
+
+  editor.innerHTML = `
+    <div class="ce-back" onclick="closeChainCardEditor()">
+      <span class="ce-back-arrow">←</span>
+      <span class="ce-back-label">Chain</span>
+    </div>
+    <div class="ce-body">
+      <input class="ce-title-input" id="ce-title" placeholder="${placeholder}" value="${title}" />
+      <div class="ce-tags" id="ce-tags">
+        ${allPhases.map(p=>`<span class="ce-tag${usedPhases.includes(p)?' selected':''}" onclick="toggleCeTag(this)">${p}</span>`).join('')}
+        <span class="ce-tag selected" onclick="toggleCeTag(this)">${archName}</span>
+        ${levels.map(l=>`<span class="ce-tag" onclick="toggleCeTag(this)">${l}</span>`).join('')}
+      </div>
+      <div class="ce-oracle-strip">
+        <span class="ce-oracle-text">${oracleText}</span>
+        <button class="ce-oracle-btn" onclick="chainEditorConsultOracle('${type}')">Consult</button>
+      </div>
+      <div class="ce-section-label">Sequence + notes</div>
+      <div style="margin-bottom:16px">${stepsHtml}</div>
+    </div>
+    <div class="ce-save-row">
+      <button class="ce-btn-save" onclick="saveChainCard('${type}')">Save to Grimoire</button>
+      <button class="ce-btn-share" onclick="shareChainCard('${type}')">Share</button>
+    </div>`;
+
+  editor.style.display = 'block';
+  editor.scrollTop = 0;
+}
+
+// Oracle consult from inside the editor
+async function chainEditorConsultOracle(type){
+  const data = getEditorData(type);
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const apiKey = getAnthropicKey(); if(!apiKey) return;
+  const apiHeaders = {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+
+  const chainDesc = data.steps.map(s=>s.technique+' ('+s.phase+')').join(' → ');
+  const existingNotes = data.steps.filter(s=>s.note).map(s=>s.technique+': '+s.note).join('\n');
+
+  if(type === 'eco'){
+    // Generate eco game from chain in editor
+    const detail = document.getElementById('st-detail');
+    closeChainCardEditor();
+    detail.style.display = 'block';
+    detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic;text-align:center;padding:20px 0">The Oracle is creating an eco game\u2026</div>';
+
+    const prompt = 'You design ecological BJJ training games (Greg Souders / Standard Jiu-Jitsu style). Design ONE game for this chain: ' + chainDesc + '. Archetype: ' + ad.name + '.' + (existingNotes ? '\n\nUser notes:\n'+existingNotes : '') + '\n\nReturn ONLY JSON:\n{"game_name":"","player_a_start":"","player_b_start":"","continuous_goal":"","terminal_goal":"","player_b_goal":"","constraints":"","win_condition":"","continuity":"Reset or Continuous","attention_cue":"","skill_emerges":"","round_length":"3 minutes"}';
+
+    try{
+      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders,body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:700,messages:[{role:'user',content:prompt}]})});
+      const d = await r.json();
+      const game = extractAndParseJSON(d.content?.[0]?.text||'{}');
+      game.bot_type = 'Oracle';
+      game.phase = data.steps[data.steps.length-1]?.phase || '';
+      stLastOracleGame = game;
+      detail.innerHTML = renderGrimoireCard(game);
+    }catch(e){
+      detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">Oracle error: '+(e.message||e)+'</div>';
+    }
+  } else {
+    // Generate transition notes for attack chain
+    const btn = document.querySelector('.ce-oracle-btn');
+    if(btn){ btn.textContent = 'Working...'; btn.style.opacity='0.5'; }
+
+    const prompt = 'You are an expert BJJ instructor. For this attack chain: ' + chainDesc + ' (Archetype: ' + ad.name + ').\n\nWrite a transition note (1-2 sentences) for each step explaining HOW to get there from the previous position. Be specific about grips, hip movement, and timing.\n\nReturn ONLY JSON:\n{"steps":[{"technique":"name","note":"transition note"}]}';
+
+    try{
+      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:apiHeaders,body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+      const d = await r.json();
+      const result = extractAndParseJSON(d.content?.[0]?.text||'{}');
+      // Fill in the note textareas
+      (result.steps||[]).forEach(os => {
+        const stepIdx = data.steps.findIndex(s=>s.technique.toLowerCase()===(os.technique||'').toLowerCase());
+        if(stepIdx >= 0){
+          const textarea = document.querySelector('.ce-note[data-step="'+stepIdx+'"]');
+          if(textarea && !textarea.value.trim()) textarea.value = os.note || '';
+        }
+      });
+      if(btn){ btn.textContent = 'Done ✓'; setTimeout(()=>{ btn.textContent='Consult'; btn.style.opacity='1'; }, 2000); }
+    }catch(e){
+      if(btn){ btn.textContent = 'Error'; btn.style.opacity='1'; }
+      showToast('Oracle error: '+(e.message||e));
+    }
+  }
+}
+
+// --- SAVE TO SUPABASE ---
+
+async function saveChainCard(type){
+  const data = getEditorData(type);
+  if(!data.title){ showToast('Please name your '+(type==='chain'?'attack chain':'eco game')); return; }
+
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const profile = stUserProfile || {};
+
+  // Build game_data object
+  const gameData = {
+    card_type: type === 'chain' ? 'attack_chain' : 'eco_game',
+    chain_name: data.title,
+    steps: data.steps,
+    archetype: stCurrentResultData?.archetype || ad.name
+  };
+
+  try{
+    const { error } = await sbClient.from('community_games').insert({
+      technique: data.steps.map(s=>s.technique).join(' → '),
+      phase: data.steps[0]?.phase || 'General',
+      tags: data.tags.map(t=>t.toLowerCase()),
+      game_data: gameData,
+      creator_name: profile.name || ad.name + ' Player',
+      creator_belt: profile.belt || 'white',
+      creator_archetype: ad.name,
+      creator_chain: (stCurrentResultData?.chain||[]).map(c=>c.technique),
+      upvotes: 0,
+      usage_count: 0
+    });
+
+    if(error){ showToast('Save error: '+error.message); return; }
+
+    stBadgeCounters.games_shared = (stBadgeCounters.games_shared||0) + 1;
+    updateCodexBadges();
+    closeChainCardEditor();
+    showToast('✦ Saved to Grimoire!');
+  }catch(e){
+    showToast('Error: '+(e.message||e));
+  }
+}
+
+async function shareChainCard(type){
+  const data = getEditorData(type);
+  if(!data.title){ showToast('Please name your card first'); return; }
+
+  // Build a shareable text
+  const lines = [data.title, ''];
+  data.steps.forEach((s,i) => {
+    lines.push((i+1)+'. '+s.technique+' ('+s.phase+')');
+    if(s.note) lines.push('   '+s.note);
+  });
+  if(data.tags.length) lines.push('', 'Tags: '+data.tags.join(', '));
+  lines.push('', 'Built with Grimwaza');
+
+  const text = lines.join('\n');
+
+  if(navigator.share){
+    try{ await navigator.share({title:data.title, text}); }catch(e){}
+  } else {
+    try{ await navigator.clipboard.writeText(text); showToast('Copied to clipboard!'); }catch(e){ showToast('Could not share'); }
+  }
+}
 
 
 // SESSION LOGGING STATE
@@ -4974,20 +6077,26 @@ function initGraph(data, ad){
   const cellH = (H - padTop - padBot) / (rows - 0.5);
   const nodeR = Math.min(Math.round(W * 0.07), 28);
 
-  // Map phases to user techniques (case-insensitive lookup)
+  // Map phases to user techniques (case-insensitive lookup) — supports multiple per phase
   const techMap = {};
+  const techsMap = {}; // multi-technique map: phase -> [tech1, tech2, ...]
   graphState.chain.forEach(n => {
     if(n.technique && n.technique !== "???"){
-      // Normalize: match chain phase to GRAPH_LAYOUT phase names case-insensitively
       const matchedPhase = Object.keys(GRAPH_LAYOUT).find(
         k => k.toLowerCase() === (n.phase||"").toLowerCase()
       );
-      if(matchedPhase) techMap[matchedPhase] = n.technique;
+      if(matchedPhase){
+        techMap[matchedPhase] = techMap[matchedPhase] || n.technique; // primary
+        if(!techsMap[matchedPhase]) techsMap[matchedPhase] = [];
+        // Support both old format (technique) and new format (techniques array)
+        if(n.techniques && Array.isArray(n.techniques)){
+          n.techniques.forEach(t => { if(!techsMap[matchedPhase].includes(t)) techsMap[matchedPhase].push(t); });
+        } else {
+          if(!techsMap[matchedPhase].includes(n.technique)) techsMap[matchedPhase].push(n.technique);
+        }
+      }
     }
   });
-
-  console.log("[BJJ Grimoire] Chain data:", JSON.stringify(graphState.chain.map(c=>c.phase+":"+c.technique)));
-  console.log("[BJJ Grimoire] techMap:", JSON.stringify(techMap));
 
   Object.entries(GRAPH_LAYOUT).forEach(([phase, pos])=>{
     const cx = padX + pos.col * cellW;
@@ -4995,6 +6104,7 @@ function initGraph(data, ad){
     graphState.nodes[phase] = {
       phase, cx, cy, r: nodeR,
       tech: techMap[phase] || "",
+      techs: techsMap[phase] || [], // array of all techniques in this phase
       active: false,
     };
   });
@@ -5591,10 +6701,12 @@ async function fireChainOracle(){
       const d = await r.json();
       let raw = d.content?.[0]?.text || '{}';
       const game = extractAndParseJSON(raw);
+      game.bot_type = 'Oracle';
+      game.phase = singleNode.phase;
       stLastOracleGame = game;
       stLastOracleTech = singleNode.tech;
       stLastOraclePhase = singleNode.phase;
-      detail.innerHTML = '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">Focus: ' + singleNode.tech + ' (' + singleNode.phase + ')</div>' + renderOracleGame(game, false);
+      detail.innerHTML = '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">Focus: ' + singleNode.tech + ' (' + singleNode.phase + ')</div>' + renderGrimoireCard(game);
     }catch(e){
       console.error('[Oracle] single-node error:', e);
       detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">The Oracle could not be reached. Error: ' + (e.message||e) + '</div>';
@@ -5623,10 +6735,12 @@ async function fireChainOracle(){
       const d = await r.json();
       let raw = d.content?.[0]?.text || '{}';
       const game = extractAndParseJSON(raw);
+      game.bot_type = 'Oracle';
+      game.phase = nodeB.phase;
       stLastOracleGame = game;
       stLastOracleTech = nodeB.tech;
       stLastOraclePhase = nodeB.phase;
-      detail.innerHTML = '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">' + nodeA.tech + ' \u2192 ' + nodeB.tech + '</div>' + renderOracleGame(game, false);
+      detail.innerHTML = '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">' + nodeA.tech + ' \u2192 ' + nodeB.tech + '</div>' + renderGrimoireCard(game);
     }catch(e){
       console.error('[Oracle] transition error:', e);
       detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">The Oracle could not be reached. Error: ' + (e.message||e) + '</div>';
@@ -5673,9 +6787,10 @@ async function fireChainOracle(){
     const games = await Promise.all(gamePromises);
 
     detail.innerHTML = games.map(game => {
+      game.bot_type = 'Oracle';
       return '<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid rgba(255,255,255,0.06)">' +
         '<div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:4px">' + (game.connection||'') + '</div>' +
-        renderOracleGame(game, false) +
+        renderGrimoireCard(game) +
       '</div>';
     }).join('');
   } catch(e){
@@ -5723,13 +6838,15 @@ Design ONE ecological game specifically for this transition/connection. Return O
     const d = await r.json();
     let raw = d.content?.[0]?.text || '{}';
     const game = extractAndParseJSON(raw);
+    game.bot_type = 'Oracle';
+    game.phase = nodeB.phase;
     stLastOracleGame = game;
     stLastOracleTech = nodeB.tech;
     stLastOraclePhase = nodeB.phase;
     detail.innerHTML = `
       <div style="font-size:12px;color:#f4ead8;margin-bottom:2px">${nodeA.tech} → ${nodeB.tech}</div>
       <div style="font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:${ad.color}88;margin-bottom:10px">${nodeA.phase} → ${nodeB.phase}</div>
-      ${renderOracleGame(game, false)}`;
+      ${renderGrimoireCard(game)}`;
   }catch(e){
     detail.innerHTML = `<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">The Oracle could not be reached.</div>`;
   }
@@ -5785,18 +6902,55 @@ function renderGraphIcons(){
     const px = n.cx * scaleX;
     const py = n.cy * scaleY;
     const iconSize = Math.round(n.r * scaleX * 0.85);
+    const techs = n.techs || [];
     const techLabel = n.tech || '';
+    const isMulti = techs.length > 1;
     const nodeR = n.r * scaleX;
     const techOffset = nodeR + 28;
-    return `<div style="position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none">
+
+    // Icon overlay (pointer-events:none so canvas taps still work)
+    let html = `<div style="position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none">
       <span class="material-symbols-outlined"
         style="font-size:${iconSize}px;color:${isActive?ad.color:'rgba(198,196,223,0.15)'};
         ${isActive?'filter:drop-shadow(0 0 8px '+ad.color+') drop-shadow(0 0 16px '+ad.color+'44)':''};
         transition:color 0.3s, filter 0.3s">${PHASE_ICONS[n.phase]||'circle'}</span>
-    </div>
-    ${techLabel ? `<div style="position:absolute;left:${px}px;top:${py + techOffset}px;transform:translateX(-50%);text-align:center;pointer-events:none;white-space:nowrap">
-      <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.04em;color:${isActive?'#f4ead8':'rgba(229,226,225,0.4)'};transition:color 0.3s">${techLabel}</span>
-    </div>` : ''}`;
+    </div>`;
+
+    if(isMulti){
+      // EXPANDED NODE — multiple techniques stacked with dots and arrows
+      const itemsHtml = techs.map((t,i) =>
+        `${i>0?'<div class="chain-multi-arrow">↓</div>':''}
+         <div class="chain-multi-item"><div class="chain-multi-dot"></div><div class="chain-multi-name">${t}</div></div>`
+      ).join('');
+      html += `<div class="chain-multi-wrap" style="left:${px}px;top:${py + techOffset}px">
+        <div class="chain-multi-phase">${n.phase}</div>
+        ${itemsHtml}
+        <div class="chain-multi-btns">
+          <button class="chain-node-btn cb-swap" onclick="event.stopPropagation();openChainSwapPicker('${n.phase}')" title="Swap">↺</button>
+          <button class="chain-node-btn cb-add" onclick="event.stopPropagation();openChainAddPicker('${n.phase}')" title="Add technique">+</button>
+        </div>
+      </div>`;
+    } else if(techLabel){
+      // SINGLE TECHNIQUE — label + swap/add buttons
+      html += `<div style="position:absolute;left:${px}px;top:${py + techOffset}px;transform:translateX(-50%);text-align:center;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div style="white-space:nowrap">
+          <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.04em;color:${isActive?'#f4ead8':'rgba(229,226,225,0.4)'};transition:color 0.3s">${techLabel}</span>
+        </div>
+        <div class="chain-node-btns">
+          <button class="chain-node-btn cb-swap" onclick="event.stopPropagation();openChainTechPicker('${n.phase}')" title="Swap technique">↺</button>
+          <button class="chain-node-btn cb-add" onclick="event.stopPropagation();openChainAddPicker('${n.phase}')" title="Add technique">+</button>
+        </div>
+      </div>`;
+    } else {
+      // NO TECHNIQUE — just show phase name as hint + add button
+      html += `<div style="position:absolute;left:${px}px;top:${py + techOffset}px;transform:translateX(-50%);text-align:center;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.06em;color:rgba(198,196,223,0.2)">${n.phase}</span>
+        <div class="chain-node-btns">
+          <button class="chain-node-btn cb-add" onclick="event.stopPropagation();openChainAddPicker('${n.phase}')" title="Add technique">+</button>
+        </div>
+      </div>`;
+    }
+    return html;
   }).join('');
 }
 

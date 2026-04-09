@@ -697,7 +697,7 @@ function previewResult(){
 const TUTORIAL_TIPS = {
   chain: "Connect any links in your attack chain — you don't need to complete the whole thing. Tap two connected phases to consult the Oracle for ecological games that sharpen that part of your game.",
   grimoire: "Explore positions to find techniques, eco games, and attack chains. Switch to For You for personalized content. Tap any technique to swap it into your chain or consult the Oracle.",
-  quest: "Log your training session here. Pick phases you drilled, set roll focus techniques, add eco games, then reflect on your rounds.",
+  quest: "Prepare your game plan before class or log your session after. Build chains, add eco games, set a roll focus, then switch to Reflect to track your rounds.",
   codex: "Your training history at a glance. Tap the heatmap phases to see technique-level stats. Scroll down for session history and badges."
 };
 
@@ -2228,14 +2228,31 @@ function buildSkillTreeHTML(data, ad) {
 
         <!-- Date header -->
         <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:4px" id="log-date-label"></div>
-        <div style="font-size:18px;color:#f4ead8;margin-bottom:2px;font-family:'Cinzel',serif">Session Log</div>
-        <div style="font-size:11px;color:rgba(198,196,223,0.35);font-family:serif;font-style:italic;margin-bottom:18px">Capture your training, set a focus, reflect on your rolls</div>
+
+        <!-- ═══ PREPARE / REFLECT TOGGLE ═══ -->
+        <div style="display:flex;gap:6px;margin-bottom:16px">
+          <button onclick="switchQuestMode('prepare')" id="quest-mode-prepare" style="flex:1;padding:10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;background:#c8a84b;color:#0e0e0e;border:none;font-weight:600">Prepare</button>
+          <button onclick="switchQuestMode('reflect')" id="quest-mode-reflect" style="flex:1;padding:10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;background:#131313;color:rgba(198,196,223,0.35);border:0.5px solid rgba(255,255,255,0.08)">Reflect</button>
+        </div>
+
+        <!-- ═══════════════════════════════ -->
+        <!-- MODE HEADER (changes per mode) -->
+        <!-- ═══════════════════════════════ -->
+        <div id="quest-mode-header">
+          <div id="quest-mode-title" style="font-size:18px;color:#f4ead8;margin-bottom:2px;font-family:'Cinzel',serif">Quest Card</div>
+          <div id="quest-mode-subtitle" style="font-size:11px;color:rgba(198,196,223,0.35);font-family:serif;font-style:italic;margin-bottom:18px">Your game plan — what to focus on today</div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- SHARED: DRILL LOG + ROLL FOCUS          -->
+        <!-- (visible in both Prepare and Reflect)   -->
+        <!-- ═══════════════════════════════════════ -->
 
         <!-- ═══ SECTION 1: DRILL LOG ═══ -->
         <div style="margin-bottom:20px">
-          <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <div id="quest-drill-header" style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-block;width:14px;height:1px;background:rgba(198,196,223,0.12)"></span>
-            What did you work on?
+            <span id="quest-drill-label">What will you work on?</span>
             <span style="flex:1;height:1px;background:rgba(198,196,223,0.06)"></span>
           </div>
 
@@ -2262,18 +2279,25 @@ function buildSkillTreeHTML(data, ad) {
           <!-- ATTACK CHAIN drill mode -->
           <div id="drill-mode-chain" style="display:block">
             <div id="chaincard-added-list" style="margin-bottom:8px"></div>
+            <div style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:8px">Search shared chains or build your own</div>
+            <input type="text" id="drill-chain-search" placeholder="Search attack chains..."
+              oninput="onChainSearch(this.value)"
+              onfocus="onChainSearch(this.value)"
+              onblur="setTimeout(()=>{const el=document.getElementById('drill-chain-dropdown');if(el)el.style.display='none'},250)"
+              style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;padding:10px 12px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px"/>
+            <div id="drill-chain-dropdown" style="display:none;position:relative;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.1);max-height:200px;overflow-y:auto;z-index:10;margin-bottom:6px"></div>
             <button onclick="drillChainGoToBuilder()"
               style="width:100%;padding:12px 10px;background:#1a1205;border:0.5px solid rgba(200,168,75,0.25);color:#c8a84b;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px">
               <span style="font-size:14px">⛓</span> Build attack chain
             </button>
-            <textarea id="drill-notes-input" rows="2" placeholder="Notes on the chain you worked on..."
+            <textarea id="drill-notes-input" rows="2" placeholder="Notes on the chain..."
               oninput="onDrillNotesInput()"
               style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;font-family:'Crimson Pro',serif;padding:10px 12px;resize:none;outline:none;line-height:1.5;transition:border-color 0.15s"></textarea>
           </div>
 
           <!-- POSITIONAL drill mode -->
           <div id="drill-mode-positional" style="display:none">
-            <div style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:8px">What position did you drill from?</div>
+            <div style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:8px">What position are you focusing on?</div>
             <div id="drill-positional-selected" style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap"></div>
             <input type="text" id="drill-position-search" placeholder="Search positions..."
               oninput="onPositionSearch(this.value)"
@@ -2289,7 +2313,7 @@ function buildSkillTreeHTML(data, ad) {
 
           <!-- TECHNIQUE focus drill mode -->
           <div id="drill-mode-technique" style="display:none">
-            <div style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:8px">What specific technique did you drill?</div>
+            <div style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:8px">What specific technique are you focusing on?</div>
             <div id="drill-technique-pills" style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap"></div>
             <input type="text" id="drill-technique-search" placeholder="Search techniques..."
               oninput="onDrillTechSearch(this.value)"
@@ -2297,7 +2321,7 @@ function buildSkillTreeHTML(data, ad) {
               onblur="setTimeout(()=>{const el=document.getElementById('drill-tech-dropdown');if(el)el.style.display='none'},200)"
               style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;padding:10px 12px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px"/>
             <div id="drill-tech-dropdown" style="display:none;position:relative;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.1);max-height:160px;overflow-y:auto;z-index:10;margin-bottom:8px"></div>
-            <textarea id="drill-technique-notes" rows="2" placeholder="Notes on what you worked on..."
+            <textarea id="drill-technique-notes" rows="2" placeholder="Notes on technique focus..."
               oninput="onDrillNotesInput()"
               style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;font-family:'Crimson Pro',serif;padding:10px 12px;resize:none;outline:none;line-height:1.5;transition:border-color 0.15s"></textarea>
           </div>
@@ -2311,60 +2335,92 @@ function buildSkillTreeHTML(data, ad) {
               <div id="quest-oracle-response" style="background:#131313;border:0.5px solid rgba(255,255,255,0.06);padding:14px"></div>
             </div>
 
-            <!-- Community search results area -->
+            <!-- Community/Grimoire search results area -->
             <div id="quest-community-wrap" style="display:none;margin-bottom:8px">
               <div id="quest-community-results" style="display:flex;flex-direction:column;gap:8px"></div>
             </div>
 
+            <!-- Eco game search -->
+            <div style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:8px">Search eco games or explore the Grimoire</div>
+            <input type="text" id="drill-eco-search" placeholder="Search eco games..."
+              oninput="onEcoGameSearch(this.value)"
+              onfocus="onEcoGameSearch(this.value)"
+              onblur="setTimeout(()=>{const el=document.getElementById('drill-eco-dropdown');if(el)el.style.display='none'},250)"
+              style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;padding:10px 12px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px"/>
+            <div id="drill-eco-dropdown" style="display:none;position:relative;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.1);max-height:200px;overflow-y:auto;z-index:10;margin-bottom:6px"></div>
             <!-- Action buttons -->
             <div id="ecogame-action-btns" style="display:flex;flex-direction:column;gap:6px">
               <button onclick="drillEcoGoToBuilder()"
                 style="width:100%;padding:12px 10px;background:#1a1205;border:0.5px solid rgba(200,168,75,0.25);color:#c8a84b;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px">
                 <span style="font-size:14px">♟</span> Build on Chain tab
               </button>
-              <button onclick="searchCommunityFromQuest()" id="quest-community-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:none;border:0.5px solid rgba(255,255,255,0.1);color:rgba(198,196,223,0.35);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Cinzel',serif;width:100%;transition:all 0.15s">Search community games</button>
+              <button onclick="switchSTTab(1)" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:none;border:0.5px solid rgba(200,150,10,0.2);color:rgba(200,150,10,0.6);font-size:8px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Cinzel',serif;width:100%;transition:all 0.15s">Explore Grimoire →</button>
             </div>
           </div>
         </div>
 
-        <!-- ═══ SECTION 2: ROLL FOCUS ═══ -->
-        <div id="quest-rollfocus-section" style="margin-bottom:20px">
+        <!-- ═══════════════════════════════ -->
+        <!-- PREPARE-ONLY: Roll Focus + Save -->
+        <!-- ═══════════════════════════════ -->
+        <div id="quest-prepare-view">
+
+          <!-- ═══ ROLL FOCUS (Prepare: pick your focus) ═══ -->
+          <div id="quest-rollfocus-section" style="margin-bottom:20px">
+            <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+              <span style="display:inline-block;width:14px;height:1px;background:rgba(198,196,223,0.12)"></span>
+              Roll focus
+              <span style="flex:1;height:1px;background:rgba(198,196,223,0.06)"></span>
+            </div>
+            <div style="font-size:9px;color:rgba(198,196,223,0.2);font-family:serif;font-style:italic;margin-bottom:10px">What will you hunt for in live rounds?</div>
+
+            <!-- Active focus items (Prepare: no counters, just list + remove) -->
+            <div id="rollfocus-items-list"></div>
+
+            <!-- Suggested focus (based on drill or weakness) -->
+            <div id="rollfocus-suggestion" style="display:none;background:#131313;border:0.5px solid rgba(255,255,255,0.06);padding:14px;margin-bottom:8px;position:relative;overflow:hidden;cursor:pointer" onclick="acceptRollFocusSuggestion()">
+              <div id="rollfocus-suggestion-glow" style="position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle at top right, rgba(200,150,10,0.08), transparent 70%);pointer-events:none"></div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div id="rollfocus-suggestion-icon" style="font-size:24px;flex-shrink:0"></div>
+                <div style="flex:1">
+                  <div style="font-size:6px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:3px">Suggested focus</div>
+                  <div id="rollfocus-suggestion-tech" style="font-size:14px;color:#f4ead8;font-family:'Cinzel',serif;line-height:1.3"></div>
+                  <div id="rollfocus-suggestion-reason" style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-top:2px"></div>
+                </div>
+                <div id="rollfocus-suggestion-check" style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.15);font-family:'Cinzel',serif">tap to add</div>
+              </div>
+            </div>
+
+            <!-- Technique search picker -->
+            <div id="rollfocus-search-wrap" style="position:relative">
+              <input type="text" id="rollfocus-search" placeholder="Search techniques... e.g. Toreando Pass"
+                oninput="onRollFocusSearch(this.value)"
+                onfocus="onRollFocusSearch(this.value)"
+                onblur="setTimeout(()=>{const el=document.getElementById('rollfocus-dropdown');if(el)el.style.display='none'},200)"
+                style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;padding:10px 12px;outline:none;font-family:'Crimson Pro',serif"/>
+              <div id="rollfocus-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.1);max-height:200px;overflow-y:auto;z-index:10"></div>
+            </div>
+          </div>
+
+          <button onclick="saveQuestCardToGrimoire()" id="quest-save-grimoire-btn" style="width:100%;padding:14px;background:rgba(200,150,10,0.15);border:1px solid rgba(200,150,10,0.3);font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#c8a84b;cursor:pointer;margin-top:4px">+ Save Quest Card to Grimoire</button>
+        </div>
+
+        <!-- ═══════════════════════════════ -->
+        <!-- REFLECT-ONLY: Roll Tracking + After Rolling -->
+        <!-- ═══════════════════════════════ -->
+        <div id="quest-reflect-view" style="display:none">
+
+        <!-- ═══ ROLL FOCUS TRACKING (Reflect: carried over with counters) ═══ -->
+        <div id="quest-reflect-rollfocus" style="margin-bottom:20px">
           <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-block;width:14px;height:1px;background:rgba(198,196,223,0.12)"></span>
             Roll focus
             <span style="flex:1;height:1px;background:rgba(198,196,223,0.06)"></span>
           </div>
-          <div style="font-size:9px;color:rgba(198,196,223,0.2);font-family:serif;font-style:italic;margin-bottom:10px">What are you hunting for in live rounds?</div>
-
-          <!-- Active focus items (rendered dynamically) -->
-          <div id="rollfocus-items-list"></div>
-
-          <!-- Suggested focus (based on drill or weakness) -->
-          <div id="rollfocus-suggestion" style="display:none;background:#131313;border:0.5px solid rgba(255,255,255,0.06);padding:14px;margin-bottom:8px;position:relative;overflow:hidden;cursor:pointer" onclick="acceptRollFocusSuggestion()">
-            <div id="rollfocus-suggestion-glow" style="position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle at top right, rgba(200,150,10,0.08), transparent 70%);pointer-events:none"></div>
-            <div style="display:flex;align-items:center;gap:10px">
-              <div id="rollfocus-suggestion-icon" style="font-size:24px;flex-shrink:0"></div>
-              <div style="flex:1">
-                <div style="font-size:6px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:3px">Suggested focus</div>
-                <div id="rollfocus-suggestion-tech" style="font-size:14px;color:#f4ead8;font-family:'Cinzel',serif;line-height:1.3"></div>
-                <div id="rollfocus-suggestion-reason" style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-top:2px"></div>
-              </div>
-              <div id="rollfocus-suggestion-check" style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.15);font-family:'Cinzel',serif">tap to add</div>
-            </div>
-          </div>
-
-          <!-- Technique search picker (always visible for adding more) -->
-          <div id="rollfocus-search-wrap" style="position:relative">
-            <input type="text" id="rollfocus-search" placeholder="Search techniques... e.g. Toreando Pass"
-              oninput="onRollFocusSearch(this.value)"
-              onfocus="onRollFocusSearch(this.value)"
-              onblur="setTimeout(()=>{const el=document.getElementById('rollfocus-dropdown');if(el)el.style.display='none'},200)"
-              style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;padding:10px 12px;outline:none;font-family:'Crimson Pro',serif"/>
-            <div id="rollfocus-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.1);max-height:200px;overflow-y:auto;z-index:10"></div>
-          </div>
+          <div id="rollfocus-reflect-empty" style="font-size:9px;color:rgba(198,196,223,0.2);font-family:serif;font-style:italic;margin-bottom:10px;display:none">Set your roll focus on the Prepare tab first</div>
+          <div id="rollfocus-reflect-list"></div>
         </div>
 
-        <!-- ═══ SECTION 3: AFTER ROLLING ═══ -->
+        <!-- ═══ AFTER ROLLING ═══ -->
         <div id="quest-reflection-section" style="margin-bottom:20px">
           <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-block;width:14px;height:1px;background:rgba(198,196,223,0.12)"></span>
@@ -2387,6 +2443,8 @@ function buildSkillTreeHTML(data, ad) {
 
         <!-- ═══ SAVE BUTTON ═══ -->
         <button onclick="saveFullSession()" id="quest-save-btn" style="width:100%;padding:14px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer;opacity:0.35;pointer-events:none;transition:opacity 0.2s">Save Session ✦</button>
+
+        </div><!-- end quest-reflect-view -->
 
       </div>
 
@@ -2656,12 +2714,10 @@ async function shareGameToCommunity(gameData, technique, phase) {
     const { data: newGame, error } = await sbClient
       .from('community_games')
       .insert([{
-        game_name: gameData.game_name || 'Untitled Game',
-        card_type: gameData.card_type || 'eco_game',
         technique: technique,
         phase: phase,
         tags: tags,
-        game_data: gameData,
+        game_data: Object.assign({}, gameData, {game_name: gameData.game_name || 'Untitled Game'}),
         creator_name: (stUserProfile||{}).name || 'Anonymous',
         creator_belt: (stUserProfile||{}).belt || 'white',
         creator_archetype: stCurrentResultData?.archetype || 'Unknown',
@@ -2943,7 +2999,7 @@ function openGameEditor(game, technique, phase, mode) {
         ${mode === 'edit' ? 'Save Changes' : 'Save to Quest'}
       </button>
       <button class="btn-primary" style="background:rgba(200,150,10,0.3);color:rgba(200,150,10,0.8)" onclick="saveAndShareGame('${mode}', '${technique}', '${phase}', true)">
-        ✦ Add to Grimoire
+        + Add to Grimoire
       </button>
     </div>
     </div>
@@ -3244,6 +3300,148 @@ function renderQuestTab(){
   renderEcoGameList();
   updateRollFocusSection();
   updateSaveBtn();
+  renderPrepareView();
+  switchQuestMode(stQuestMode, true); // restore current mode without re-rendering
+}
+
+// ============================
+// QUEST: PREPARE / REFLECT MODE
+// ============================
+
+function switchQuestMode(mode, skipRender){
+  stQuestMode = mode;
+  const prepEl = document.getElementById('quest-prepare-view');
+  const refEl = document.getElementById('quest-reflect-view');
+  const prepBtn = document.getElementById('quest-mode-prepare');
+  const refBtn = document.getElementById('quest-mode-reflect');
+  const ad = stCurrentArchData || AD.BERSERKER;
+
+  // Toggle mode-specific sections
+  if(prepEl) prepEl.style.display = mode === 'prepare' ? 'block' : 'none';
+  if(refEl) refEl.style.display = mode === 'reflect' ? 'block' : 'none';
+
+  // Update header text per mode
+  const titleEl = document.getElementById('quest-mode-title');
+  const subEl = document.getElementById('quest-mode-subtitle');
+  const drillLabel = document.getElementById('quest-drill-label');
+  if(mode === 'prepare'){
+    if(titleEl) titleEl.textContent = 'Quest Card';
+    if(subEl) subEl.textContent = 'Your game plan \u2014 what to focus on today';
+    if(drillLabel) drillLabel.textContent = 'What will you work on?';
+  } else {
+    if(titleEl) titleEl.textContent = 'Session Log';
+    if(subEl) subEl.textContent = 'Capture your training, set a focus, reflect on your rolls';
+    if(drillLabel) drillLabel.textContent = 'What did you work on?';
+  }
+
+  // Toggle button styles
+  if(prepBtn){
+    if(mode === 'prepare'){
+      prepBtn.style.background = ad.color;
+      prepBtn.style.color = '#0e0e0e';
+      prepBtn.style.border = 'none';
+      prepBtn.style.fontWeight = '600';
+    } else {
+      prepBtn.style.background = '#131313';
+      prepBtn.style.color = 'rgba(198,196,223,0.35)';
+      prepBtn.style.border = '0.5px solid rgba(255,255,255,0.08)';
+      prepBtn.style.fontWeight = 'normal';
+    }
+  }
+  if(refBtn){
+    if(mode === 'reflect'){
+      refBtn.style.background = ad.color;
+      refBtn.style.color = '#0e0e0e';
+      refBtn.style.border = 'none';
+      refBtn.style.fontWeight = '600';
+    } else {
+      refBtn.style.background = '#131313';
+      refBtn.style.color = 'rgba(198,196,223,0.35)';
+      refBtn.style.border = '0.5px solid rgba(255,255,255,0.08)';
+      refBtn.style.fontWeight = 'normal';
+    }
+  }
+  if(!skipRender) renderPrepareView();
+}
+
+function renderPrepareView(){
+  // Show/hide the save-to-grimoire button based on whether there's quest content
+  const hasContent = stEcoGames.length > 0 || stChainCards.length > 0 || stRollFocusItems.length > 0 ||
+    stDrillPhases.length > 0 || stDrillPositions.length > 0 || stDrillTechniques.length > 0;
+  const saveBtn = document.getElementById('quest-save-grimoire-btn');
+  if(saveBtn) saveBtn.style.display = hasContent ? 'block' : 'none';
+}
+
+function removeChainCardFromQuest(idx){
+  stChainCards.splice(idx, 1);
+  renderChainCardList();
+  renderPrepareView();
+  updateSaveBtn();
+}
+
+async function saveQuestCardToGrimoire(){
+  const btn = document.getElementById('quest-save-grimoire-btn');
+  if(btn){ btn.textContent = 'Saving...'; btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
+
+  try {
+    const ad = stCurrentArchData || AD.BERSERKER;
+    const profile = stUserProfile || {};
+    const questTitle = 'Quest Card — ' + new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+    const gameData = {
+      card_type: 'quest_card',
+      game_name: questTitle,
+      archetype: ad.name,
+      eco_games: stEcoGames.map(g => {
+        const gd = g.game_data || {};
+        const merged = Object.assign({}, gd, g);
+        return {
+          game_name: merged.game_name || gd.game_name || merged.name || 'Eco Game',
+          phase: merged.phase || '',
+          player_a_start: merged.player_a_start || '',
+          player_b_start: merged.player_b_start || '',
+          constraints: merged.constraints || '',
+          win_condition: merged.win_condition || '',
+          attention_cue: merged.attention_cue || ''
+        };
+      }),
+      attack_chains: stChainCards.map(c => ({
+        title: c.title || 'Attack Chain',
+        tags: c.tags || [],
+        steps: (c.steps||[]).map(s => ({technique: s.technique, phase: s.phase, note: s.note||''}))
+      })),
+      roll_focus: stRollFocusItems.map(i => ({
+        technique: i.technique || '',
+        phase: i.phase || '',
+        cue: i.cue || ''
+      }))
+    };
+
+    const tags = ['quest_card'];
+    if(stEcoGames.length > 0) tags.push('eco_game');
+    if(stChainCards.length > 0) tags.push('attack_chain');
+
+    const { error } = await sbClient.from('community_games').insert({
+      technique: questTitle,
+      phase: 'Quest',
+      tags: tags,
+      game_data: gameData,
+      creator_name: profile.name || (ad.name + ' Player'),
+      creator_belt: profile.belt || 'white',
+      creator_archetype: ad.name,
+      creator_chain: stChainCards.length > 0 ? stChainCards[0].steps.map(s=>s.technique) : [],
+      upvotes: 0,
+      usage_count: 0
+    });
+
+    if(error) throw error;
+    showToast('Quest card saved to Grimoire!');
+  } catch(e){
+    console.error('Quest save error:', e);
+    showToast('Error saving: ' + (e?.message || 'Try again.'));
+  } finally {
+    if(btn){ btn.textContent = '+ Save Quest Card to Grimoire'; btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
+  }
 }
 
 function changeSTScore(tech, d){
@@ -3280,6 +3478,7 @@ let stRollFocusIdCounter = 0;
 let stReflectionRollCount = 3;
 let stEcoGames = [];       // [{game_name, phase, player_a_start, player_b_start, constraints, win_condition, attention_cue, ...}]
 let stChainCards = [];     // [{title, tags, steps:[{technique, phase, note}]}]
+let stQuestMode = 'prepare';  // 'prepare' | 'reflect'
 let stEcoGameBuilderPhase = '';  // phase selected in inline builder
 let stExposureLog = {};    // {phaseName: {count, lastDate}} — cumulative exposure per phase
 
@@ -3366,6 +3565,233 @@ function drillChainGoToBuilder(){
 
 function drillEcoGoToBuilder(){
   switchSTTab(0); // Go to Chain tab — use + Eco Game button there
+}
+
+// --- CHAIN SEARCH (local + community) ---
+
+async function onChainSearch(val){
+  const dropdown = document.getElementById('drill-chain-dropdown');
+  if(!dropdown) return;
+  const q = (val||'').toLowerCase().trim();
+  if(!q || q.length < 2){ dropdown.style.display = 'none'; return; }
+
+  const ad = stCurrentArchData || AD.BERSERKER;
+  let results = [];
+
+  // 1) Search local stChainCards
+  stChainCards.forEach(c => {
+    const title = (c.title||'').toLowerCase();
+    const preview = (c.steps||[]).map(s=>s.technique).join(' ').toLowerCase();
+    if(title.includes(q) || preview.includes(q)){
+      results.push({source:'local', title:c.title, steps:c.steps||[], tags:c.tags||[]});
+    }
+  });
+
+  // 2) Search community chains from Supabase — live server-side search
+  if(sbClient){
+    try {
+      const wildcard = '%' + q + '%';
+      const {data} = await sbClient.from('community_games').select('*')
+        .or('technique.ilike.'+wildcard+',phase.ilike.'+wildcard)
+        .order('upvotes',{ascending:false}).limit(80);
+      (data||[]).forEach(g => {
+        const gd = g.game_data||{};
+        const ct = gd.card_type;
+        const tags = g.tags||[];
+        // Only include chain-type entries
+        if(ct !== 'attack_chain' && !tags.includes('attack_chain')) return;
+        const title = (gd.chain_name || gd.game_name || g.technique || 'Chain').toLowerCase();
+        const already = results.some(r => r.title.toLowerCase() === title);
+        if(!already){
+          results.push({
+            source:'community',
+            title: gd.chain_name || gd.game_name || g.technique || 'Chain',
+            steps: gd.steps||[],
+            tags: tags,
+            creator: g.creator_name||'',
+            upvotes: g.upvotes||0
+          });
+        }
+      });
+    } catch(e){ console.error('[ChainSearch] query error', e); }
+  }
+
+  // Prioritize title matches over phase-only matches
+  results.sort((a, b) => {
+    const aName = a.title.toLowerCase().includes(q) ? 1 : 0;
+    const bName = b.title.toLowerCase().includes(q) ? 1 : 0;
+    return bName - aName;
+  });
+  results = results.slice(0, 10);
+  if(results.length === 0){ dropdown.style.display = 'none'; return; }
+
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = results.map((r, i) => {
+    const preview = r.steps.slice(0,4).map(s=>s.technique).join(' → ');
+    const badge = r.source === 'community'
+      ? '<span style="font-size:6px;letter-spacing:0.08em;text-transform:uppercase;background:'+ad.color+'22;color:'+ad.color+';padding:1px 5px;border-radius:2px;margin-left:6px">Community</span>'
+      : '<span style="font-size:6px;letter-spacing:0.08em;text-transform:uppercase;background:rgba(255,255,255,0.06);color:rgba(198,196,223,0.4);padding:1px 5px;border-radius:2px;margin-left:6px">Local</span>';
+    return `<div onmousedown="selectChainFromSearch(${i})"
+      style="padding:10px 12px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.04);transition:background 0.1s"
+      onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='none'">
+      <div style="display:flex;align-items:center">
+        <span style="font-size:12px;color:#f4ead8;font-family:'Cinzel',serif">${r.title}</span>${badge}
+      </div>
+      <div style="font-size:9px;color:rgba(198,196,223,0.35);margin-top:3px;line-height:1.3">${preview || 'No steps'}</div>
+    </div>`;
+  }).join('');
+
+  // Stash results for selection
+  window._chainSearchResults = results;
+}
+
+function selectChainFromSearch(idx){
+  const r = (window._chainSearchResults||[])[idx];
+  if(!r) return;
+  // Add to stChainCards if not already there
+  const already = stChainCards.some(c => c.title === r.title);
+  if(!already){
+    stChainCards.push({ title: r.title, tags: r.tags||[], steps: r.steps||[] });
+    renderChainCardList();
+    updateSaveBtn();
+    renderPrepareView();
+    showToast('Chain added: ' + r.title);
+  } else {
+    showToast('Chain already added');
+  }
+  const input = document.getElementById('drill-chain-search');
+  if(input) input.value = '';
+  const dropdown = document.getElementById('drill-chain-dropdown');
+  if(dropdown) dropdown.style.display = 'none';
+}
+
+// --- ECO GAME SEARCH (community) ---
+
+async function onEcoGameSearch(val){
+  const dropdown = document.getElementById('drill-eco-dropdown');
+  if(!dropdown) return;
+  const q = (val||'').toLowerCase().trim();
+  if(!q || q.length < 2){ dropdown.style.display = 'none'; return; }
+
+  const ad = stCurrentArchData || AD.BERSERKER;
+  let results = [];
+
+  // Local registry games
+  if(typeof ecoCardGameRegistry !== 'undefined'){
+    Object.entries(ecoCardGameRegistry).forEach(([id, g]) => {
+      const name = (g.game_name||g.title||'').toLowerCase();
+      const desc = (g.problem||g.skill_emerges||'').toLowerCase();
+      if(name.includes(q) || desc.includes(q)){
+        results.push({
+          source:'local',
+          game_name: g.game_name||g.title||'Eco Game',
+          phase: g.phase||'',
+          player_a_start: g.player_a_start||'',
+          player_b_start: g.player_b_start||'',
+          constraints: g.constraints||'',
+          win_condition: g.win_condition||'',
+          attention_cue: g.attention_cue||'',
+          skill_emerges: g.skill_emerges||'',
+          problem: g.problem||''
+        });
+      }
+    });
+  }
+
+  // Community eco games — live server-side search (searches ALL rows, not just top 100)
+  if(sbClient){
+    try {
+      const wildcard = '%' + q + '%';
+      const {data} = await sbClient.from('community_games').select('*')
+        .or('technique.ilike.'+wildcard+',phase.ilike.'+wildcard)
+        .order('upvotes',{ascending:false}).limit(80);
+      (data||[]).forEach(g => {
+        const gd = g.game_data||{};
+        const ct = gd.card_type;
+        const tags = g.tags||[];
+        // Only include eco-type entries
+        if(ct === 'attack_chain' || tags.includes('attack_chain') || ct === 'quest_card' || tags.includes('quest_card')) return;
+        const gameName = gd.game_name||gd.name||g.technique||'Eco Game';
+        const winCond = gd.win_condition||gd.win||'';
+        const attCue = gd.attention_cue||gd.cue||'';
+        const startPos = gd.player_a_start||gd.start||'';
+        const already = results.some(r => r.game_name.toLowerCase() === gameName.toLowerCase());
+        if(!already){
+          results.push({
+            source:'community',
+            game_name: gameName,
+            phase: g.phase||gd.phase||'',
+            player_a_start: startPos,
+            player_b_start: gd.player_b_start||'',
+            constraints: gd.constraints||'',
+            win_condition: winCond,
+            attention_cue: attCue,
+            skill_emerges: gd.skill_emerges||'',
+            problem: gd.problem||'',
+            creator: g.creator_name||'',
+            upvotes: g.upvotes||0
+          });
+        }
+      });
+    } catch(e){ console.error('[EcoSearch] query error', e); }
+  }
+
+  // Prioritize name matches over phase-only matches
+  results.sort((a, b) => {
+    const aName = a.game_name.toLowerCase().includes(q) ? 1 : 0;
+    const bName = b.game_name.toLowerCase().includes(q) ? 1 : 0;
+    return bName - aName;
+  });
+  results = results.slice(0, 10);
+  if(results.length === 0){ dropdown.style.display = 'none'; return; }
+
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = results.map((r, i) => {
+    const badge = r.source === 'community'
+      ? '<span style="font-size:6px;letter-spacing:0.08em;text-transform:uppercase;background:'+ad.color+'22;color:'+ad.color+';padding:1px 5px;border-radius:2px;margin-left:6px">Community</span>'
+      : '<span style="font-size:6px;letter-spacing:0.08em;text-transform:uppercase;background:rgba(255,255,255,0.06);color:rgba(198,196,223,0.4);padding:1px 5px;border-radius:2px;margin-left:6px">Local</span>';
+    const desc = r.problem || r.win_condition || r.skill_emerges || '';
+    return `<div onmousedown="selectEcoFromSearch(${i})"
+      style="padding:10px 12px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.04);transition:background 0.1s"
+      onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='none'">
+      <div style="display:flex;align-items:center">
+        <span style="font-size:12px;color:#f4ead8;font-family:'Cinzel',serif">${r.game_name}</span>${badge}
+      </div>
+      ${r.phase ? '<div style="font-size:8px;color:'+ad.color+'66;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px">'+r.phase+'</div>' : ''}
+      ${desc ? '<div style="font-size:9px;color:rgba(198,196,223,0.35);margin-top:3px;line-height:1.3;max-height:28px;overflow:hidden">'+desc+'</div>' : ''}
+    </div>`;
+  }).join('');
+
+  window._ecoSearchResults = results;
+}
+
+function selectEcoFromSearch(idx){
+  const r = (window._ecoSearchResults||[])[idx];
+  if(!r) return;
+  const already = stEcoGames.some(g => g.game_name === r.game_name);
+  if(!already){
+    stEcoGames.push({
+      game_name: r.game_name,
+      phase: r.phase||'',
+      player_a_start: r.player_a_start||'',
+      player_b_start: r.player_b_start||'',
+      constraints: r.constraints||'',
+      win_condition: r.win_condition||'',
+      attention_cue: r.attention_cue||'',
+      skill_emerges: r.skill_emerges||'',
+      source: r.source === 'community' ? 'community' : 'registry'
+    });
+    renderEcoGameList();
+    updateSaveBtn();
+    renderPrepareView();
+    showToast('Game added: ' + r.game_name);
+  } else {
+    showToast('Game already added');
+  }
+  const input = document.getElementById('drill-eco-search');
+  if(input) input.value = '';
+  const dropdown = document.getElementById('drill-eco-dropdown');
+  if(dropdown) dropdown.style.display = 'none';
 }
 
 // --- POSITIONAL DRILL ---
@@ -3787,9 +4213,12 @@ function addOracleGameFromQuest(){
 }
 
 // --- SEARCH COMMUNITY GAMES FROM QUEST TAB ---
-async function searchCommunityFromQuest(){
+function searchGrimoireFromQuest(){ return searchCommunityFromQuest('grimoire'); }
+
+async function searchCommunityFromQuest(source){
   const ad = stCurrentArchData || AD.BERSERKER;
-  const btn = document.getElementById('quest-community-btn');
+  const isGrimoire = source === 'grimoire';
+  const btn = document.getElementById(isGrimoire ? 'quest-grimoire-btn' : 'quest-community-btn');
   const wrap = document.getElementById('quest-community-wrap');
   const results = document.getElementById('quest-community-results');
   if(!btn||!results) return;
@@ -3844,7 +4273,7 @@ async function searchCommunityFromQuest(){
     if(wrap) wrap.style.display = 'block';
   }
 
-  btn.textContent = 'Search community games';
+  btn.textContent = isGrimoire ? 'Search Grimoire' : 'Search community games';
   btn.style.opacity = '1';
   btn.disabled = false;
 }
@@ -3955,24 +4384,57 @@ function changeFocusItemCount(id, type, d){
   if(!item) return;
   if(type === 'landed') item.landed = Math.max(0, item.landed + d);
   else item.attempted = Math.max(0, item.attempted + d);
-  renderRollFocusItems();
+  renderReflectRollFocus();
   syncRollFocusLegacy();
 }
 
 function renderRollFocusItems(){
+  // Prepare mode: show focus items with remove button, NO counters
   const el = document.getElementById('rollfocus-items-list');
   if(!el) return;
   const ad = stCurrentArchData || AD.BERSERKER;
 
   el.innerHTML = stRollFocusItems.map(item => `
     <div style="background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid ${ad.color};padding:12px 14px;margin-bottom:8px">
-      <!-- Header: technique + phase + remove -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
         <div style="flex:1">
           <div style="font-size:14px;color:#f4ead8;font-family:'Cinzel',serif;line-height:1.3">${item.technique}</div>
           <div style="font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:${ad.color}88;margin-top:2px">${item.phase || ''}</div>
         </div>
         <button onclick="event.stopPropagation();removeRollFocusItem('${item.id}')" style="background:rgba(200,50,50,0.08);border:0.5px solid rgba(200,50,50,0.2);color:#c05050;cursor:pointer;font-size:10px;padding:6px 10px;flex-shrink:0;font-family:'Cinzel',serif;letter-spacing:0.06em;border-radius:3px;min-width:44px;min-height:36px;display:flex;align-items:center;justify-content:center">✕ Remove</button>
+      </div>
+      ${item.cue ? `
+      <div style="font-size:10px;font-style:italic;line-height:1.4;padding:6px 10px;border-left:2px solid ${ad.color};background:rgba(0,0,0,0.2);margin-top:8px">
+        <span style="font-size:6px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.2);display:block;margin-bottom:2px">Attention cue</span>
+        <span style="color:${ad.color}">${item.cue}</span>
+      </div>` : ''}
+    </div>`).join('');
+
+  // Also update the reflect-side roll focus list
+  renderReflectRollFocus();
+}
+
+function renderReflectRollFocus(){
+  // Reflect mode: show carried-over focus items WITH landed/attempted counters
+  const el = document.getElementById('rollfocus-reflect-list');
+  const emptyEl = document.getElementById('rollfocus-reflect-empty');
+  const sectionEl = document.getElementById('quest-reflect-rollfocus');
+  if(!el) return;
+  const ad = stCurrentArchData || AD.BERSERKER;
+
+  if(stRollFocusItems.length === 0){
+    el.innerHTML = '';
+    if(emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display = 'none';
+
+  el.innerHTML = stRollFocusItems.map(item => `
+    <div style="background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid ${ad.color};padding:12px 14px;margin-bottom:8px">
+      <!-- Header: technique + phase -->
+      <div style="margin-bottom:8px">
+        <div style="font-size:14px;color:#f4ead8;font-family:'Cinzel',serif;line-height:1.3">${item.technique}</div>
+        <div style="font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:${ad.color}88;margin-top:2px">${item.phase || ''}</div>
       </div>
 
       ${item.cue ? `
@@ -4554,12 +5016,12 @@ function renderAllFeed(feedEl){
   // Trending section
   html += `
     <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin:12px 0 8px">Trending</div>
-    <div id="grimoire-trending" style="display:flex;flex-direction:column;gap:8px">
+    <div id="grimoire-feed-trending" style="display:flex;flex-direction:column;gap:8px">
       <div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Loading...</div>
     </div>`;
 
   feedEl.innerHTML = html;
-  loadGrimoireTrending();
+  loadGrimoireFeedTrending();
 }
 
 function renderCategoryFeed(feedEl, cat){
@@ -4837,13 +5299,13 @@ async function loadGrimCatContent(cat){
   if(!feedEl) return;
   if(!sbClient){ feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No community content for '+cat+' yet</div>'; return; }
   try {
-    let query = sbClient.from('community_games').select('*').eq('phase',cat).not('game_name','is',null).neq('game_name','').order('upvotes',{ascending:false}).limit(10);
-    // Filter by content type
-    if(stGrimCatFilter === 'Attack Chains') query = query.eq('card_type','attack_chain');
-    else if(stGrimCatFilter === 'Eco Games') query = query.eq('card_type','eco_game');
-    else if(stGrimCatFilter === 'Quest Cards') query = query.eq('card_type','quest_card');
+    let query = sbClient.from('community_games').select('*').eq('phase',cat).order('upvotes',{ascending:false}).limit(30);
     const { data, error } = await query;
-    const clean = (data||[]).filter(g => { const n = g.game_name || (g.game_data||{}).chain_name || (g.game_data||{}).game_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    let clean = (data||[]).filter(g => { const n = (g.game_data||{}).game_name || (g.game_data||{}).chain_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    // Client-side card_type filter (stored inside game_data)
+    if(stGrimCatFilter === 'Attack Chains') clean = clean.filter(g => (g.game_data||{}).card_type === 'attack_chain');
+    else if(stGrimCatFilter === 'Eco Games') clean = clean.filter(g => (g.game_data||{}).card_type === 'eco_game');
+    else if(stGrimCatFilter === 'Quest Cards') clean = clean.filter(g => (g.game_data||{}).card_type === 'quest_card');
     if(error || clean.length===0){
       const label = stGrimCatFilter === 'All' ? 'community content' : stGrimCatFilter.toLowerCase();
       feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No '+label+' for '+cat+' yet</div>';
@@ -4971,20 +5433,19 @@ function setGrimoireFilter(filter){
   else loadGrimoireTrending();
 }
 
-async function loadGrimoireTrending(){
-  const el = document.getElementById('grimoire-trending');
+async function loadGrimoireFeedTrending(){ return loadGrimoireTrending('grimoire-feed-trending'); }
+async function loadGrimoireTrending(targetId){
+  const el = document.getElementById(targetId || 'grimoire-trending');
   if(!el) return;
   if(!sbClient){ el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No community content yet — be the first to create!</div>'; return; }
   try {
-    let query = sbClient.from('community_games').select('*').not('game_name','is',null).neq('game_name','').order('upvotes',{ascending:false}).limit(10);
-    // Filter by content type
-    if(stGrimoireFilter === 'Attack Chains') query = query.eq('card_type','attack_chain');
-    else if(stGrimoireFilter === 'Eco Games') query = query.eq('card_type','eco_game');
-    else if(stGrimoireFilter === 'Quest Cards') query = query.eq('card_type','quest_card');
-    // 'All' = no filter
+    let query = sbClient.from('community_games').select('*').order('upvotes',{ascending:false}).limit(30);
     const { data, error } = await query;
-    // Also filter client-side for safety
-    const clean = (data||[]).filter(g => { const n = g.game_name || (g.game_data||{}).chain_name || (g.game_data||{}).game_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    let clean = (data||[]).filter(g => { const n = (g.game_data||{}).game_name || (g.game_data||{}).chain_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    // Client-side card_type filter (stored inside game_data)
+    if(stGrimoireFilter === 'Attack Chains') clean = clean.filter(g => (g.game_data||{}).card_type === 'attack_chain');
+    else if(stGrimoireFilter === 'Eco Games') clean = clean.filter(g => (g.game_data||{}).card_type === 'eco_game');
+    else if(stGrimoireFilter === 'Quest Cards') clean = clean.filter(g => (g.game_data||{}).card_type === 'quest_card');
     if(error || clean.length===0){
       const label = stGrimoireFilter === 'All' ? 'community content' : stGrimoireFilter.toLowerCase();
       el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No '+label+' yet — be the first to create!</div>';
@@ -5002,8 +5463,8 @@ async function loadForYouFeed(){
   const ad = stCurrentArchData || AD.BERSERKER;
   const archKey = ad.key || 'BERSERKER';
   try {
-    const { data, error } = await sbClient.from('community_games').select('*').not('game_name','is',null).neq('game_name','').order('upvotes',{ascending:false}).limit(20);
-    const clean = (data||[]).filter(g => { const n = g.game_name || (g.game_data||{}).chain_name || (g.game_data||{}).game_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    const { data, error } = await sbClient.from('community_games').select('*').order('upvotes',{ascending:false}).limit(20);
+    const clean = (data||[]).filter(g => { const n = (g.game_data||{}).game_name || (g.game_data||{}).chain_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
     if(error || clean.length===0){
       el.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:24px;margin-bottom:8px">✦</div><div style="font-size:12px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic">No content yet. Create eco games and quest cards to build your feed.</div></div>';
       return;
@@ -5030,65 +5491,102 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
   ecoCardGameRegistry[id] = game;
   const phase = game.phase || game.technique || 'General';
   const gd = game.game_data || {};
-  const name = game.game_name || gd.chain_name || gd.game_name || game.name || 'Untitled';
-  const cue = game.attention_cue || game.cue || '';
-  const startA = game.player_a_start || '';
-  const startB = game.player_b_start || '';
-  const startPos = game.start_position || (startA ? 'Player A: '+startA+(startB ? ' — Player B: '+startB : '') : '');
-  const contGoal = game.continuous_goal || game.player_a_goal || '';
-  const termGoal = game.terminal_goal || '';
-  const partnerRes = game.player_b_goal || '';
-  const constraints = game.constraints || '';
-  const win = game.win_condition || game.win || '';
-  const format = game.continuity || game.format || 'Reset';
-  const duration = game.round_length || game.round_duration || game.duration || '3 min';
-  const bot = game.bot_type || game.source || game.creator_name || 'Standard JJ Bot';
-  const skill = game.skill_emerges || '';
+  // Merge: check top-level (Oracle/in-memory) then game_data (Supabase) for each field
+  const g = Object.assign({}, gd, game); // game top-level wins, gd fills gaps
+  const name = g.game_name || gd.chain_name || gd.game_name || g.name || 'Untitled';
+  const cue = g.attention_cue || g.cue || '';
+  const startA = g.player_a_start || '';
+  const startB = g.player_b_start || '';
+  const startPos = g.start_position || (startA ? 'Player A: '+startA+(startB ? ' — Player B: '+startB : '') : '');
+  const contGoal = g.continuous_goal || g.player_a_goal || '';
+  const termGoal = g.terminal_goal || '';
+  const partnerRes = g.player_b_goal || '';
+  const constraints = g.constraints || '';
+  const win = g.win_condition || g.win || '';
+  const format = g.continuity || g.format || 'Reset';
+  const duration = g.round_length || g.round_duration || g.duration || '3 min';
+  const bot = g.bot_type || g.source || g.creator_name || 'Standard JJ Bot';
+  const skill = g.skill_emerges || '';
+  const problem = g.problem || '';
+
+  // Determine card type early so sections can branch on it
+  const effectiveCardType = game.card_type || gd.card_type || 'eco_game';
+  const cardTypeLabel = (effectiveCardType === 'attack_chain') ? '⛓ Chain' : '♟ Eco';
+  const cardTypeColor = (effectiveCardType === 'attack_chain') ? '#c8a84b' : '#2e8b57';
 
   // Build swipe sections dynamically — only include sections with content
   const sections = [];
-  sections.push({label:'Start Position', body:`
-    ${startA || startB ? `
-      <div class="eco-two-col">
-        <div class="eco-col-block">
-          <div class="eco-col-label">Player A</div>
-          <div class="eco-col-body">${startA || 'Standard position'}</div>
+  const chainSteps = g.steps || gd.steps || [];
+  const isChainCard = (effectiveCardType === 'attack_chain' || chainSteps.length > 0) && chainSteps.length > 0;
+
+  if(isChainCard){
+    // Attack chain: show steps with connected dots (same format as renderChainCard)
+    const stepsHtml = chainSteps.map((s,i) => {
+      const isLast = i === (chainSteps.length - 1);
+      return `<div class="cc-step">
+        <div class="cc-step-left">
+          <div class="cc-step-dot${isLast?' last':''}"></div>
+          ${!isLast ? '<div class="cc-step-line"></div>' : ''}
         </div>
-        <div class="eco-col-block">
-          <div class="eco-col-label">Player B</div>
-          <div class="eco-col-body">${startB || 'Standard position'}</div>
+        <div class="cc-step-content">
+          <div class="cc-step-name">${s.technique||''}</div>
+          <div class="cc-step-phase">${s.phase||''}</div>
+          ${s.note ? '<div class="cc-step-note">'+s.note+'</div>' : ''}
         </div>
-      </div>` : `<div class="eco-section-body">${startPos || 'Standard starting position for '+phase}</div>`}`});
+      </div>`;
+    }).join('');
+    const chainTags = g.tags || gd.tags || [];
+    const tagsHtml = Array.isArray(chainTags) && chainTags.length ? chainTags.map(t=>'<span class="cc-tag">'+t+'</span>').join('') : '';
+    sections.push({label:'Sequence', body:`
+      ${tagsHtml ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">'+tagsHtml+'</div>' : ''}
+      ${stepsHtml}`});
+  } else {
+    // Eco game: show game sections
+    if(problem) sections.push({label:'Problem', body:`
+      <div class="eco-section-body">${problem}</div>`});
+    sections.push({label:'Start Position', body:`
+      ${startA || startB ? `
+        <div class="eco-two-col">
+          <div class="eco-col-block">
+            <div class="eco-col-label">Player A</div>
+            <div class="eco-col-body">${startA || 'Standard position'}</div>
+          </div>
+          <div class="eco-col-block">
+            <div class="eco-col-label">Player B</div>
+            <div class="eco-col-body">${startB || 'Standard position'}</div>
+          </div>
+        </div>` : `<div class="eco-section-body">${startPos || 'Standard starting position for '+phase}</div>`}`});
 
-  if(contGoal) sections.push({label:'Continuous Goal', body:`
-    <div class="eco-section-body">${contGoal}</div>
-    <div style="font-size:10px;color:#4a5568;margin-top:6px;font-style:italic">Maintain throughout the round</div>`});
+    if(contGoal) sections.push({label:'Continuous Goal', body:`
+      <div class="eco-section-body">${contGoal}</div>
+      <div style="font-size:10px;color:#4a5568;margin-top:6px;font-style:italic">Maintain throughout the round</div>`});
 
-  if(termGoal) sections.push({label:'Terminal Goal', body:`
-    <div class="eco-section-body">${termGoal}</div>
-    <div style="font-size:10px;color:#4a5568;margin-top:6px;font-style:italic">Achieve to win the round</div>`});
+    if(termGoal) sections.push({label:'Terminal Goal', body:`
+      <div class="eco-section-body">${termGoal}</div>
+      <div style="font-size:10px;color:#4a5568;margin-top:6px;font-style:italic">Achieve to win the round</div>`});
 
-  if(partnerRes) sections.push({label:"Partner's Resistance", body:`
-    <div class="eco-section-body">${partnerRes}</div>`});
+    if(partnerRes) sections.push({label:"Partner's Resistance", body:`
+      <div class="eco-section-body">${partnerRes}</div>`});
 
-  if(constraints) sections.push({label:'Constraints', body:`
-    <div class="eco-section-body">${(()=>{
-      const cStr = Array.isArray(constraints) ? constraints.join(', ') : String(constraints);
-      const parts = cStr.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
-      if(parts.length <= 1) return cStr;
-      return parts.map(p=>'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="color:#2e8b57;flex-shrink:0">—</span><span>'+p+'</span></div>').join('');
-    })()}</div>`});
+    if(constraints) sections.push({label:'Constraints', body:`
+      <div class="eco-section-body">${(()=>{
+        const cStr = Array.isArray(constraints) ? constraints.join(', ') : String(constraints);
+        const parts = cStr.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+        if(parts.length <= 1) return cStr;
+        return parts.map(p=>'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="color:#2e8b57;flex-shrink:0">—</span><span>'+p+'</span></div>').join('');
+      })()}</div>`});
 
-  sections.push({label:'Win Condition', body:`
-    <div class="eco-section-body">${win || 'Complete the objective'}</div>
-    ${cue ? `<div class="eco-cue-expanded">${cue}</div>` : ''}
-    ${skill ? `<div style="margin-top:10px;font-size:12px;color:#4a5568;font-style:italic">Skill that emerges: ${skill}</div>` : ''}`});
+    sections.push({label:'Win Condition', body:`
+      <div class="eco-section-body">${win || 'Complete the objective'}</div>
+      ${cue ? `<div class="eco-cue-expanded">${cue}</div>` : ''}
+      ${skill ? `<div style="margin-top:10px;font-size:12px;color:#4a5568;font-style:italic">Skill that emerges: ${skill}</div>` : ''}`});
+  }
 
   const totalSections = sections.length;
   const dotLabels = sections.map(s => s.label.split(' ')[0]); // Short labels for dots
 
   let addBtnHtml;
-  let saveBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="background:rgba(200,150,10,0.15);border-color:rgba(200,150,10,0.3);color:#c8a84b">✦ Grimoire</button>`;
+  let saveBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="background:rgba(200,150,10,0.15);border-color:rgba(200,150,10,0.3);color:#c8a84b">+ Grimoire</button>`;
   if(mode === 'quest' && questIdx !== null){
     addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();removeEcoGame(${questIdx})" style="background:rgba(200,50,50,0.15);border-color:rgba(200,50,50,0.3);color:#e05555">✕ Remove</button>`;
     saveBtnHtml = '';
@@ -5100,10 +5598,6 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
 
   const editBtnHtml = `<button class="eco-collapse-btn" onclick="event.stopPropagation();ecoCardEdit(${id})" style="color:#c8a84b">✎ Edit</button>`;
 
-  const effectiveCardType = game.card_type || gd.card_type || 'eco_game';
-  const cardTypeLabel = (effectiveCardType === 'attack_chain') ? '⛓ Chain' : '♟ Eco';
-  const cardTypeColor = (effectiveCardType === 'attack_chain') ? '#c8a84b' : '#2e8b57';
-
   return `
     <div id="eco-card-${id}">
       <!-- COLLAPSED STATE — compact title row -->
@@ -5114,7 +5608,7 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
             <div style="font-size:12px;color:#f4ead8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
             <div style="font-size:8px;color:rgba(198,196,223,0.2);margin-top:1px">${phase}</div>
           </div>
-          ${saveBtnHtml ? `<span onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:#c8a84b;background:rgba(200,150,10,0.1);padding:4px 8px;flex-shrink:0;cursor:pointer;font-family:'Cinzel',serif">✦ Grimoire</span>` : ''}
+          ${saveBtnHtml ? `<span onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:#c8a84b;background:rgba(200,150,10,0.1);padding:4px 8px;flex-shrink:0;cursor:pointer;font-family:'Cinzel',serif">+ Grimoire</span>` : ''}
           <span style="font-size:11px;color:rgba(198,196,223,0.2);flex-shrink:0">▾</span>
         </div>
       </div>
@@ -5192,12 +5686,10 @@ async function saveOracleGameToGrimoire(cardId){
 
   try {
     const { error } = await sbClient.from('community_games').insert({
-      game_name: gameName,
-      card_type: 'eco_game',
       technique: gameName,
       phase: phase,
       tags: ['oracle', 'ecological'],
-      game_data: game,
+      game_data: Object.assign({}, game, {card_type: 'eco_game', game_name: gameName}),
       creator_name: profile.name || ad.name + ' Player',
       creator_belt: profile.belt || 'white',
       creator_archetype: ad.name,
@@ -5208,7 +5700,7 @@ async function saveOracleGameToGrimoire(cardId){
     if(error){ showToast('Save error: '+error.message); return; }
     stBadgeCounters.games_shared = (stBadgeCounters.games_shared||0) + 1;
     updateCodexBadges();
-    showToast('✦ Saved to Grimoire!');
+    showToast('+ Saved to Grimoire!');
   } catch(e){
     showToast('Error: '+(e.message||e));
   }
@@ -6113,8 +6605,6 @@ async function saveEcoGameFromEditor(){
 
   try{
     const { error } = await sbClient.from('community_games').insert({
-      game_name: data.game_name,
-      card_type: 'eco_game',
       technique: data.game_name,
       phase: data.phase || 'General',
       tags: data.tags.map(t=>t.toLowerCase()),
@@ -6146,7 +6636,7 @@ async function saveEcoGameFromEditor(){
     stBadgeCounters.games_shared = (stBadgeCounters.games_shared||0) + 1;
     updateCodexBadges();
     closeChainCardEditor();
-    showToast('✦ Saved to Grimoire!');
+    showToast('+ Saved to Grimoire!');
   }catch(e){
     showToast('Error: '+(e.message||e));
   }
@@ -6403,6 +6893,7 @@ async function saveChainCard(type){
   // Build game_data object
   const gameData = {
     card_type: type === 'chain' ? 'attack_chain' : 'eco_game',
+    game_name: data.title,
     chain_name: data.title,
     steps: data.steps,
     archetype: stCurrentResultData?.archetype || ad.name
@@ -6410,8 +6901,6 @@ async function saveChainCard(type){
 
   try{
     const { error } = await sbClient.from('community_games').insert({
-      game_name: data.title,
-      card_type: type === 'chain' ? 'attack_chain' : 'eco_game',
       technique: data.steps.map(s=>s.technique).join(' → '),
       phase: data.steps[0]?.phase || 'General',
       tags: data.tags.map(t=>t.toLowerCase()),
@@ -6429,7 +6918,7 @@ async function saveChainCard(type){
     stBadgeCounters.games_shared = (stBadgeCounters.games_shared||0) + 1;
     updateCodexBadges();
     closeChainCardEditor();
-    showToast('✦ Saved to Grimoire!');
+    showToast('+ Saved to Grimoire!');
   }catch(e){
     showToast('Error: '+(e.message||e));
   }

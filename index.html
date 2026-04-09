@@ -350,7 +350,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-secondary { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; background: none; color: rgba(198,196,223,0.5); border: 0.5px solid rgba(200,150,10,0.2); padding: 10px 20px; cursor: pointer; transition: all 0.2s; }
 .btn-secondary:hover { color: rgba(198,196,223,0.8); border-color: rgba(200,150,10,0.4); }
 
-.videos-coming-badge { position: absolute; top: 10px; right: 10px; font-size: 9px; color: rgba(200,150,10,0.4); background: rgba(200,150,10,0.08); padding: 4px 8px; border: 0.5px solid rgba(200,150,10,0.2); border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
 
 .belt-rank { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 4px; }
 </style>
@@ -2140,14 +2139,14 @@ function buildSkillTreeHTML(data, ad) {
 
         <!-- Filter pills -->
         <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px;scrollbar-width:none" id="grimoire-filter-row">
-          ${['All','Attack Chains','Eco Games','Quest Cards','Videos'].map((f,i)=>`
+          ${['All','Attack Chains','Eco Games','Quest Cards'].map((f,i)=>`
             <button onclick="setGrimoireFilter('${f}')" class="grim-filter" data-filter="${f}" style="padding:5px 12px;border-radius:20px;font-size:9px;white-space:nowrap;cursor:pointer;flex-shrink:0;font-family:'Cinzel',serif;letter-spacing:0.06em;${i===0?'background:#1a1205;border:1px solid '+ad.color+';color:'+ad.color:'background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.3)'}">${f}</button>`).join('')}
         </div>
 
         <!-- EXPLORE VIEW -->
         <div id="grimoire-explore-view">
-          <!-- 6 Category Cards -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+          <!-- 6 Compact Category Cards (3x2 grid) -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">
             ${[
               {cat:'Standing', icon:'⚔', accent:'#c8a84b', bg:'#1a1205'},
               {cat:'Takedown', icon:'⤵', accent:'#2b6cb0', bg:'#0a1428'},
@@ -2156,19 +2155,16 @@ function buildSkillTreeHTML(data, ad) {
               {cat:'Pinning', icon:'⊕', accent:'#e8621a', bg:'#1a1205'},
               {cat:'Submission', icon:'✦', accent:'#e84747', bg:'#1a0808'}
             ].map(c=>`
-              <div onclick="openGrimoireCategory('${c.cat}')" style="background:linear-gradient(135deg,${c.bg},#131313);border:0.5px solid ${c.accent}44;padding:16px 14px;cursor:pointer;position:relative;overflow:hidden;min-height:80px;display:flex;flex-direction:column;justify-content:flex-end">
-                <div style="position:absolute;top:0;left:0;width:100%;height:2px;background:${c.accent}"></div>
-                <div style="font-size:18px;margin-bottom:6px">${c.icon}</div>
-                <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#f4ead8;font-weight:500">${c.cat}</div>
-                <div style="font-size:8px;color:rgba(198,196,223,0.3);margin-top:2px" id="grim-count-${c.cat.toLowerCase()}">${(TECHNIQUES[c.cat]||[]).length} techniques</div>
+              <div onclick="openGrimoireCategory('${c.cat}')" style="background:linear-gradient(135deg,${c.bg},#131313);border:0.5px solid ${c.accent}44;padding:10px 8px;cursor:pointer;position:relative;overflow:hidden;text-align:center">
+                <div style="position:absolute;top:0;left:0;width:100%;height:1.5px;background:${c.accent}"></div>
+                <div style="font-size:14px;margin-bottom:3px">${c.icon}</div>
+                <div style="font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#f4ead8;font-weight:500">${c.cat}</div>
+                <div style="font-size:7px;color:rgba(198,196,223,0.25);margin-top:1px">${(TECHNIQUES[c.cat]||[]).length}</div>
               </div>`).join('')}
           </div>
 
-          <!-- Curated / Trending section -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25)">Trending</div>
-            <div style="font-size:8px;color:${ad.color};cursor:pointer" onclick="switchGrimoireView('foryou')">See all →</div>
-          </div>
+          <!-- Trending + community feed -->
+          <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:8px">Trending</div>
           <div id="grimoire-trending" style="display:flex;flex-direction:column;gap:8px">
             <div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Loading community content...</div>
           </div>
@@ -2197,7 +2193,7 @@ function buildSkillTreeHTML(data, ad) {
 
         <!-- Category filter pills -->
         <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px;scrollbar-width:none" id="grimoire-cat-filters">
-          ${['All','Eco Games','Attack Chains','Videos'].map((f,i)=>`
+          ${['All','Eco Games','Attack Chains','Quest Cards'].map((f,i)=>`
             <button onclick="setGrimCatFilter('${f}')" class="grim-cat-filter" data-filter="${f}" style="padding:5px 12px;border-radius:20px;font-size:9px;white-space:nowrap;cursor:pointer;flex-shrink:0;font-family:'Cinzel',serif;letter-spacing:0.06em;${i===0?'background:#1a1205;border:1px solid '+ad.color+';color:'+ad.color:'background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.3)'}">${f}</button>`).join('')}
         </div>
 
@@ -2623,11 +2619,12 @@ async function loadCommunityGames(technique, phase) {
 }
 
 async function shareGameToCommunity(gameData, technique, phase) {
-  if (!gameData || !gameData.game_name) return;
+  if (!gameData || !gameData.game_name) { showToast('Missing game name'); return; }
 
   try {
-    // Auto-tag the game
-    const tags = await autoTagGame(gameData);
+    // Auto-tag the game (non-fatal if it fails)
+    let tags = [];
+    try { tags = await autoTagGame(gameData); } catch(tagErr){ console.warn('Auto-tag failed, continuing:', tagErr); }
 
     if (!sbClient) {
       // Fallback: store in localStorage
@@ -2643,8 +2640,8 @@ async function shareGameToCommunity(gameData, technique, phase) {
         phase: phase,
         tags: tags,
         game_data: gameData,
-        creator_name: stUserProfile.name,
-        creator_belt: stUserProfile.belt,
+        creator_name: (stUserProfile||{}).name || 'Anonymous',
+        creator_belt: (stUserProfile||{}).belt || 'white',
         creator_archetype: stCurrentResultData?.archetype || 'Unknown',
         creator_chain: (stCurrentResultData?.chain || []).map(c => c.technique),
         upvotes: 0
@@ -2659,12 +2656,14 @@ async function shareGameToCommunity(gameData, technique, phase) {
     const { data: newGame, error } = await sbClient
       .from('community_games')
       .insert([{
+        game_name: gameData.game_name || 'Untitled Game',
+        card_type: gameData.card_type || 'eco_game',
         technique: technique,
         phase: phase,
         tags: tags,
         game_data: gameData,
-        creator_name: stUserProfile.name,
-        creator_belt: stUserProfile.belt,
+        creator_name: (stUserProfile||{}).name || 'Anonymous',
+        creator_belt: (stUserProfile||{}).belt || 'white',
         creator_archetype: stCurrentResultData?.archetype || 'Unknown',
         creator_chain: (stCurrentResultData?.chain || []).map(c => c.technique),
         upvotes: 0
@@ -2680,8 +2679,8 @@ async function shareGameToCommunity(gameData, technique, phase) {
     showToast('Game shared with community!');
     await loadCommunityGames(technique, phase);
   } catch (e) {
-    console.error('Error:', e);
-    showToast('Error sharing. Try again.');
+    console.error('Error sharing to community:', e, e?.message, e?.details);
+    showToast('Error sharing: ' + (e?.message || 'Try again.'));
   }
 }
 
@@ -2944,7 +2943,7 @@ function openGameEditor(game, technique, phase, mode) {
         ${mode === 'edit' ? 'Save Changes' : 'Save to Quest'}
       </button>
       <button class="btn-primary" style="background:rgba(200,150,10,0.3);color:rgba(200,150,10,0.8)" onclick="saveAndShareGame('${mode}', '${technique}', '${phase}', true)">
-        Share to Community
+        ✦ Add to Grimoire
       </button>
     </div>
     </div>
@@ -4408,6 +4407,9 @@ async function loadCustomTechniques(phase) {
 }
 
 let stGrimCatFilter = 'All';
+let stGrimFeedCategory = null;  // null = all, 'Standing' etc = filtered
+let stGrimFeedTechnique = null; // null = category level, 'Collar tie' = technique level
+let stGrimTechExpanded = false; // whether technique list is expanded beyond initial 4
 
 function setGrimCatFilter(filter){
   stGrimCatFilter = filter;
@@ -4423,8 +4425,301 @@ function setGrimCatFilter(filter){
   loadGrimCatContent(stCurrentGrimCat);
 }
 
+// --- REDDIT-STYLE EXPLORE FEED ---
+
+const CATEGORY_META = {
+  Standing: {icon:'⚔', accent:'#c8a84b'},
+  Takedown: {icon:'⤵', accent:'#2b6cb0'},
+  Guard:    {icon:'🛡', accent:'#2e8b57'},
+  Passing:  {icon:'↗', accent:'#6b3fa0'},
+  Pinning:  {icon:'⊕', accent:'#e8621a'},
+  Submission:{icon:'✦', accent:'#e84747'}
+};
+
+function setGrimCategory(cat){
+  stGrimFeedCategory = cat;
+  stGrimFeedTechnique = null;
+  stGrimTechExpanded = false;
+  updateGrimCategoryPills();
+  renderGrimoireFeed();
+}
+
+function setGrimTechnique(cat, techName){
+  stGrimFeedCategory = cat;
+  stGrimFeedTechnique = techName;
+  updateGrimCategoryPills();
+  renderGrimoireFeed();
+}
+
+function updateGrimCategoryPills(){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const cats = ['all','standing','takedown','guard','passing','pinning','submission'];
+  cats.forEach(c => {
+    const btn = document.getElementById('grim-cat-' + c);
+    if(!btn) return;
+    const isActive = (c === 'all' && !stGrimFeedCategory) || (stGrimFeedCategory && c === stGrimFeedCategory.toLowerCase());
+    if(isActive){
+      const accent = c === 'all' ? ad.color : (CATEGORY_META[stGrimFeedCategory]||{}).accent || ad.color;
+      btn.style.background = '#1a1205';
+      btn.style.border = '1px solid ' + accent;
+      btn.style.color = accent;
+    } else {
+      btn.style.background = '#131313';
+      btn.style.border = '0.5px solid rgba(255,255,255,0.06)';
+      btn.style.color = 'rgba(198,196,223,0.3)';
+    }
+  });
+}
+
+function renderGrimBreadcrumb(){
+  const el = document.getElementById('grim-breadcrumb');
+  if(!el) return;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  if(!stGrimFeedCategory){
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'flex';
+  const meta = CATEGORY_META[stGrimFeedCategory] || {icon:'', accent:ad.color};
+  if(stGrimFeedTechnique){
+    el.innerHTML = `
+      <span onclick="setGrimCategory(null)" style="color:rgba(198,196,223,0.25);cursor:pointer">Explore</span>
+      <span style="color:rgba(198,196,223,0.15)">›</span>
+      <span onclick="setGrimCategory('${stGrimFeedCategory}')" style="color:${meta.accent};cursor:pointer">${meta.icon} ${stGrimFeedCategory}</span>
+      <span style="color:rgba(198,196,223,0.15)">›</span>
+      <span style="color:#f4ead8">${stGrimFeedTechnique}</span>`;
+  } else {
+    el.innerHTML = `
+      <span onclick="setGrimCategory(null)" style="color:rgba(198,196,223,0.25);cursor:pointer">Explore</span>
+      <span style="color:rgba(198,196,223,0.15)">›</span>
+      <span style="color:${meta.accent}">${meta.icon} ${stGrimFeedCategory}</span>
+      <span style="font-size:8px;color:rgba(198,196,223,0.2);margin-left:4px">${(TECHNIQUES[stGrimFeedCategory]||[]).length} techniques</span>`;
+  }
+}
+
+async function renderGrimoireFeed(){
+  const feedEl = document.getElementById('grimoire-feed');
+  if(!feedEl) return;
+  const ad = stCurrentArchData || AD.BERSERKER;
+
+  renderGrimBreadcrumb();
+
+  // LEVEL 2: Specific technique view
+  if(stGrimFeedTechnique && stGrimFeedCategory){
+    renderTechniqueFeed(feedEl, stGrimFeedCategory, stGrimFeedTechnique);
+    return;
+  }
+
+  // LEVEL 1: Category view
+  if(stGrimFeedCategory){
+    renderCategoryFeed(feedEl, stGrimFeedCategory);
+    return;
+  }
+
+  // LEVEL 0: All — show mixed feed
+  renderAllFeed(feedEl);
+}
+
+function renderAllFeed(feedEl){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  let html = '';
+
+  // Show each category as a compact section with 2 preview techniques
+  const cats = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  cats.forEach(cat => {
+    const meta = CATEGORY_META[cat];
+    const techs = TECHNIQUES[cat] || [];
+    const preview = techs.slice(0, 2);
+
+    html += `
+    <div style="background:#131313;border:0.5px solid ${meta.accent}22;margin-bottom:4px;overflow:hidden">
+      <div onclick="setGrimCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:14px">${meta.icon}</span>
+          <div>
+            <div style="font-size:12px;color:#f4ead8;font-family:'Cinzel',serif;letter-spacing:0.06em">${cat}</div>
+            <div style="font-size:8px;color:rgba(198,196,223,0.25);margin-top:1px">${techs.length} techniques</div>
+          </div>
+        </div>
+        <span style="font-size:12px;color:${meta.accent}">›</span>
+      </div>
+      <div style="padding:0 14px 10px;display:flex;gap:6px;flex-wrap:wrap">
+        ${preview.map(t => `<span onclick="event.stopPropagation();setGrimTechnique('${cat}','${t.name.replace(/'/g,"\\'")}')"
+          style="font-size:9px;padding:4px 10px;background:${meta.accent}0a;border:0.5px solid ${meta.accent}22;color:${meta.accent}88;cursor:pointer;font-family:'Crimson Pro',serif">${t.name}</span>`).join('')}
+        <span onclick="setGrimCategory('${cat}')" style="font-size:9px;padding:4px 10px;color:rgba(198,196,223,0.2);cursor:pointer;font-family:'Crimson Pro',serif">+${techs.length - 2} more</span>
+      </div>
+    </div>`;
+  });
+
+  // Trending section
+  html += `
+    <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin:12px 0 8px">Trending</div>
+    <div id="grimoire-trending" style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Loading...</div>
+    </div>`;
+
+  feedEl.innerHTML = html;
+  loadGrimoireTrending();
+}
+
+function renderCategoryFeed(feedEl, cat){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const meta = CATEGORY_META[cat] || {accent: ad.color};
+  const techs = TECHNIQUES[cat] || [];
+  const showCount = stGrimTechExpanded ? techs.length : 4;
+  const visibleTechs = techs.slice(0, showCount);
+
+  let html = '';
+
+  // Techniques section (collapsible)
+  html += `<div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:6px">Techniques</div>`;
+
+  visibleTechs.forEach(t => {
+    const archColor = ARCH_COLORS[t.arch] || ad.color;
+    html += `
+    <div onclick="setGrimTechnique('${cat}','${t.name.replace(/'/g,"\\'")}')"
+      style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);margin-bottom:3px;cursor:pointer;transition:background 0.1s">
+      <span style="width:6px;height:6px;border-radius:50%;background:${archColor};flex-shrink:0"></span>
+      <div style="flex:1">
+        <div style="font-size:12px;color:#f4ead8">${t.name}</div>
+        <div style="font-size:9px;color:rgba(198,196,223,0.25);font-style:italic;margin-top:1px">${t.cue}</div>
+      </div>
+      <span style="font-size:10px;color:rgba(198,196,223,0.2)">›</span>
+    </div>`;
+  });
+
+  if(!stGrimTechExpanded && techs.length > 4){
+    html += `
+    <div onclick="stGrimTechExpanded=true;renderGrimoireFeed()"
+      style="padding:10px;text-align:center;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:${meta.accent};cursor:pointer;font-family:'Cinzel',serif;border:0.5px dashed ${meta.accent}33;margin-bottom:4px">
+      Show all ${techs.length} techniques ▾
+    </div>`;
+  } else if(stGrimTechExpanded && techs.length > 4){
+    html += `
+    <div onclick="stGrimTechExpanded=false;renderGrimoireFeed()"
+      style="padding:10px;text-align:center;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.25);cursor:pointer;font-family:'Cinzel',serif;margin-bottom:4px">
+      Show less ▴
+    </div>`;
+  }
+
+  // Community content for this category
+  html += `
+    <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin:14px 0 8px">Community · ${cat}</div>
+    <div id="grim-feed-community" style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:10px;color:rgba(198,196,223,0.15);font-style:italic;font-family:serif">Loading...</div>
+    </div>`;
+
+  feedEl.innerHTML = html;
+
+  // Load community content async
+  loadGrimFeedCommunity(cat, null);
+}
+
+async function renderTechniqueFeed(feedEl, cat, techName){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const meta = CATEGORY_META[cat] || {accent: ad.color};
+  let t = (TECHNIQUES[cat]||[]).find(x => x.name === techName);
+  if(!t) t = {name: techName, arch: 'berserker', game: techName + ' Game', start:'', win:'', cue:'', leads:[]};
+
+  const archColor = ARCH_COLORS[t.arch] || ad.color;
+  const alreadyAdded = stQuestItems[t.name];
+  const onChain = stCurrentResultData && (stCurrentResultData.chain||[]).some(c => c.technique === t.name);
+
+  let html = `
+  <!-- Technique header card -->
+  <div style="background:#131313;border:0.5px solid ${meta.accent}33;border-left:3px solid ${meta.accent};padding:16px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${archColor}"></span>
+      <span style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:${archColor}">${t.arch}</span>
+    </div>
+    <div style="font-size:18px;color:#f4ead8;font-family:'Cinzel',serif;margin-bottom:6px">${t.name}</div>
+    ${t.cue ? `<div style="font-size:11px;color:rgba(198,196,223,0.5);font-style:italic;font-family:serif;line-height:1.5;margin-bottom:12px">"${t.cue}"</div>` : ''}
+
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${t.start ? `<div style="font-size:8px;padding:4px 8px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.35)">Start: ${t.start}</div>` : ''}
+      ${t.win ? `<div style="font-size:8px;padding:4px 8px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.35)">Win: ${t.win}</div>` : ''}
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex;gap:6px">
+      <button onclick="addToChain('${cat}','${t.name.replace(/'/g,"\\'")}')"
+        style="flex:1;padding:9px;background:none;border:0.5px solid ${onChain ? ad.color : 'rgba(255,255,255,0.1)'};font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:${onChain ? ad.color : 'rgba(198,196,223,0.3)'};cursor:pointer">
+        ${onChain ? '✓ On Chain' : '+ Chain'}
+      </button>
+      <button onclick="askOracle('${t.name.replace(/'/g,"\\'")}','${t.arch}','${cat}')"
+        style="flex:1;padding:9px;background:#131313;border:0.5px solid ${ad.color}44;font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:${ad.color};cursor:pointer">
+        ✦ Oracle
+      </button>
+    </div>
+    <div id="oracle-response-wrap" style="display:none;margin-top:8px">
+      <div style="background:#0e0e0e;border-left:1.5px solid rgba(198,196,223,0.15);padding:10px 12px">
+        <div id="oracle-response" style="font-family:serif;font-size:12px;color:rgba(198,196,223,0.7);font-style:italic;line-height:1.7"></div>
+      </div>
+    </div>
+  </div>
+
+  ${t.leads && t.leads.length > 0 ? `
+  <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.15);margin:12px 0 6px">Leads from</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+    ${t.leads.map(l => `<span onclick="setGrimTechnique('${guessPhaseForTech(l)}','${l.replace(/'/g,"\\'")}')"
+      style="font-size:9px;padding:4px 10px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.4);cursor:pointer;font-family:'Crimson Pro',serif">${l}</span>`).join('')}
+  </div>` : ''}
+
+  <!-- Related community content -->
+  <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin:14px 0 8px">Related games · ${t.name}</div>
+  <div id="grim-feed-community" style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:10px;color:rgba(198,196,223,0.15);font-style:italic;font-family:serif">Loading...</div>
+  </div>`;
+
+  feedEl.innerHTML = html;
+  loadGrimFeedCommunity(cat, techName);
+}
+
+function guessPhaseForTech(techName){
+  for(const [phase, techs] of Object.entries(TECHNIQUES)){
+    if(techs.some(t => t.name === techName)) return phase;
+  }
+  return 'Standing';
+}
+
+async function loadGrimFeedCommunity(cat, techName){
+  const feedEl = document.getElementById('grim-feed-community');
+  if(!feedEl) return;
+  try {
+    let query = sbClient.from('community_games').select('*').order('upvotes',{ascending:false}).limit(10);
+    if(cat) query = query.eq('phase', cat);
+    if(techName) query = query.ilike('technique', '%'+techName+'%');
+    const { data, error } = await query;
+
+    if(error || !data || data.length === 0){
+      // Show the technique's built-in eco game as a fallback
+      if(techName){
+        const t = (TECHNIQUES[cat]||[]).find(x => x.name === techName);
+        if(t && t.game){
+          const builtIn = {game_name: t.game, phase: cat, player_a_start: t.start, win_condition: t.win, attention_cue: t.cue};
+          feedEl.innerHTML = renderGrimoireCard(builtIn);
+          return;
+        }
+      }
+      feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.15);font-style:italic;font-family:serif">No community content yet — be the first to share!</div>';
+      return;
+    }
+    feedEl.innerHTML = data.map(g => renderGrimoireCard(g)).join('');
+  } catch(e){
+    feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.15);font-style:italic;font-family:serif">Browse techniques above</div>';
+  }
+}
+
+let stGrimCatExpanded = false;
+let stGrimCatSearchQuery = '';
+let stGrimCatCustomTechs = []; // community-added technique names for current category
+
 async function openGrimoireCategory(cat){
   stCurrentGrimCat = cat;
+  stGrimCatExpanded = false;
+  stGrimCatSearchQuery = '';
+  stGrimCatFilter = 'All';
+  stGrimCatCustomTechs = [];
   const ad = stCurrentArchData || AD.BERSERKER;
   document.getElementById('grimoire-home').style.display='none';
   document.getElementById('grimoire-category').style.display='block';
@@ -4435,62 +4730,126 @@ async function openGrimoireCategory(cat){
   const countEl = document.getElementById('grimoire-cat-count');
   if(titleEl) titleEl.textContent=cat;
   const techs = TECHNIQUES[cat]||[];
-  if(countEl) countEl.textContent = techs.length + ' techniques';
 
-  // Render technique list with archetype dots
-  let html = techs.map(t=>{
-    const archColor = ARCH_COLORS[t.arch] || ad.color;
-    return `
-    <div onclick="openGrimoireTech('${cat}','${t.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);margin-bottom:4px;cursor:pointer">
-      <div style="flex:1">
-        <div style="font-size:12px;color:#f4ead8">${t.name}</div>
-      </div>
-      <span style="width:7px;height:7px;border-radius:50%;background:${archColor};display:inline-block;flex-shrink:0"></span>
-      <span style="font-size:12px;color:rgba(198,196,223,0.3)">›</span>
-    </div>`;
-  }).join('');
+  // Render immediately with built-in techniques
+  renderCatTechList(cat);
 
-  // Add technique button
-  html += `
-    <div id="custom-techs-section"></div>
-    <div onclick="openAddTechniqueModal('${cat}')" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:none;border:1px dashed rgba(200,150,10,0.25);margin-top:12px;cursor:pointer">
-      <span style="font-size:14px;color:rgba(200,150,10,0.6)">+</span>
-      <span style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(200,150,10,0.5);font-family:'Cinzel',serif">Add Technique</span>
-    </div>`;
-  document.getElementById('grimoire-tech-list').innerHTML = html;
-
-  // Load custom techniques async
+  // Load custom techniques async and re-render to integrate them
   const customTechs = await loadCustomTechniques(cat);
-  if (customTechs.length > 0) {
-    const section = document.getElementById('custom-techs-section');
-    if (section) {
-      section.innerHTML = `
-        <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin:16px 0 8px;padding-top:12px;border-top:0.5px solid rgba(255,255,255,0.04)">Community Techniques</div>
-        ${customTechs.map(name=>`
-          <div onclick="openGrimoireTech('${cat}','${name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);border-left:2px solid rgba(200,150,10,0.2);margin-bottom:4px;cursor:pointer">
-            <div style="flex:1">
-              <div style="font-size:12px;color:#f4ead8">${name}</div>
-              <div style="font-size:7px;color:rgba(198,196,223,0.2);margin-top:1px">COMMUNITY</div>
-            </div>
-            <span style="font-size:12px;color:rgba(198,196,223,0.3)">›</span>
-          </div>`).join('')}`;
-    }
+  stGrimCatCustomTechs = customTechs;
+  if(customTechs.length > 0){
+    // Update count to include community techniques
+    if(countEl) countEl.textContent = (techs.length + customTechs.length) + ' techniques';
+    renderCatTechList(cat);
+  } else {
+    if(countEl) countEl.textContent = techs.length + ' techniques';
   }
 
   // Load category-scoped community content
   loadGrimCatContent(cat);
 }
 
+function renderCatTechList(cat){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const builtInTechs = TECHNIQUES[cat]||[];
+  const customTechs = stGrimCatCustomTechs || [];
+  const INITIAL_SHOW = 5;
+  const query = stGrimCatSearchQuery.toLowerCase().trim();
+
+  // Build combined list: built-in techniques + community techniques
+  const allTechs = [
+    ...builtInTechs.map(t => ({name: t.name, arch: t.arch, isCommunity: false})),
+    ...customTechs.map(name => ({name, arch: null, isCommunity: true}))
+  ];
+
+  // Filter by search if active
+  const filtered = query ? allTechs.filter(t => t.name.toLowerCase().includes(query)) : allTechs;
+
+  // Decide which to show
+  const isSearching = query.length > 0;
+  const showAll = stGrimCatExpanded || isSearching;
+  const visible = showAll ? filtered : filtered.slice(0, INITIAL_SHOW);
+  const hiddenCount = filtered.length - INITIAL_SHOW;
+
+  // Search bar
+  let html = `
+    <div style="position:relative;margin-bottom:10px">
+      <input id="grim-cat-search" type="text" placeholder="Search ${cat.toLowerCase()} techniques..." value="${stGrimCatSearchQuery}"
+        oninput="stGrimCatSearchQuery=this.value;renderCatTechList('${cat}')"
+        style="width:100%;box-sizing:border-box;padding:9px 12px 9px 30px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:12px;font-family:serif;outline:none">
+      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:rgba(198,196,223,0.2)">⌕</span>
+    </div>`;
+
+  // Technique rows (built-in + community integrated)
+  html += visible.map(t=>{
+    const archColor = t.isCommunity ? 'rgba(200,150,10,0.5)' : (ARCH_COLORS[t.arch] || ad.color);
+    return `
+    <div onclick="openGrimoireTech('${cat}','${t.name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);${t.isCommunity?'border-left:2px solid rgba(200,150,10,0.2);':''}margin-bottom:4px;cursor:pointer">
+      <div style="flex:1">
+        <div style="font-size:12px;color:#f4ead8">${t.name}</div>
+        ${t.isCommunity ? '<div style="font-size:7px;color:rgba(198,196,223,0.2);margin-top:1px">COMMUNITY</div>' : ''}
+      </div>
+      <span style="width:7px;height:7px;border-radius:50%;background:${archColor};display:inline-block;flex-shrink:0"></span>
+      <span style="font-size:12px;color:rgba(198,196,223,0.3)">›</span>
+    </div>`;
+  }).join('');
+
+  // Show all / collapse toggle (only when not searching and there are hidden items)
+  if(!isSearching && hiddenCount > 0){
+    if(!stGrimCatExpanded){
+      html += `
+        <div onclick="stGrimCatExpanded=true;renderCatTechList('${cat}')" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;cursor:pointer;margin-top:4px">
+          <span style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif">Show all ${filtered.length} techniques</span>
+          <span style="font-size:10px;color:rgba(198,196,223,0.2)">▾</span>
+        </div>`;
+    } else {
+      html += `
+        <div onclick="stGrimCatExpanded=false;renderCatTechList('${cat}')" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;cursor:pointer;margin-top:4px">
+          <span style="font-size:10px;color:rgba(198,196,223,0.3);font-family:serif">Show fewer</span>
+          <span style="font-size:10px;color:rgba(198,196,223,0.2)">▴</span>
+        </div>`;
+    }
+  }
+
+  // No results message
+  if(isSearching && filtered.length === 0){
+    html += `<div style="font-size:11px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif;text-align:center;padding:16px 0">No techniques matching "${stGrimCatSearchQuery}"</div>`;
+  }
+
+  // Add technique button
+  html += `
+    <div onclick="openAddTechniqueModal('${cat}')" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:none;border:1px dashed rgba(200,150,10,0.25);margin-top:12px;cursor:pointer">
+      <span style="font-size:14px;color:rgba(200,150,10,0.6)">+</span>
+      <span style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(200,150,10,0.5);font-family:'Cinzel',serif">Add Technique</span>
+    </div>`;
+
+  document.getElementById('grimoire-tech-list').innerHTML = html;
+
+  // Re-focus search input and place cursor at end
+  if(isSearching){
+    const inp = document.getElementById('grim-cat-search');
+    if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+  }
+}
+
 async function loadGrimCatContent(cat){
   const feedEl = document.getElementById('grimoire-cat-feed');
   if(!feedEl) return;
+  if(!sbClient){ feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No community content for '+cat+' yet</div>'; return; }
   try {
-    const { data, error } = await supabase.from('community_games').select('*').eq('phase',cat).order('upvotes',{ascending:false}).limit(10);
-    if(error || !data || data.length===0){
-      feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No community content for '+cat+' yet</div>';
+    let query = sbClient.from('community_games').select('*').eq('phase',cat).not('game_name','is',null).neq('game_name','').order('upvotes',{ascending:false}).limit(10);
+    // Filter by content type
+    if(stGrimCatFilter === 'Attack Chains') query = query.eq('card_type','attack_chain');
+    else if(stGrimCatFilter === 'Eco Games') query = query.eq('card_type','eco_game');
+    else if(stGrimCatFilter === 'Quest Cards') query = query.eq('card_type','quest_card');
+    const { data, error } = await query;
+    const clean = (data||[]).filter(g => { const n = g.game_name || (g.game_data||{}).chain_name || (g.game_data||{}).game_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    if(error || clean.length===0){
+      const label = stGrimCatFilter === 'All' ? 'community content' : stGrimCatFilter.toLowerCase();
+      feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No '+label+' for '+cat+' yet</div>';
       return;
     }
-    feedEl.innerHTML = data.map(g => renderGrimoireCard(g)).join('');
+    feedEl.innerHTML = clean.map(g => renderGrimoireCard(g)).join('');
   } catch(e){
     feedEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Browse techniques above</div>';
   }
@@ -4586,6 +4945,7 @@ function switchGrimoireView(view){
     if(foryouBtn){ foryouBtn.style.background='#131313'; foryouBtn.style.color='rgba(198,196,223,0.35)'; foryouBtn.style.border='0.5px solid rgba(255,255,255,0.08)'; foryouBtn.style.fontWeight='400'; }
     if(exploreView) exploreView.style.display='block';
     if(foryouView) foryouView.style.display='none';
+    renderGrimoireFeed();
   } else {
     if(foryouBtn){ foryouBtn.style.background=ad.color; foryouBtn.style.color='#0e0e0e'; foryouBtn.style.border='none'; foryouBtn.style.fontWeight='600'; }
     if(exploreBtn){ exploreBtn.style.background='#131313'; exploreBtn.style.color='rgba(198,196,223,0.35)'; exploreBtn.style.border='0.5px solid rgba(255,255,255,0.08)'; exploreBtn.style.fontWeight='400'; }
@@ -4614,13 +4974,23 @@ function setGrimoireFilter(filter){
 async function loadGrimoireTrending(){
   const el = document.getElementById('grimoire-trending');
   if(!el) return;
+  if(!sbClient){ el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No community content yet — be the first to create!</div>'; return; }
   try {
-    const { data, error } = await supabase.from('community_games').select('*').order('upvotes',{ascending:false}).limit(5);
-    if(error || !data || data.length===0){
-      el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No community content yet — be the first to create!</div>';
+    let query = sbClient.from('community_games').select('*').not('game_name','is',null).neq('game_name','').order('upvotes',{ascending:false}).limit(10);
+    // Filter by content type
+    if(stGrimoireFilter === 'Attack Chains') query = query.eq('card_type','attack_chain');
+    else if(stGrimoireFilter === 'Eco Games') query = query.eq('card_type','eco_game');
+    else if(stGrimoireFilter === 'Quest Cards') query = query.eq('card_type','quest_card');
+    // 'All' = no filter
+    const { data, error } = await query;
+    // Also filter client-side for safety
+    const clean = (data||[]).filter(g => { const n = g.game_name || (g.game_data||{}).chain_name || (g.game_data||{}).game_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    if(error || clean.length===0){
+      const label = stGrimoireFilter === 'All' ? 'community content' : stGrimoireFilter.toLowerCase();
+      el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No '+label+' yet — be the first to create!</div>';
       return;
     }
-    el.innerHTML = data.map(g => renderGrimoireCard(g)).join('');
+    el.innerHTML = clean.map(g => renderGrimoireCard(g)).join('');
   } catch(e){
     el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Browse categories above to explore techniques</div>';
   }
@@ -4632,13 +5002,14 @@ async function loadForYouFeed(){
   const ad = stCurrentArchData || AD.BERSERKER;
   const archKey = ad.key || 'BERSERKER';
   try {
-    const { data, error } = await supabase.from('community_games').select('*').order('upvotes',{ascending:false}).limit(20);
-    if(error || !data || data.length===0){
+    const { data, error } = await sbClient.from('community_games').select('*').not('game_name','is',null).neq('game_name','').order('upvotes',{ascending:false}).limit(20);
+    const clean = (data||[]).filter(g => { const n = g.game_name || (g.game_data||{}).chain_name || (g.game_data||{}).game_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    if(error || clean.length===0){
       el.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:24px;margin-bottom:8px">✦</div><div style="font-size:12px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic">No content yet. Create eco games and quest cards to build your feed.</div></div>';
       return;
     }
     // Sort: archetype matches first
-    const sorted = data.sort((a,b)=>{
+    const sorted = clean.sort((a,b)=>{
       const aMatch = (a.archetype||'').toUpperCase()===archKey ? 1 : 0;
       const bMatch = (b.archetype||'').toUpperCase()===archKey ? 1 : 0;
       return bMatch - aMatch || (b.upvotes||0) - (a.upvotes||0);
@@ -4658,7 +5029,8 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
   const id = ecoCardIdCounter++;
   ecoCardGameRegistry[id] = game;
   const phase = game.phase || game.technique || 'General';
-  const name = game.game_name || game.name || 'Eco Game';
+  const gd = game.game_data || {};
+  const name = game.game_name || gd.chain_name || gd.game_name || game.name || 'Untitled';
   const cue = game.attention_cue || game.cue || '';
   const startA = game.player_a_start || '';
   const startB = game.player_b_start || '';
@@ -4701,8 +5073,9 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
 
   if(constraints) sections.push({label:'Constraints', body:`
     <div class="eco-section-body">${(()=>{
-      const parts = constraints.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
-      if(parts.length <= 1) return constraints;
+      const cStr = Array.isArray(constraints) ? constraints.join(', ') : String(constraints);
+      const parts = cStr.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+      if(parts.length <= 1) return cStr;
       return parts.map(p=>'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="color:#2e8b57;flex-shrink:0">—</span><span>'+p+'</span></div>').join('');
     })()}</div>`});
 
@@ -4715,38 +5088,34 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
   const dotLabels = sections.map(s => s.label.split(' ')[0]); // Short labels for dots
 
   let addBtnHtml;
+  let saveBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="background:rgba(200,150,10,0.15);border-color:rgba(200,150,10,0.3);color:#c8a84b">✦ Grimoire</button>`;
   if(mode === 'quest' && questIdx !== null){
     addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();removeEcoGame(${questIdx})" style="background:rgba(200,50,50,0.15);border-color:rgba(200,50,50,0.3);color:#e05555">✕ Remove</button>`;
+    saveBtnHtml = '';
   } else if(showAddToSession || mode === 'oracle'){
-    addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();addOracleGameFromQuest()">+ Add to session</button>`;
+    addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();ecoCardAddToQuest(${id})">+ Quest</button>`;
   } else {
     addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();ecoCardAddToQuest(${id})">+ Quest</button>`;
   }
 
   const editBtnHtml = `<button class="eco-collapse-btn" onclick="event.stopPropagation();ecoCardEdit(${id})" style="color:#c8a84b">✎ Edit</button>`;
 
+  const effectiveCardType = game.card_type || gd.card_type || 'eco_game';
+  const cardTypeLabel = (effectiveCardType === 'attack_chain') ? '⛓ Chain' : '♟ Eco';
+  const cardTypeColor = (effectiveCardType === 'attack_chain') ? '#c8a84b' : '#2e8b57';
+
   return `
     <div id="eco-card-${id}">
-      <!-- COLLAPSED STATE — just title + attention cue -->
-      <div class="eco-collapsed" id="eco-col-${id}" onclick="expandEcoCard(${id})">
-        <div class="eco-top">
-          <div class="eco-tags">
-            <span class="eco-tag-green">Eco game</span>
-            <span class="eco-tag-phase">${phase}</span>
+      <!-- COLLAPSED STATE — compact title row -->
+      <div class="eco-collapsed" id="eco-col-${id}" onclick="expandEcoCard(${id})" style="padding:10px 12px;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:${cardTypeColor};background:${cardTypeColor}15;padding:3px 7px;flex-shrink:0;font-family:'Cinzel',serif">${cardTypeLabel}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:#f4ead8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div style="font-size:8px;color:rgba(198,196,223,0.2);margin-top:1px">${phase}</div>
           </div>
-          <span class="eco-bot-label">${bot}</span>
-        </div>
-        <div class="eco-title">${name}</div>
-        ${cue ? `<div class="eco-cue">${cue}</div>` : ''}
-        <div class="eco-footer">
-          <div class="eco-meta">
-            <span class="eco-meta-item">${duration}</span>
-            <span class="eco-meta-item">${format}</span>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span class="eco-expand-hint">Tap to expand ↓</span>
-            ${addBtnHtml}
-          </div>
+          ${saveBtnHtml ? `<span onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:#c8a84b;background:rgba(200,150,10,0.1);padding:4px 8px;flex-shrink:0;cursor:pointer;font-family:'Cinzel',serif">✦ Grimoire</span>` : ''}
+          <span style="font-size:11px;color:rgba(198,196,223,0.2);flex-shrink:0">▾</span>
         </div>
       </div>
 
@@ -4785,9 +5154,10 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
 
         <div class="eco-action-row">
           <span class="eco-upvote">♥ ${game.upvotes||0}</span>
-          <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
             ${editBtnHtml}
             <button class="eco-collapse-btn" onclick="collapseEcoCard(${id})">Collapse ↑</button>
+            ${saveBtnHtml}
             ${addBtnHtml}
           </div>
         </div>
@@ -4808,6 +5178,40 @@ function expandEcoCard(id){
 function collapseEcoCard(id){
   document.getElementById('eco-exp-'+id).style.display='none';
   document.getElementById('eco-col-'+id).style.display='block';
+}
+
+async function saveOracleGameToGrimoire(cardId){
+  const game = ecoCardGameRegistry[cardId];
+  if(!game){ showToast('No game data found'); return; }
+  if(!sbClient){ showToast('Not connected to community'); return; }
+
+  const gameName = game.game_name || game.name || 'Oracle Game';
+  const phase = game.phase || 'General';
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const profile = stUserProfile || {};
+
+  try {
+    const { error } = await sbClient.from('community_games').insert({
+      game_name: gameName,
+      card_type: 'eco_game',
+      technique: gameName,
+      phase: phase,
+      tags: ['oracle', 'ecological'],
+      game_data: game,
+      creator_name: profile.name || ad.name + ' Player',
+      creator_belt: profile.belt || 'white',
+      creator_archetype: ad.name,
+      creator_chain: (stCurrentResultData?.chain||[]).map(c=>c.technique),
+      upvotes: 0,
+      usage_count: 0
+    });
+    if(error){ showToast('Save error: '+error.message); return; }
+    stBadgeCounters.games_shared = (stBadgeCounters.games_shared||0) + 1;
+    updateCodexBadges();
+    showToast('✦ Saved to Grimoire!');
+  } catch(e){
+    showToast('Error: '+(e.message||e));
+  }
 }
 
 function ecoSwipeTo(id, idx, total){
@@ -4860,6 +5264,12 @@ function backToGrimoireHome(){
   document.getElementById('grimoire-category').style.display='none';
   document.getElementById('grimoire-detail').style.display='none';
   document.getElementById('grimoire-discover').style.display='none';
+  // Reset feed state
+  stGrimFeedCategory = null;
+  stGrimFeedTechnique = null;
+  stGrimTechExpanded = false;
+  updateGrimCategoryPills();
+  renderGrimoireFeed();
 }
 
 function backToGrimoireCategory(){
@@ -5035,7 +5445,7 @@ Use functional language not technique names where possible. No metaphors. Real B
       stLastOracleGame = game;
       stLastOracleTech = techName;
       stLastOraclePhase = phase || 'Unknown';
-      resp.innerHTML = renderGrimoireCard(game);
+      resp.innerHTML = renderGrimoireCard(game, true, 'oracle');
     }catch(e2){
       resp.textContent = d.content?.[0]?.text || 'The Oracle is silent.';
     }
@@ -5098,7 +5508,7 @@ Use functional language. No metaphors. Real BJJ terminology.`;
       stLastOracleGame = game;
       stLastOracleTech = techName;
       stLastOraclePhase = phase || 'Unknown';
-      resp.innerHTML = renderGrimoireCard(game);
+      resp.innerHTML = renderGrimoireCard(game, true, 'oracle');
     }catch(e){
       resp.textContent = d.content?.[0]?.text || 'The Oracle is silent.';
     }
@@ -5703,6 +6113,8 @@ async function saveEcoGameFromEditor(){
 
   try{
     const { error } = await sbClient.from('community_games').insert({
+      game_name: data.game_name,
+      card_type: 'eco_game',
       technique: data.game_name,
       phase: data.phase || 'General',
       tags: data.tags.map(t=>t.toLowerCase()),
@@ -5998,6 +6410,8 @@ async function saveChainCard(type){
 
   try{
     const { error } = await sbClient.from('community_games').insert({
+      game_name: data.title,
+      card_type: type === 'chain' ? 'attack_chain' : 'eco_game',
       technique: data.steps.map(s=>s.technique).join(' → '),
       phase: data.steps[0]?.phase || 'General',
       tags: data.tags.map(t=>t.toLowerCase()),

@@ -93,6 +93,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .reading-dot:nth-child(2){animation-delay:0.2s}
 .reading-dot:nth-child(3){animation-delay:0.4s}
 @keyframes dp{0%,80%,100%{opacity:0.3;transform:scale(1)}40%{opacity:1;transform:scale(1.3)}}
+@keyframes voicePulse{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
 
 /* RESULT */
 #result{display:none;min-height:100vh;padding:40px 24px 80px}
@@ -2243,6 +2244,45 @@ function buildSkillTreeHTML(data, ad) {
           <div id="quest-mode-subtitle" style="font-size:11px;color:rgba(198,196,223,0.35);font-family:serif;font-style:italic;margin-bottom:18px">Your game plan — what to focus on today</div>
         </div>
 
+        <!-- ═══ VOICE INPUT — HERO FEATURE (both Prepare & Reflect) ═══ -->
+        <div id="voice-session-hero" style="display:none;margin-bottom:20px">
+          <button id="voice-record-btn" onclick="toggleVoiceRecording()"
+            style="width:100%;padding:16px 14px;background:linear-gradient(135deg,rgba(233,195,73,0.1),rgba(233,195,73,0.04));border:0.5px solid rgba(233,195,73,0.3);color:#e9c349;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px">
+            <span id="voice-mic-icon" style="font-size:18px">🎙</span>
+            <span id="voice-btn-label">Talk Through Your Session</span>
+          </button>
+          <div id="voice-hero-subtitle" style="font-size:9px;color:rgba(198,196,223,0.25);font-family:serif;font-style:italic;text-align:center;margin-top:6px">Describe what you worked on — we'll fill in everything for you</div>
+
+          <!-- Guided prompts — shown when recording starts, content set by JS based on mode -->
+          <div id="voice-guided-prompts" style="display:none;margin-top:10px;background:#131313;border:0.5px solid rgba(255,255,255,0.04);padding:12px 14px">
+            <div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:10px">Try mentioning...</div>
+            <div id="voice-prompts-list" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+
+          <!-- Recording indicator -->
+          <div id="voice-recording-indicator" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(192,57,43,0.08);border:0.5px solid rgba(192,57,43,0.25)">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span id="voice-pulse" style="display:inline-block;width:8px;height:8px;background:#c0392b;border-radius:50%;animation:voicePulse 1s ease-in-out infinite"></span>
+              <span style="font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:#c0392b">Listening...</span>
+              <span id="voice-duration" style="font-size:8px;color:rgba(198,196,223,0.3);margin-left:auto">0:00</span>
+            </div>
+            <div id="voice-interim" style="font-size:10px;color:rgba(198,196,223,0.3);font-style:italic;margin-top:6px;min-height:14px"></div>
+          </div>
+
+          <!-- Transcript + actions -->
+          <div id="voice-transcript-wrap" style="display:none;margin-top:10px">
+            <div style="font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:4px">Transcript</div>
+            <div id="voice-transcript" style="background:#131313;border:0.5px solid rgba(255,255,255,0.04);padding:10px 12px;font-size:11px;color:rgba(198,196,223,0.6);font-family:'Crimson Pro',serif;line-height:1.6;max-height:120px;overflow-y:auto"></div>
+            <div id="voice-action-btns" style="display:flex;gap:6px;margin-top:8px">
+              <button id="voice-notes-btn" onclick="addTranscriptToNotes()" style="flex:1;padding:10px;background:none;border:0.5px solid rgba(255,255,255,0.08);font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.4);cursor:pointer">+ Add to Notes</button>
+              <button id="voice-extract-btn" onclick="voiceExtractDispatch()" style="flex:1;padding:10px;background:linear-gradient(135deg,rgba(233,195,73,0.15),rgba(233,195,73,0.06));border:0.5px solid rgba(233,195,73,0.3);font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:#e9c349;cursor:pointer;font-weight:600">⛓ Extract Session</button>
+            </div>
+          </div>
+
+          <!-- Extraction result -->
+          <div id="voice-extraction-result" style="display:none;margin-top:10px"></div>
+        </div>
+
         <!-- ═══════════════════════════════════════ -->
         <!-- SHARED: DRILL LOG + ROLL FOCUS          -->
         <!-- (visible in both Prepare and Reflect)   -->
@@ -3213,10 +3253,14 @@ function selectChainNode(idx){
     ` : ''}
     <div style="margin-top:10px">
       <div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:6px">Ask the Oracle</div>
-      <button onclick="askOracleChain('${node.technique}','${techData?techData.arch:'berserker'}','${node.phase}')"
-        style="display:block;width:100%;padding:11px;background:#131313;border:0.5px solid ${ad.color}44;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${ad.color};cursor:pointer;margin-bottom:4px">
-        ✦ Consult the Oracle
-      </button>
+      <div style="display:flex;gap:6px;margin-bottom:4px">
+        <button onclick="askOracleChain('${node.technique}','${techData?techData.arch:'berserker'}','${node.phase}')"
+          style="flex:1;padding:11px;background:#131313;border:0.5px solid ${ad.color}44;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${ad.color};cursor:pointer">
+          ✦ Consult the Oracle
+        </button>
+        <button onclick="oracleVoiceRecord('chain-detail','${node.technique.replace(/'/g,"\\'")}','${techData?techData.arch:'berserker'}','${node.phase}')"
+          style="padding:11px 14px;background:#131313;border:0.5px solid ${ad.color}44;font-size:16px;cursor:pointer;color:${ad.color}" title="Speak to the Oracle">🎙</button>
+      </div>
       <div id="chain-oracle-wrap" style="display:none;margin-top:4px">
         <div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:6px">The Oracle speaks</div>
         <div style="background:#0e0e0e;border-left:1.5px solid rgba(198,196,223,0.15);padding:10px 12px">
@@ -3319,6 +3363,9 @@ function switchQuestMode(mode, skipRender){
   // Toggle mode-specific sections
   if(prepEl) prepEl.style.display = mode === 'prepare' ? 'block' : 'none';
   if(refEl) refEl.style.display = mode === 'reflect' ? 'block' : 'none';
+  const voiceHero = document.getElementById('voice-session-hero');
+  if(voiceHero) voiceHero.style.display = 'block';
+  updateVoiceHeroForMode(mode);
 
   // Update header text per mode
   const titleEl = document.getElementById('quest-mode-title');
@@ -4628,6 +4675,1046 @@ function changeFocusCount(type, d){
   else stIntentionOutcome = null;
 }
 
+// --- VOICE-TO-CHAIN ---
+let _voiceRecognition = null;
+let _voiceRecording = false;
+let _voiceTranscript = '';
+let _voiceStartTime = 0;
+let _voiceDurationIv = null;
+
+function toggleVoiceRecording(){
+  if(_voiceRecording){
+    stopVoiceRecording();
+  } else {
+    startVoiceRecording();
+  }
+}
+
+function startVoiceRecording(){
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRec){
+    showToast('Speech recognition not supported in this browser. Try Chrome.');
+    return;
+  }
+
+  _voiceRecognition = new SpeechRec();
+  _voiceRecognition.continuous = true;
+  _voiceRecognition.interimResults = true;
+  _voiceRecognition.lang = 'en-US';
+
+  _voiceTranscript = '';
+  _voiceRecording = true;
+  _voiceStartTime = Date.now();
+
+  // UI updates
+  const btn = document.getElementById('voice-record-btn');
+  const indicator = document.getElementById('voice-recording-indicator');
+  const label = document.getElementById('voice-btn-label');
+  const icon = document.getElementById('voice-mic-icon');
+  if(btn){ btn.style.background = 'rgba(192,57,43,0.12)'; btn.style.borderColor = 'rgba(192,57,43,0.4)'; btn.style.color = '#c0392b'; }
+  if(label) label.textContent = 'Stop recording';
+  if(icon) icon.textContent = '⏹';
+  if(indicator) indicator.style.display = 'block';
+  const prompts = document.getElementById('voice-guided-prompts');
+  if(prompts) prompts.style.display = 'block';
+
+  // Duration timer
+  _voiceDurationIv = setInterval(() => {
+    const secs = Math.floor((Date.now() - _voiceStartTime) / 1000);
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    const el = document.getElementById('voice-duration');
+    if(el) el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
+
+  _voiceRecognition.onresult = function(e){
+    let interim = '';
+    let final = '';
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      const t = e.results[i][0].transcript;
+      if(e.results[i].isFinal){
+        final += t + ' ';
+      } else {
+        interim += t;
+      }
+    }
+    if(final) _voiceTranscript += final;
+
+    const interimEl = document.getElementById('voice-interim');
+    if(interimEl) interimEl.textContent = interim || '...';
+  };
+
+  _voiceRecognition.onerror = function(e){
+    console.error('[Voice] error:', e.error);
+    if(e.error === 'not-allowed'){
+      showToast('Microphone access denied. Check browser permissions.');
+      stopVoiceRecording();
+    }
+  };
+
+  _voiceRecognition.onend = function(){
+    // Auto-restart if still recording (browser sometimes stops after silence)
+    if(_voiceRecording){
+      try { _voiceRecognition.start(); } catch(e){}
+    }
+  };
+
+  try {
+    _voiceRecognition.start();
+  } catch(e){
+    showToast('Could not start voice recording: ' + e.message);
+    _voiceRecording = false;
+  }
+}
+
+function stopVoiceRecording(){
+  _voiceRecording = false;
+  if(_voiceRecognition){
+    try { _voiceRecognition.stop(); } catch(e){}
+    _voiceRecognition = null;
+  }
+  if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
+
+  // UI updates
+  const btn = document.getElementById('voice-record-btn');
+  const indicator = document.getElementById('voice-recording-indicator');
+  const label = document.getElementById('voice-btn-label');
+  const icon = document.getElementById('voice-mic-icon');
+  const ad = stCurrentArchData || AD.BERSERKER;
+  if(btn){ btn.style.background = 'rgba(233,195,73,0.06)'; btn.style.borderColor = 'rgba(233,195,73,0.2)'; btn.style.color = '#e9c349'; }
+  if(label) label.textContent = 'Talk through your session';
+  if(icon) icon.textContent = '🎙';
+  if(indicator) indicator.style.display = 'none';
+  const prompts = document.getElementById('voice-guided-prompts');
+  if(prompts) prompts.style.display = 'none';
+
+  // Show transcript
+  const text = _voiceTranscript.trim();
+  if(text){
+    const wrapEl = document.getElementById('voice-transcript-wrap');
+    const textEl = document.getElementById('voice-transcript');
+    if(wrapEl) wrapEl.style.display = 'block';
+    if(textEl) textEl.textContent = text;
+  } else {
+    showToast('No speech detected. Try again.');
+  }
+}
+
+function addTranscriptToNotes(){
+  const text = _voiceTranscript.trim();
+  if(!text) return;
+  const notesEl = document.getElementById('reflection-notes');
+  if(notesEl){
+    const existing = notesEl.value.trim();
+    notesEl.value = existing ? existing + '\n\n' + text : text;
+    notesEl.style.height = 'auto';
+    notesEl.style.height = Math.min(200, notesEl.scrollHeight) + 'px';
+  }
+  showToast('Transcript added to notes');
+}
+
+async function extractChainFromTranscript(){
+  const text = _voiceTranscript.trim();
+  if(!text){ showToast('No transcript to extract from'); return; }
+
+  const ANTHROPIC_KEY = getAnthropicKey();
+  if(!ANTHROPIC_KEY) return;
+
+  const btn = document.getElementById('voice-extract-btn');
+  const resultEl = document.getElementById('voice-extraction-result');
+  if(btn){ btn.textContent = 'Extracting...'; btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
+
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const phases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  const validPositions = ['Mount','Side Control','Back','Closed Guard','Half Guard','Open Guard','Turtle','North-South','Knee on Belly','Deep Half','Butterfly Guard','De La Riva','Reverse De La Riva','Spider Guard','Lasso Guard','X-Guard','Single Leg X','Rubber Guard','Z-Guard','Lockdown','Quarter Guard','Headquarters','50/50','Ashi Garami','Saddle','Inside Sankaku','Over-Under','Front Headlock','Body Lock','Crucifix','Truck','Wrestling Stance'];
+
+  const prompt = `You are a BJJ training assistant. A practitioner just finished training and recorded a voice memo about their session. Extract EVERYTHING you can from their transcript to fill in their training log. Parse out:
+
+1. **Attack Chains**: If they describe sequences of techniques (e.g., "I hit a collar tie to arm drag to back take"), extract each as an ordered chain.
+2. **Positions**: Any positions they worked from or mentioned (e.g., "half guard", "mount", "side control"). Use standard BJJ position names.
+3. **Individual Techniques**: Specific techniques mentioned that aren't part of a chain (e.g., "worked on my kimura", "drilled toreando pass").
+4. **Eco Games / Drills**: If they describe any positional sparring, specific training games, or constraint-based drills (e.g., "we did guard retention rounds", "played a passing game starting from headquarters"), extract them as eco games.
+5. **Roll Focus**: If they mention what they were specifically hunting for or focusing on during live rolls (e.g., "I was looking for underhooks", "tried to hit the arm drag every round").
+6. **Rounds Rolled**: If they mention how many rounds they rolled.
+7. **Session Notes**: A clean, concise summary of their session suitable for a training journal.
+
+Valid phases: ${phases.join(', ')}
+Valid positions (use these exact names when possible): ${validPositions.join(', ')}
+
+Respond in this exact JSON format (no markdown, no backticks, just raw JSON):
+{
+  "chains": [
+    {
+      "title": "Short descriptive chain name",
+      "steps": [
+        {"technique": "Technique Name", "phase": "Phase", "note": "optional context"}
+      ]
+    }
+  ],
+  "positions": ["Position Name"],
+  "techniques": [
+    {"name": "Technique Name", "phase": "Phase"}
+  ],
+  "eco_games": [
+    {
+      "game_name": "Short name for the drill/game",
+      "phase": "Phase",
+      "player_a_start": "Starting position for player A",
+      "player_b_start": "Starting position for player B",
+      "win_condition": "What counts as a win",
+      "constraints": "Any rules or constraints mentioned",
+      "skill_emerges": "What skill this develops"
+    }
+  ],
+  "roll_focus": [
+    {"technique": "What they were hunting for", "phase": "Phase", "cue": "Any attention cue or detail"}
+  ],
+  "rounds_rolled": null,
+  "notes": "Clean session summary as training journal notes"
+}
+
+Return empty arrays for anything not mentioned. rounds_rolled should be null if not mentioned, or a number if they said how many rounds. Always provide notes.
+
+Transcript: "${text.replace(/"/g, '\\"')}"`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+
+    const data = await r.json();
+    if(data.error){ throw new Error(data.error.message || 'API error'); }
+
+    const responseText = (data.content && data.content[0] && data.content[0].text) || '';
+    let jsonStr = responseText.trim();
+    if(jsonStr.startsWith('```')) jsonStr = jsonStr.replace(/^```json?\n?/,'').replace(/\n?```$/,'');
+    const parsed = JSON.parse(jsonStr);
+
+    // Track what was added for the summary
+    let summary = [];
+
+    // 1) Attack Chains → stChainCards
+    let addedChains = 0;
+    if(parsed.chains && parsed.chains.length > 0){
+      parsed.chains.forEach(chain => {
+        const already = stChainCards.some(c => c.title === chain.title);
+        if(!already && chain.steps && chain.steps.length > 0){
+          stChainCards.push({
+            title: chain.title,
+            tags: ['voice-extracted'],
+            steps: chain.steps.map(s => ({
+              technique: s.technique,
+              phase: s.phase || 'Guard',
+              note: s.note || ''
+            }))
+          });
+          addedChains++;
+        }
+      });
+      if(addedChains > 0){
+        renderChainCardList();
+        summary.push('⛓ ' + addedChains + ' attack chain' + (addedChains > 1 ? 's' : ''));
+      }
+    }
+
+    // 2) Positions → stDrillPositions
+    let addedPositions = 0;
+    if(parsed.positions && parsed.positions.length > 0){
+      parsed.positions.forEach(p => {
+        if(p && !stDrillPositions.includes(p)){
+          stDrillPositions.push(p);
+          addedPositions++;
+        }
+      });
+      if(addedPositions > 0){
+        renderPositionalPills();
+        renderPositionalSelected();
+        summary.push('📍 ' + addedPositions + ' position' + (addedPositions > 1 ? 's' : ''));
+      }
+    }
+
+    // 3) Individual Techniques → stDrillTechniques
+    let addedTechs = 0;
+    if(parsed.techniques && parsed.techniques.length > 0){
+      parsed.techniques.forEach(t => {
+        if(t.name && !stDrillTechniques.includes(t.name)){
+          stDrillTechniques.push(t.name);
+          addedTechs++;
+        }
+      });
+      if(addedTechs > 0){
+        renderDrillTechPills();
+        summary.push('✦ ' + addedTechs + ' technique' + (addedTechs > 1 ? 's' : ''));
+      }
+    }
+
+    // 4) Eco Games → stEcoGames
+    let addedGames = 0;
+    if(parsed.eco_games && parsed.eco_games.length > 0){
+      parsed.eco_games.forEach(g => {
+        if(g.game_name && !stEcoGames.some(eg => eg.game_name === g.game_name)){
+          stEcoGames.push({
+            game_name: g.game_name,
+            phase: g.phase || '',
+            player_a_start: g.player_a_start || '',
+            player_b_start: g.player_b_start || '',
+            constraints: g.constraints || '',
+            win_condition: g.win_condition || '',
+            attention_cue: '',
+            skill_emerges: g.skill_emerges || '',
+            source: 'voice-extracted'
+          });
+          addedGames++;
+        }
+      });
+      if(addedGames > 0){
+        renderEcoGameList();
+        summary.push('♟ ' + addedGames + ' eco game' + (addedGames > 1 ? 's' : ''));
+      }
+    }
+
+    // 5) Roll Focus → stRollFocusItems via addRollFocusItem
+    let addedFocus = 0;
+    if(parsed.roll_focus && parsed.roll_focus.length > 0){
+      const phaseIcons = {Standing:'👣',Takedown:'↓',Guard:'↩️',Passing:'⬜',Pinning:'📌',Submission:'💀'};
+      parsed.roll_focus.forEach(f => {
+        if(f.technique && !stRollFocusItems.some(rf => rf.technique === f.technique)){
+          addRollFocusItem({
+            technique: f.technique,
+            phase: f.phase || '',
+            icon: phaseIcons[f.phase] || '✦',
+            cue: f.cue || null,
+            source: 'voice-extracted'
+          });
+          addedFocus++;
+        }
+      });
+      if(addedFocus > 0){
+        summary.push('🎯 ' + addedFocus + ' roll focus item' + (addedFocus > 1 ? 's' : ''));
+      }
+    }
+
+    // 6) Rounds Rolled
+    if(parsed.rounds_rolled != null && typeof parsed.rounds_rolled === 'number'){
+      stReflectionRollCount = parsed.rounds_rolled;
+      const rollEl = document.getElementById('reflection-roll-count');
+      if(rollEl) rollEl.textContent = stReflectionRollCount;
+      summary.push('🥋 ' + parsed.rounds_rolled + ' round' + (parsed.rounds_rolled > 1 ? 's' : '') + ' rolled');
+    }
+
+    // 7) Notes → reflection notes textarea
+    if(parsed.notes){
+      const notesEl = document.getElementById('reflection-notes');
+      if(notesEl){
+        const existing = notesEl.value.trim();
+        notesEl.value = existing ? existing + '\n\n' + parsed.notes : parsed.notes;
+        notesEl.style.height = 'auto';
+        notesEl.style.height = Math.min(200, notesEl.scrollHeight) + 'px';
+      }
+      summary.push('📝 Notes');
+    }
+
+    updateSaveBtn();
+    renderPrepareView();
+
+    // Show result summary
+    if(resultEl){
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `
+        <div style="background:#131313;border:0.5px solid rgba(233,195,73,0.15);border-left:2px solid ${ad.color};padding:12px">
+          <div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color}88;margin-bottom:8px">Session extracted</div>
+          ${summary.length > 0 ? summary.map(s => '<div style="font-size:10px;color:#f4ead8;margin-bottom:4px;line-height:1.4">'+s+'</div>').join('') : '<div style="font-size:10px;color:rgba(198,196,223,0.4);font-style:italic">No structured data detected. Notes updated.</div>'}
+        </div>`;
+    }
+
+    const totalItems = addedChains + addedPositions + addedTechs + addedGames + addedFocus;
+    showToast('Session extracted — ' + totalItems + ' item' + (totalItems !== 1 ? 's' : '') + ' added');
+
+  } catch(e){
+    console.error('[VoiceExtract] error:', e);
+    showToast('Extraction error: ' + (e.message || 'Try again'));
+    if(resultEl){
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = '<div style="background:#131313;border:0.5px solid rgba(192,57,43,0.2);padding:10px;font-size:10px;color:rgba(192,57,43,0.7)">Could not extract: '+(e.message||'Unknown error')+'</div>';
+    }
+  } finally {
+    if(btn){ btn.textContent = '⛓ Extract Session'; btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
+  }
+}
+
+// --- ORACLE VOICE INPUT ---
+let _oracleVoiceRec = null;
+let _oracleVoiceActive = false;
+let _oracleVoiceTranscript = '';
+let _oracleVoiceContext = null;
+let _oracleVoiceTimerIv = null;
+let _oracleVoiceStart = 0;
+
+function oracleVoiceRecord(source, techName, arch, phase){
+  if(_oracleVoiceActive){
+    stopOracleVoice();
+    return;
+  }
+
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRec){
+    showToast('Speech recognition not supported. Try Chrome.');
+    return;
+  }
+
+  _oracleVoiceContext = {source:source, techName:techName, arch:arch, phase:phase};
+  _oracleVoiceTranscript = '';
+  _oracleVoiceActive = true;
+  _oracleVoiceStart = Date.now();
+
+  _oracleVoiceRec = new SpeechRec();
+  _oracleVoiceRec.continuous = true;
+  _oracleVoiceRec.interimResults = true;
+  _oracleVoiceRec.lang = 'en-US';
+
+  // Show overlay — ensure it's a direct child of body (it may be inside div.app which is display:none)
+  var overlay = document.getElementById('oracle-voice-overlay');
+  if(overlay && overlay.parentElement !== document.body) document.body.appendChild(overlay);
+  var interimEl = document.getElementById('oracle-voice-interim');
+  var timerEl = document.getElementById('oracle-voice-timer');
+  if(overlay) overlay.style.display = 'block';
+  if(interimEl) interimEl.textContent = 'Speak your request...';
+  if(timerEl) timerEl.textContent = '0:00';
+
+  // Timer
+  _oracleVoiceTimerIv = setInterval(function(){
+    var secs = Math.floor((Date.now() - _oracleVoiceStart) / 1000);
+    var m = Math.floor(secs / 60);
+    var s = secs % 60;
+    if(timerEl) timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
+
+  var _oracleTimeout = setTimeout(function(){ stopOracleVoice(); }, 20000);
+
+  _oracleVoiceRec.onresult = function(e){
+    var final = '';
+    var interim = '';
+    for(var i = e.resultIndex; i < e.results.length; i++){
+      if(e.results[i].isFinal){
+        final += e.results[i][0].transcript + ' ';
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    if(final) _oracleVoiceTranscript += final;
+    // Show live text in overlay
+    var displayText = _oracleVoiceTranscript + (interim ? interim : '');
+    if(interimEl && displayText.trim()) interimEl.textContent = displayText.trim();
+  };
+
+  _oracleVoiceRec.onerror = function(e){
+    console.error('[OracleVoice] error:', e.error);
+    if(e.error === 'not-allowed' || e.error === 'audio-capture'){
+      showToast('Microphone access denied.');
+      stopOracleVoice();
+    }
+    // no-speech, network, aborted — just let onend handle restart
+  };
+
+  _oracleVoiceRec.onend = function(){
+    clearTimeout(_oracleTimeout);
+    if(_oracleVoiceActive && _oracleVoiceTranscript.trim().length < 3){
+      try { _oracleVoiceRec.start(); } catch(e){}
+      _oracleTimeout = setTimeout(function(){ stopOracleVoice(); }, 20000);
+    } else {
+      stopOracleVoice();
+    }
+  };
+
+  try {
+    _oracleVoiceRec.start();
+  } catch(e){
+    showToast('Could not start recording: ' + e.message);
+    _oracleVoiceActive = false;
+    if(overlay) overlay.style.display = 'none';
+  }
+}
+
+function stopOracleVoice(){
+  _oracleVoiceActive = false;
+  if(_oracleVoiceRec){
+    try { _oracleVoiceRec.stop(); } catch(e){}
+    _oracleVoiceRec = null;
+  }
+  if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
+
+  // Hide overlay
+  var overlay = document.getElementById('oracle-voice-overlay');
+  if(overlay) overlay.style.display = 'none';
+
+  var text = _oracleVoiceTranscript.trim();
+  if(!text){
+    showToast('No speech detected. Try again.');
+    return;
+  }
+
+  var ctx = _oracleVoiceContext;
+  if(!ctx) return;
+
+  showToast('The Oracle received your words...');
+
+  if(ctx.source === 'chain' || ctx.source === 'eco'){
+    oracleVoiceBuildChain(ctx.source, text);
+  } else if(ctx.source === 'chain-detail'){
+    askOracleChainWithVoice(ctx.techName, ctx.arch, ctx.phase, text);
+  } else if(ctx.source === 'grimoire-detail'){
+    askOracleWithVoice(ctx.techName, ctx.arch, ctx.phase, text);
+  }
+}
+
+async function oracleVoiceBuildChain(type, voiceText){
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var detail = document.getElementById('st-detail');
+  var apiKey = getAnthropicKey(); if(!apiKey) return;
+
+  if(detail){
+    detail.style.display = 'block';
+    detail.innerHTML = '<div style="text-align:center;padding:20px 0"><span style="display:inline-block;width:10px;height:10px;background:' + ad.color + ';border-radius:50%;animation:voicePulse 1s ease-in-out infinite"></span><div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic;margin-top:8px">The Oracle is forging your ' + (type==='eco'?'game':'chain') + '...</div></div>';
+  }
+
+  var fullChain = (stCurrentResultData && stCurrentResultData.chain || []).map(function(c){ return c.phase + ': ' + c.technique; }).join(', ');
+  var allPhases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+
+  var prompt;
+  if(type === 'chain'){
+    prompt = 'You are an expert BJJ instructor. A player described what attack chain they want:\n\n"' + voiceText.replace(/"/g,'\\"') + '"\n\nTheir available chain phases and current techniques: ' + fullChain + '\nAvailable phases: ' + allPhases.join(', ') + '\n\nBuild an attack chain from their description. Map each technique to the correct phase. Return ONLY this JSON:\n{"chain_name":"short name (max 5 words)","steps":[{"technique":"Technique Name","phase":"Phase","note":"brief transition note"}]}\n\nUse real BJJ technique names. Each step must use one of the valid phases. Be specific.';
+  } else {
+    prompt = 'You design ecological BJJ training games (Greg Souders / Standard Jiu-Jitsu). A player described what they want:\n\n"' + voiceText.replace(/"/g,'\\"') + '"\n\nTheir chain: ' + fullChain + '\nPhases: ' + allPhases.join(', ') + '\n\nDesign ONE ecological game based on their request. Return ONLY JSON:\n{"game_name":"short name","problem":"...","player_a_start":"...","player_b_start":"...","player_a_goal":"...","player_b_goal":"...","constraints":"...","win_condition":"...","continuity":"Reset or Continuous","attention_cue":"...","skill_emerges":"...","round_length":"3 minutes","chain_phases":["Phase1","Phase2"]}';
+  }
+
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    var d = await r.json();
+    var raw = d.content && d.content[0] && d.content[0].text || '';
+    var parsed = extractAndParseJSON(raw);
+
+    if(type === 'chain' && parsed.steps && parsed.steps.length > 0){
+      // Animate building the chain on the graph
+      if(detail) detail.innerHTML = '<div style="text-align:center;padding:20px 0"><div style="font-size:11px;color:' + ad.color + ';font-family:serif;font-style:italic">The Oracle speaks...</div></div>';
+      await animateChainBuild(parsed.steps, parsed.chain_name || 'Oracle Chain');
+    } else if(parsed.game_name){
+      // Eco game result
+      var game = parsed;
+      game.bot_type = 'Oracle';
+      game.phase = (parsed.chain_phases && parsed.chain_phases[0]) || '';
+      stLastOracleGame = game;
+      stLastOraclePhase = game.phase;
+      if(detail){
+        detail.style.display = 'block';
+        detail.innerHTML = '<div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">Oracle designed a game</div>' + renderGrimoireCard(game, true, 'oracle');
+      }
+      showToast('The Oracle designed an eco game');
+    }
+  } catch(e){
+    console.error('[OracleVoice] build chain error:', e);
+    if(detail) detail.innerHTML = '<div style="font-size:11px;color:rgba(198,196,223,0.4);font-family:serif;font-style:italic">Oracle error: ' + (e.message||e) + '</div>';
+    showToast('Oracle error: ' + (e.message || 'Try again'));
+  }
+}
+
+async function animateChainBuild(steps, chainName){
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var detail = document.getElementById('st-detail');
+
+  // 1) Clear existing connections
+  userEdges = [];
+  graphState.selected = null;
+  graphState.thread = null;
+  refreshActiveNodes();
+  drawGraph();
+  renderGraphIcons();
+
+  await new Promise(function(r){ setTimeout(r, 400); });
+
+  // 2) For each step, set the technique on the node and light it up
+  for(var i = 0; i < steps.length; i++){
+    var step = steps[i];
+    var phase = step.phase;
+    var tech = step.technique;
+
+    // Set the technique on the graph node — append if phase already has a technique
+    if(graphState.nodes[phase]){
+      var curTechs = graphState.nodes[phase].techs || [];
+      if(curTechs.length > 0 && !curTechs.includes(tech)){
+        curTechs.push(tech);
+        graphState.nodes[phase].techs = curTechs;
+      } else if(curTechs.length === 0) {
+        graphState.nodes[phase].techs = [tech];
+      }
+      graphState.nodes[phase].tech = graphState.nodes[phase].techs[0];
+      graphState.nodes[phase].active = true;
+    }
+
+    // Also update the chain data
+    if(stCurrentResultData){
+      var chain = stCurrentResultData.chain || [];
+      var existing = chain.find(function(c){ return c.phase === phase; });
+      if(existing){
+        if(!existing.techniques) existing.techniques = [existing.technique];
+        if(!existing.techniques.includes(tech)) existing.techniques.push(tech);
+        existing.technique = existing.techniques[0];
+      } else {
+        chain.push({phase:phase, technique:tech, techniques:[tech], state:'secondary'});
+      }
+    }
+
+    // Flash the node — briefly select it
+    graphState.selected = phase;
+    drawGraph();
+    renderGraphIcons();
+
+    await new Promise(function(r){ setTimeout(r, 500); });
+
+    // 3) If not the first step, create an edge from previous to this
+    if(i > 0){
+      var prevPhase = steps[i-1].phase;
+      userEdges.push([prevPhase, phase]);
+      graphState.selected = null;
+      refreshActiveNodes();
+      drawGraph();
+      renderGraphIcons();
+      updateOracleButton();
+
+      await new Promise(function(r){ setTimeout(r, 400); });
+    }
+  }
+
+  // Deselect
+  graphState.selected = null;
+  graphState.thread = null;
+  refreshActiveNodes();
+  drawGraph();
+  renderGraphIcons();
+  updateOracleButton();
+  persistChain();
+
+  // Store Oracle steps for Save as Card
+  window._lastOracleChainSteps = steps;
+  window._lastOracleChainName = chainName || 'Attack Chain';
+
+  // Show completion in detail panel
+  var stepsPreview = steps.map(function(s){ return s.technique; }).join(' → ');
+  if(detail){
+    detail.style.display = 'block';
+    detail.innerHTML =
+      '<div style="border-left:2px solid ' + ad.color + ';padding:12px 14px;background:#131313">' +
+        '<div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:6px">⛓ ' + (chainName||'Attack Chain') + '</div>' +
+        '<div style="font-size:11px;color:rgba(244,234,216,0.7);font-family:serif;line-height:1.6;margin-bottom:10px">' + stepsPreview + '</div>' +
+        steps.map(function(s){
+          return '<div style="font-size:9px;color:rgba(198,196,223,0.4);margin-bottom:4px"><span style="color:' + ad.color + '">' + s.phase + ':</span> ' + s.technique + (s.note ? ' — <i>' + s.note + '</i>' : '') + '</div>';
+        }).join('') +
+        '<div style="display:flex;gap:6px;margin-top:10px">' +
+          '<button onclick="saveOracleVoiceChainAsCard()" style="flex:1;padding:10px;background:rgba(200,150,10,0.12);border:0.5px solid rgba(200,150,10,0.3);color:#c8a84b;font-family:\'Cinzel\',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer">Edit Card</button>' +
+          '<button onclick="chainConsultOracle(\'eco\')" style="flex:1;padding:10px;background:rgba(107,63,160,0.12);border:0.5px solid rgba(107,63,160,0.3);color:#c084fc;font-family:\'Cinzel\',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer">Generate Eco Game</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  showToast('The Oracle forged your chain');
+}
+
+function saveOracleVoiceChainAsCard(){
+  var steps = window._lastOracleChainSteps;
+  var name = window._lastOracleChainName || '';
+  if(!steps || steps.length === 0){ showToast('No chain to save'); return; }
+  // Go straight to editor pre-filled with Oracle steps
+  openChainCardEditorPrefilled('chain', name, steps);
+  // Hide detail panel
+  var detail = document.getElementById('st-detail');
+  if(detail) detail.style.display = 'none';
+}
+
+async function chainEditorConsultOracleWithVoice(type, voiceText){
+  var data = getEditorData(type);
+  if(!data) return;
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var stepsDesc = data.steps.map(function(s,i){ return (i+1)+'. '+s.technique+' ('+s.phase+')'; }).join(', ');
+
+  var prompt = 'You design ecological BJJ training games in the style of Greg Souders / Standard Jiu-Jitsu. A player has a ' + (type==='eco'?'game':'chain') + ': ' + stepsDesc + '.\n\nThey just gave you verbal instructions: "' + voiceText.replace(/"/g,'\\"') + '"\n\nBased on their instructions, do one of the following:\n1. If they want to SWAP a technique: return the modified chain with the substitution.\n2. If they want an ECO GAME: design one in the Souders ecological style.\n3. If they want to MODIFY or ADD steps: return the updated chain.\n\nReturn ONLY JSON. If modifying the chain:\n{"type":"chain_update","title":"' + (data.title||'Updated Chain') + '","steps":[{"technique":"Name","phase":"Phase","note":"brief note"}]}\n\nIf creating an eco game:\n{"type":"eco_game","game_name":"name","problem":"...","player_a_start":"...","player_b_start":"...","player_a_goal":"...","player_b_goal":"...","constraints":"...","win_condition":"...","continuity":"Reset or Continuous","attention_cue":"...","skill_emerges":"...","round_length":"3 minutes"}';
+
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    var d = await r.json();
+    var raw = d.content && d.content[0] && d.content[0].text || '';
+    var parsed = extractAndParseJSON(raw);
+
+    if(parsed.type === 'chain_update' && parsed.steps){
+      var ceSteps = document.querySelectorAll('.ce-step-name');
+      parsed.steps.forEach(function(ns, i){
+        if(ceSteps[i]) ceSteps[i].textContent = ns.technique;
+        var phaseEl = ceSteps[i] && ceSteps[i].parentElement && ceSteps[i].parentElement.querySelector('.ce-step-phase');
+        if(phaseEl) phaseEl.textContent = ns.phase;
+        var noteEl = ceSteps[i] && ceSteps[i].parentElement && ceSteps[i].parentElement.querySelector('.ce-note');
+        if(noteEl && ns.note) noteEl.value = ns.note;
+      });
+      showToast('Chain updated by the Oracle');
+    } else if(parsed.type === 'eco_game' || parsed.game_name){
+      var game = parsed;
+      game.bot_type = 'Oracle';
+      game.phase = data.steps[0] && data.steps[0].phase || '';
+      stLastOracleGame = game;
+      stLastOraclePhase = game.phase;
+      var detail = document.querySelector('.ce-body');
+      if(detail){
+        var resultDiv = document.createElement('div');
+        resultDiv.style.cssText = 'margin-top:12px;border-top:0.5px solid rgba(255,255,255,0.06);padding-top:12px';
+        resultDiv.innerHTML = '<div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:6px">Oracle Response</div>' + renderGrimoireCard(game, true, 'oracle');
+        detail.appendChild(resultDiv);
+      }
+      showToast('Oracle designed an eco game');
+    }
+  } catch(e){
+    console.error('[OracleVoice] chain editor error:', e);
+    showToast('Oracle error: ' + (e.message || 'Try again'));
+  }
+}
+
+async function askOracleChainWithVoice(techName, arch, phase, voiceText){
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var resp = document.getElementById('chain-oracle-response');
+  var wrap = document.getElementById('chain-oracle-wrap');
+  if(wrap) wrap.style.display = 'block';
+  if(resp) resp.textContent = 'The Oracle is listening...';
+  var chain = (stCurrentResultData && stCurrentResultData.chain || []).map(function(c){ return c.technique; }).join(' > ');
+
+  var prompt = 'You design ecological BJJ games in the style of Greg Souders / Standard Jiu-Jitsu. A ' + arch + ' archetype player is working on ' + techName + ' in the ' + phase + ' phase. Their chain: ' + chain + '.\n\nThey just told you: "' + voiceText.replace(/"/g,'\\"') + '"\n\nBased on what they said, design ONE ecological game that addresses their request. Return ONLY this JSON:\n{"game_name":"short name","problem":"...","player_a_start":"...","player_b_start":"...","player_a_goal":"...","player_b_goal":"...","constraints":"...","win_condition":"...","continuity":"Reset or Continuous","attention_cue":"...","skill_emerges":"...","round_length":"3 minutes"}';
+
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    var d = await r.json();
+    try {
+      var game = extractAndParseJSON(d.content && d.content[0] && d.content[0].text || '{}');
+      game.bot_type = 'Oracle'; game.phase = phase;
+      stLastOracleGame = game; stLastOracleTech = techName; stLastOraclePhase = phase;
+      resp.innerHTML = renderGrimoireCard(game, true, 'oracle');
+    } catch(e2){
+      resp.textContent = d.content && d.content[0] && d.content[0].text || 'The Oracle is silent.';
+    }
+  } catch(e){
+    console.error('[OracleVoice] chain detail error:', e);
+    if(resp) resp.textContent = 'The Oracle could not be reached. ' + (e.message||e);
+  }
+}
+
+async function askOracleWithVoice(techName, arch, phase, voiceText){
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var resp = document.getElementById('oracle-response');
+  var wrap = document.getElementById('oracle-response-wrap');
+  if(wrap) wrap.style.display = 'block';
+  if(resp) resp.textContent = 'The Oracle is listening...';
+
+  var prompt = 'You design ecological BJJ games in the style of Greg Souders / Standard Jiu-Jitsu. A ' + arch + ' archetype player is looking at ' + techName + ' in the ' + phase + ' category.\n\nThey just told you: "' + voiceText.replace(/"/g,'\\"') + '"\n\nBased on what they said, design ONE ecological game that addresses their request. Return ONLY this JSON:\n{"game_name":"short name","problem":"...","player_a_start":"...","player_b_start":"...","player_a_goal":"...","player_b_goal":"...","constraints":"...","win_condition":"...","continuity":"Reset or Continuous","attention_cue":"...","skill_emerges":"...","round_length":"3 minutes"}';
+
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    var d = await r.json();
+    try {
+      var game = extractAndParseJSON(d.content && d.content[0] && d.content[0].text || '{}');
+      game.bot_type = 'Oracle'; game.phase = phase;
+      stLastOracleGame = game; stLastOracleTech = techName; stLastOraclePhase = phase;
+      resp.innerHTML = renderGrimoireCard(game, true, 'oracle');
+    } catch(e2){
+      resp.textContent = d.content && d.content[0] && d.content[0].text || 'The Oracle is silent.';
+    }
+    if(wrap) wrap.style.display = 'block';
+  } catch(e){
+    console.error('[OracleVoice] grimoire detail error:', e);
+    if(resp) resp.textContent = 'The Oracle could not be reached. ' + (e.message||e);
+    if(wrap) wrap.style.display = 'block';
+  }
+}
+
+// --- VOICE MODE HELPERS ---
+const VOICE_PROMPTS_PREPARE = [
+  {icon:'⛓', q:'What chains do you want to drill?', ex:'"I want to work on collar tie to arm drag to back take"'},
+  {icon:'📍', q:'What positions will you focus on?', ex:'"I want to drill from half guard and closed guard"'},
+  {icon:'✦', q:'Any specific techniques to practice?', ex:'"I need to work on my toreando pass and kimura"'},
+  {icon:'♟', q:'Any games or positional rounds planned?', ex:'"I want to do guard retention rounds from butterfly"'},
+  {icon:'🎯', q:'What will you hunt for in rolls?', ex:'"I\'m going to look for underhooks every round"'}
+];
+const VOICE_PROMPTS_REFLECT = [
+  {icon:'⛓', q:'Any chains or sequences you hit?', ex:'"I hit a collar tie to arm drag to back take"'},
+  {icon:'📍', q:'What positions did you work from?', ex:'"We drilled from half guard and side control"'},
+  {icon:'✦', q:'Any specific techniques you practiced?', ex:'"Worked on my toreando pass and kimura setups"'},
+  {icon:'♟', q:'Any games or positional sparring?', ex:'"Did guard retention rounds from butterfly"'},
+  {icon:'🎯', q:'What were you hunting for in rolls?', ex:'"I was looking for underhooks every round"'},
+  {icon:'🥋', q:'How many rounds did you roll?', ex:'"I did five rounds today"'}
+];
+
+function updateVoiceHeroForMode(mode){
+  const label = document.getElementById('voice-btn-label');
+  const subtitle = document.getElementById('voice-hero-subtitle');
+  const notesBtn = document.getElementById('voice-notes-btn');
+  const extractBtn = document.getElementById('voice-extract-btn');
+  const promptsList = document.getElementById('voice-prompts-list');
+
+  if(mode === 'prepare'){
+    if(label) label.textContent = 'Plan Your Session';
+    if(subtitle) subtitle.textContent = 'Describe your game plan — we\'ll set everything up for you';
+    if(notesBtn) notesBtn.style.display = 'none';
+    if(extractBtn) extractBtn.textContent = '⛓ Build Quest Card';
+  } else {
+    if(label) label.textContent = 'Talk Through Your Session';
+    if(subtitle) subtitle.textContent = 'Describe what you worked on — we\'ll fill in everything for you';
+    if(notesBtn) notesBtn.style.display = '';
+    if(extractBtn) extractBtn.textContent = '⛓ Extract Session';
+  }
+
+  // Populate guided prompts for current mode
+  const prompts = mode === 'prepare' ? VOICE_PROMPTS_PREPARE : VOICE_PROMPTS_REFLECT;
+  if(promptsList){
+    promptsList.innerHTML = prompts.map(p =>
+      '<div style="display:flex;align-items:flex-start;gap:8px">' +
+        '<span style="font-size:12px;width:18px;text-align:center;flex-shrink:0">' + p.icon + '</span>' +
+        '<div>' +
+          '<div style="font-size:10px;color:rgba(244,234,216,0.7);line-height:1.3">' + p.q + '</div>' +
+          '<div style="font-size:8px;color:rgba(198,196,223,0.2);font-style:italic;margin-top:1px">' + p.ex + '</div>' +
+        '</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  // Reset transcript/result display when switching modes
+  const transcriptWrap = document.getElementById('voice-transcript-wrap');
+  const resultEl = document.getElementById('voice-extraction-result');
+  if(transcriptWrap) transcriptWrap.style.display = 'none';
+  if(resultEl){ resultEl.style.display = 'none'; resultEl.innerHTML = ''; }
+}
+
+function voiceExtractDispatch(){
+  if(stQuestMode === 'prepare'){
+    extractPrepareFromTranscript();
+  } else {
+    extractChainFromTranscript();
+  }
+}
+
+async function extractPrepareFromTranscript(){
+  const text = _voiceTranscript.trim();
+  if(!text){ showToast('No transcript to extract from'); return; }
+
+  const ANTHROPIC_KEY = getAnthropicKey();
+  if(!ANTHROPIC_KEY) return;
+
+  const btn = document.getElementById('voice-extract-btn');
+  const resultEl = document.getElementById('voice-extraction-result');
+  if(btn){ btn.textContent = 'Building...'; btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
+
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const phases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  const validPositions = ['Mount','Side Control','Back','Closed Guard','Half Guard','Open Guard','Turtle','North-South','Knee on Belly','Deep Half','Butterfly Guard','De La Riva','Reverse De La Riva','Spider Guard','Lasso Guard','X-Guard','Single Leg X','Rubber Guard','Z-Guard','Lockdown','Quarter Guard','Headquarters','50/50','Ashi Garami','Saddle','Inside Sankaku','Over-Under','Front Headlock','Body Lock','Crucifix','Truck','Wrestling Stance'];
+
+  const prompt = `You are a BJJ training assistant. A practitioner is about to train and recorded a voice memo describing their game plan for the session. Extract EVERYTHING you can to build their quest card (training plan). Parse out:
+
+1. **Attack Chains**: If they describe sequences they want to drill (e.g., "I want to work collar tie to arm drag to back take"), extract each as an ordered chain.
+2. **Positions**: Any positions they want to work from (e.g., "half guard", "mount", "closed guard"). Use standard BJJ position names.
+3. **Individual Techniques**: Specific techniques they want to practice that aren't part of a chain (e.g., "need to drill my kimura", "want to work toreando pass").
+4. **Eco Games / Drills**: If they describe any positional sparring or constraint-based drills they plan to do (e.g., "guard retention rounds from butterfly", "passing game from headquarters").
+5. **Roll Focus**: What they want to specifically hunt for or focus on during live rolls (e.g., "I'm going to look for underhooks", "want to hit the arm drag every round").
+
+Valid phases: ${phases.join(', ')}
+Valid positions (use these exact names when possible): ${validPositions.join(', ')}
+
+Respond in this exact JSON format (no markdown, no backticks, just raw JSON):
+{
+  "chains": [
+    {
+      "title": "Short descriptive chain name",
+      "steps": [
+        {"technique": "Technique Name", "phase": "Phase", "note": "optional context"}
+      ]
+    }
+  ],
+  "positions": ["Position Name"],
+  "techniques": [
+    {"name": "Technique Name", "phase": "Phase"}
+  ],
+  "eco_games": [
+    {
+      "game_name": "Short name for the drill/game",
+      "phase": "Phase",
+      "player_a_start": "Starting position for player A",
+      "player_b_start": "Starting position for player B",
+      "win_condition": "What counts as a win",
+      "constraints": "Any rules or constraints mentioned",
+      "skill_emerges": "What skill this develops"
+    }
+  ],
+  "roll_focus": [
+    {"technique": "What they want to hunt for", "phase": "Phase", "cue": "Any attention cue or detail"}
+  ]
+}
+
+Return empty arrays for anything not mentioned.
+
+Transcript: "${text.replace(/"/g, '\\"')}"`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+
+    if(!r.ok) throw new Error('API ' + r.status);
+    const data = await r.json();
+    const raw = (data.content && data.content[0] && data.content[0].text) || '';
+    const parsed = JSON.parse(raw);
+
+    const summary = [];
+
+    // 1) Chains → stChainCards
+    let addedChains = 0;
+    if(parsed.chains && parsed.chains.length > 0){
+      parsed.chains.forEach(c => {
+        if(c.title && c.steps && c.steps.length > 0){
+          stChainCards.push({title: c.title, steps: c.steps, tags: ['voice-planned'], source: 'voice-plan'});
+          addedChains++;
+        }
+      });
+      if(addedChains > 0){
+        renderChainCardList();
+        summary.push('⛓ ' + addedChains + ' chain' + (addedChains > 1 ? 's' : ''));
+      }
+    }
+
+    // 2) Positions → stDrillPositions
+    let addedPositions = 0;
+    if(parsed.positions && parsed.positions.length > 0){
+      parsed.positions.forEach(p => {
+        if(p && !stDrillPositions.includes(p)){
+          stDrillPositions.push(p);
+          addedPositions++;
+        }
+      });
+      if(addedPositions > 0){
+        renderPositionalPills();
+        renderPositionalSelected();
+        summary.push('📍 ' + addedPositions + ' position' + (addedPositions > 1 ? 's' : ''));
+      }
+    }
+
+    // 3) Techniques → stDrillTechniques
+    let addedTechs = 0;
+    if(parsed.techniques && parsed.techniques.length > 0){
+      parsed.techniques.forEach(t => {
+        if(t.name && !stDrillTechniques.includes(t.name)){
+          stDrillTechniques.push(t.name);
+          addedTechs++;
+        }
+      });
+      if(addedTechs > 0){
+        renderDrillTechPills();
+        summary.push('✦ ' + addedTechs + ' technique' + (addedTechs > 1 ? 's' : ''));
+      }
+    }
+
+    // 4) Eco Games → stEcoGames
+    let addedGames = 0;
+    if(parsed.eco_games && parsed.eco_games.length > 0){
+      parsed.eco_games.forEach(g => {
+        if(g.game_name && !stEcoGames.some(eg => eg.game_name === g.game_name)){
+          stEcoGames.push({
+            game_name: g.game_name, phase: g.phase || '',
+            player_a_start: g.player_a_start || '', player_b_start: g.player_b_start || '',
+            constraints: g.constraints || '', win_condition: g.win_condition || '',
+            attention_cue: '', skill_emerges: g.skill_emerges || '', source: 'voice-plan'
+          });
+          addedGames++;
+        }
+      });
+      if(addedGames > 0){
+        renderEcoGameList();
+        summary.push('♟ ' + addedGames + ' eco game' + (addedGames > 1 ? 's' : ''));
+      }
+    }
+
+    // 5) Roll Focus → stRollFocusItems
+    let addedFocus = 0;
+    if(parsed.roll_focus && parsed.roll_focus.length > 0){
+      const phaseIcons = {Standing:'👣',Takedown:'↓',Guard:'↩️',Passing:'⬜',Pinning:'📌',Submission:'💀'};
+      parsed.roll_focus.forEach(f => {
+        if(f.technique && !stRollFocusItems.some(rf => rf.technique === f.technique)){
+          addRollFocusItem({
+            technique: f.technique, phase: f.phase || '',
+            icon: phaseIcons[f.phase] || '✦', cue: f.cue || null, source: 'voice-plan'
+          });
+          addedFocus++;
+        }
+      });
+      if(addedFocus > 0){
+        summary.push('🎯 ' + addedFocus + ' roll focus item' + (addedFocus > 1 ? 's' : ''));
+      }
+    }
+
+    updateSaveBtn();
+    renderPrepareView();
+
+    if(resultEl){
+      resultEl.style.display = 'block';
+      resultEl.innerHTML =
+        '<div style="background:#131313;border:0.5px solid rgba(233,195,73,0.15);border-left:2px solid ' + ad.color + ';padding:12px">' +
+          '<div style="font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:' + ad.color + '88;margin-bottom:8px">Quest card built</div>' +
+          (summary.length > 0 ? summary.map(function(s){ return '<div style="font-size:10px;color:#f4ead8;margin-bottom:4px;line-height:1.4">' + s + '</div>'; }).join('') : '<div style="font-size:10px;color:rgba(198,196,223,0.4);font-style:italic">No structured data detected — try being more specific.</div>') +
+        '</div>';
+    }
+
+    const totalItems = addedChains + addedPositions + addedTechs + addedGames + addedFocus;
+    showToast('Quest card built — ' + totalItems + ' item' + (totalItems !== 1 ? 's' : '') + ' added');
+
+  } catch(e){
+    console.error('[VoicePrepare] error:', e);
+    showToast('Extraction error: ' + (e.message || 'Try again'));
+    if(resultEl){
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = '<div style="background:#131313;border:0.5px solid rgba(192,57,43,0.2);padding:10px;font-size:10px;color:rgba(192,57,43,0.7)">Could not extract: ' + (e.message || 'Unknown error') + '</div>';
+    }
+  } finally {
+    if(btn){ btn.textContent = '⛓ Build Quest Card'; btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
+  }
+}
+
 function changeRollCount(d){
   stReflectionRollCount = Math.max(0, stReflectionRollCount + d);
   const el = document.getElementById('reflection-roll-count');
@@ -5344,10 +6431,14 @@ function openGrimoireTech(cat, techName){
     </button>
 
     <div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:8px">Ask the Oracle</div>
-    <button onclick="askOracle('${t.name.replace(/'/g,"\\'")}','${t.arch}','${cat}')"
-      style="display:block;width:100%;padding:11px;background:#131313;border:0.5px solid ${ad.color}44;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${ad.color};cursor:pointer;margin-bottom:4px">
-      ✦ Consult the Oracle
-    </button>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <button onclick="askOracle('${t.name.replace(/'/g,"\\'")}','${t.arch}','${cat}')"
+        style="flex:1;padding:11px;background:#131313;border:0.5px solid ${ad.color}44;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${ad.color};cursor:pointer">
+        ✦ Consult the Oracle
+      </button>
+      <button onclick="oracleVoiceRecord('grimoire-detail','${t.name.replace(/'/g,"\\'")}','${t.arch}','${cat}')"
+        style="padding:11px 14px;background:#131313;border:0.5px solid ${ad.color}44;font-size:16px;cursor:pointer;color:${ad.color}" title="Speak to the Oracle">🎙</button>
+    </div>
     <div id="oracle-response-wrap" style="display:none;margin-top:4px">
       <div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:6px">The Oracle speaks</div>
       <div style="background:#0e0e0e;border-left:1.5px solid rgba(198,196,223,0.15);padding:10px 12px">
@@ -6340,8 +7431,13 @@ function openChainProceed(type){
     <div class="chain-proceed-box">
       <div class="chain-proceed-title">+ ${label}</div>
       <div class="chain-proceed-sub">How would you like to proceed?</div>
-      <div class="chain-proceed-opt chain-proceed-oracle" onclick="document.getElementById('chain-proceed-overlay')?.remove();chainConsultOracle('${type}')">
-        ✦ Consult the Oracle
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <div class="chain-proceed-opt chain-proceed-oracle" style="flex:1;margin-bottom:0" onclick="document.getElementById('chain-proceed-overlay')?.remove();chainConsultOracle('${type}')">
+          ✦ Consult the Oracle
+        </div>
+        <div class="chain-proceed-opt chain-proceed-oracle" style="margin-bottom:0;padding:14px 16px" onclick="document.getElementById('chain-proceed-overlay')?.remove();oracleVoiceRecord('${type}')" title="Speak to the Oracle">
+          🎙
+        </div>
       </div>
       <div class="chain-proceed-opt chain-proceed-create" onclick="document.getElementById('chain-proceed-overlay')?.remove();openChainCardEditor('${type}')">
         Create your own
@@ -6434,13 +7530,16 @@ function openChainCardEditor(type){
   // Steps HTML
   const stepsHtml = steps.map((s,i) => {
     const isLast = i === steps.length - 1;
-    return `<div class="ce-step">
+    return `<div class="ce-step" data-step-idx="${i}">
       <div class="ce-step-left">
         <div class="ce-step-dot${isLast?' green':''}"></div>
         ${!isLast ? '<div class="ce-step-line"></div>' : ''}
       </div>
       <div class="ce-step-content">
-        <div class="ce-step-name">${s.technique}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="ce-step-name">${s.technique}</div>
+          <button onclick="removeEditorStep(${i},'chain')" style="width:18px;height:18px;border-radius:50%;border:0.5px solid rgba(200,50,50,0.3);background:rgba(200,50,50,0.08);color:#c05050;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1" title="Remove step">✕</button>
+        </div>
         <div class="ce-step-phase">${s.phase}</div>
         <textarea class="ce-note" data-step="${i}" placeholder="Add a note — how do you get here?"></textarea>
       </div>
@@ -6463,7 +7562,10 @@ function openChainCardEditor(type){
 
       <div class="ce-oracle-strip">
         <span class="ce-oracle-text">${oracleText}</span>
-        <button class="ce-oracle-btn" onclick="chainEditorConsultOracle('chain')">Consult</button>
+        <div style="display:flex;gap:4px;align-items:center">
+          <button class="ce-oracle-mic" onclick="oracleVoiceRecord('chain')" style="font-size:14px;background:none;border:0.5px solid rgba(107,63,160,0.3);color:#c084fc;padding:3px 7px;border-radius:6px;cursor:pointer" title="Speak to the Oracle">🎙</button>
+          <button class="ce-oracle-btn" onclick="chainEditorConsultOracle('chain')">Consult</button>
+        </div>
       </div>
 
       <div class="ce-section-label">Sequence + notes</div>
@@ -6658,6 +7760,93 @@ function toggleCeTag(el){
   el.classList.toggle('selected');
 }
 
+function removeEditorStep(stepIdx, type){
+  // Remove a step from the chain graph and re-render the editor
+  var steps = buildChainSequence();
+  if(stepIdx < 0 || stepIdx >= steps.length) return;
+  var removed = steps[stepIdx];
+
+  // Remove the technique from the graph node
+  if(removed && removed.phase){
+    removeTechFromPhase(removed.phase, removed.technique);
+  }
+
+  // Also remove the corresponding edge if needed
+  if(stepIdx > 0){
+    var prevPhase = steps[stepIdx - 1].phase;
+    userEdges = userEdges.filter(function(e){ return !(e[0] === prevPhase && e[1] === removed.phase); });
+    // If the step after still exists, re-link prev to next
+    if(stepIdx < steps.length - 1){
+      var nextPhase = steps[stepIdx + 1].phase;
+      userEdges = userEdges.filter(function(e){ return !(e[0] === removed.phase && e[1] === nextPhase); });
+      userEdges.push([prevPhase, nextPhase]);
+    }
+  } else if(steps.length > 1){
+    // Removing first step — remove edge to second
+    var nextPhase = steps[1].phase;
+    userEdges = userEdges.filter(function(e){ return !(e[0] === removed.phase && e[1] === nextPhase); });
+  }
+
+  refreshActiveNodes();
+  drawGraph();
+  renderGraphIcons();
+  updateOracleButton();
+  persistChain();
+
+  // Collect current notes before re-render
+  var noteMap = {};
+  document.querySelectorAll('.ce-note').forEach(function(n){
+    var idx = parseInt(n.dataset.step);
+    if(n.value.trim()) noteMap[idx] = n.value.trim();
+  });
+
+  // Get current title
+  var title = document.getElementById('ce-title')?.value || '';
+
+  // Re-open the editor with updated chain
+  if(type === 'eco'){
+    openChainCardEditor('eco');
+  } else {
+    var newSteps = buildChainSequence();
+    if(newSteps.length === 0){
+      closeChainCardEditor();
+      showToast('All steps removed');
+      return;
+    }
+    // Re-assign notes by shifting indices
+    var shiftedNotes = {};
+    Object.keys(noteMap).forEach(function(k){
+      var origIdx = parseInt(k);
+      if(origIdx < stepIdx) shiftedNotes[origIdx] = noteMap[origIdx];
+      else if(origIdx > stepIdx) shiftedNotes[origIdx - 1] = noteMap[origIdx];
+    });
+
+    // Decide which editor to re-open based on whether we have Oracle steps
+    var oracleSteps = window._lastOracleChainSteps;
+    if(oracleSteps && oracleSteps.length > 0){
+      // Filter out the removed step from Oracle steps too
+      window._lastOracleChainSteps = oracleSteps.filter(function(os){
+        return !(os.phase === removed.phase && os.technique === removed.technique);
+      });
+      openChainCardEditorPrefilled('chain', title, window._lastOracleChainSteps);
+    } else {
+      openChainCardEditor('chain');
+    }
+
+    // Restore title
+    var titleInput = document.getElementById('ce-title');
+    if(titleInput && title) titleInput.value = title;
+
+    // Restore notes on the new step textareas
+    document.querySelectorAll('.ce-note').forEach(function(n){
+      var idx = parseInt(n.dataset.step);
+      if(shiftedNotes[idx]) n.value = shiftedNotes[idx];
+    });
+  }
+
+  showToast(removed.technique + ' removed');
+}
+
 function getEditorData(type){
   const title = document.getElementById('ce-title')?.value?.trim() || '';
   const tags = [...document.querySelectorAll('#ce-tags .ce-tag.selected')].map(t=>t.textContent.trim());
@@ -6783,13 +7972,16 @@ function openChainCardEditorPrefilled(type, title, oracleSteps){
 
   const stepsHtml = steps.map((s,i) => {
     const isLast = i === steps.length - 1;
-    return `<div class="ce-step">
+    return `<div class="ce-step" data-step-idx="${i}">
       <div class="ce-step-left">
         <div class="ce-step-dot${isLast?' green':''}"></div>
         ${!isLast ? '<div class="ce-step-line"></div>' : ''}
       </div>
       <div class="ce-step-content">
-        <div class="ce-step-name">${s.technique}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="ce-step-name">${s.technique}</div>
+          <button onclick="removeEditorStep(${i},'${type}')" style="width:18px;height:18px;border-radius:50%;border:0.5px solid rgba(200,50,50,0.3);background:rgba(200,50,50,0.08);color:#c05050;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1" title="Remove step">✕</button>
+        </div>
         <div class="ce-step-phase">${s.phase}</div>
         <textarea class="ce-note" data-step="${i}" placeholder="Add a note — how do you get here?">${s.note||''}</textarea>
       </div>
@@ -6810,7 +8002,10 @@ function openChainCardEditorPrefilled(type, title, oracleSteps){
       </div>
       <div class="ce-oracle-strip">
         <span class="ce-oracle-text">${oracleText}</span>
-        <button class="ce-oracle-btn" onclick="chainEditorConsultOracle('${type}')">Consult</button>
+        <div style="display:flex;gap:4px;align-items:center">
+          <button class="ce-oracle-mic" onclick="oracleVoiceRecord('${type}')" style="font-size:14px;background:none;border:0.5px solid rgba(107,63,160,0.3);color:#c084fc;padding:3px 7px;border-radius:6px;cursor:pointer" title="Speak to the Oracle">🎙</button>
+          <button class="ce-oracle-btn" onclick="chainEditorConsultOracle('${type}')">Consult</button>
+        </div>
       </div>
       <div class="ce-section-label">Sequence + notes</div>
       <div style="margin-bottom:16px">${stepsHtml}</div>
@@ -8419,10 +9614,14 @@ function selectChainNode(el, idx, phase, tech){
       style="display:block;width:100%;padding:11px;background:${alreadyAdded?'#1c1b1b':'linear-gradient(135deg,#ffe088,#e9c349,#c8900a)'};border:${alreadyAdded?'0.5px solid rgba(233,195,73,0.2)':'none'};font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${alreadyAdded?'rgba(233,195,73,0.4)':'#1a1000'};font-weight:700;cursor:pointer;margin-bottom:10px">
       ${alreadyAdded?'✓ On Quest Card':'+ Add to Quest Card'}
     </button>
-    <button onclick="askOracleChain('${tech}','${techData?techData.arch:'berserker'}','${phase}')"
-      style="display:block;width:100%;padding:11px;background:#131313;border:0.5px solid ${ad.color}44;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${ad.color};cursor:pointer;margin-bottom:4px">
-      ✦ Consult the Oracle
-    </button>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <button onclick="askOracleChain('${tech}','${techData?techData.arch:'berserker'}','${phase}')"
+        style="flex:1;padding:11px;background:#131313;border:0.5px solid ${ad.color}44;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${ad.color};cursor:pointer">
+        ✦ Consult the Oracle
+      </button>
+      <button onclick="oracleVoiceRecord('chain-detail','${tech.replace(/'/g,"\\'")}','${techData?techData.arch:'berserker'}','${phase}')"
+        style="padding:11px 14px;background:#131313;border:0.5px solid ${ad.color}44;font-size:16px;cursor:pointer;color:${ad.color}" title="Speak to the Oracle">🎙</button>
+    </div>
     <div id="chain-oracle-wrap" style="display:none;margin-top:4px">
       <div style="font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:6px">The Oracle speaks</div>
       <div style="background:#0e0e0e;border-left:1.5px solid rgba(198,196,223,0.15);padding:10px 12px">
@@ -8539,5 +9738,20 @@ function restart(){
   document.getElementById('intro').style.display='flex';
 }
 </script>
+
+<!-- Oracle Voice Recording Overlay — full-screen bottom sheet -->
+<div id="oracle-voice-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(0,0,0,0.7)">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,#0a0814 60%,rgba(10,8,20,0.95));border-top:1.5px solid rgba(107,63,160,0.4);padding:24px 20px 32px">
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="display:inline-block;width:48px;height:48px;border-radius:50%;background:rgba(107,63,160,0.2);border:1.5px solid rgba(107,63,160,0.5);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+        <span style="display:block;width:14px;height:14px;background:#c084fc;border-radius:50%;animation:voicePulse 1s ease-in-out infinite"></span>
+      </div>
+      <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#c084fc;margin-bottom:4px">The Oracle is listening</div>
+      <span id="oracle-voice-timer" style="font-size:10px;color:rgba(198,196,223,0.35)">0:00</span>
+    </div>
+    <div id="oracle-voice-interim" style="font-size:14px;color:rgba(244,234,216,0.8);font-family:'Crimson Pro',serif;font-style:italic;text-align:center;min-height:48px;line-height:1.7;padding:0 12px;margin-bottom:16px">Speak your request...</div>
+    <button onclick="stopOracleVoice()" style="display:block;width:100%;padding:14px;background:rgba(107,63,160,0.2);border:1px solid rgba(107,63,160,0.5);color:#c084fc;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;cursor:pointer">Stop & Send to Oracle</button>
+  </div>
+</div>
 </body>
 </html>

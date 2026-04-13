@@ -325,52 +325,85 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .community-btn:hover { color: #c8960a; border-color: #c8960a; }
 
 /* ECO CARD — COLLAPSED */
-.eco-collapsed { background:#0f0f1c; border:0.5px solid #2a2a3e; border-left:2px solid #2e8b57; border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer; transition:border 0.2s; }
+.eco-collapsed { background:linear-gradient(145deg, #1a1520 0%, #12101a 100%); border:1px solid #2a2435; border-radius:16px; padding:14px; margin-bottom:12px; cursor:pointer; transition:all 0.3s ease; }
+.eco-collapsed:hover { border-color:#3a3445; }
 .eco-collapsed .eco-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
 .eco-collapsed .eco-tags { display:flex; gap:6px; align-items:center; }
-.eco-tag-green { font-size:10px; padding:2px 8px; border-radius:6px; background:#0a1e10; color:#4ade80; letter-spacing:0.06em; text-transform:uppercase; }
-.eco-tag-phase { font-size:10px; padding:2px 8px; border-radius:6px; background:#1a1a2e; border:0.5px solid #2a2a3e; color:#8892a4; letter-spacing:0.06em; text-transform:uppercase; }
-.eco-tag-bot { font-size:10px; padding:2px 8px; border-radius:6px; background:#1a1a2e; border:0.5px solid #2a2a3e; color:#8892a4; }
-.eco-bot-label { font-size:11px; color:#4a5568; }
-.eco-title { font-size:17px; color:#e8e0d0; font-weight:500; margin-bottom:6px; }
-.eco-cue { font-size:13px; color:#2e8b57; font-style:italic; line-height:1.4; margin-bottom:12px; border-left:2px solid #2e8b57; padding-left:10px; }
+.eco-tag-green { font-size:10px; padding:3px 10px; border-radius:10px; background:rgba(200,112,32,0.1); color:#c87020; border:1px solid rgba(200,112,32,0.2); letter-spacing:0.08em; text-transform:uppercase; font-family:'Cinzel',serif; }
+.eco-tag-phase { font-size:10px; padding:3px 10px; border-radius:10px; background:rgba(106,98,82,0.1); border:1px solid rgba(106,98,82,0.2); color:#8a7e6e; letter-spacing:0.06em; text-transform:uppercase; font-family:'Cinzel',serif; }
+.eco-tag-bot { font-size:10px; padding:3px 10px; border-radius:10px; background:rgba(106,98,82,0.08); border:1px solid rgba(106,98,82,0.15); color:#6a6252; }
+.eco-bot-label { font-size:11px; color:#6a6252; }
+.eco-title { font-size:17px; color:#e8e0d4; font-weight:500; margin-bottom:6px; }
+.eco-cue { font-size:13px; color:#c87020; font-style:italic; line-height:1.4; margin-bottom:12px; border-left:3px solid #c87020; padding-left:10px; background:rgba(200,112,32,0.06); padding:10px 10px 10px 12px; border-radius:0 8px 8px 0; }
 .eco-footer { display:flex; justify-content:space-between; align-items:center; }
 .eco-meta { display:flex; gap:10px; }
-.eco-meta-item { font-size:12px; color:#6b7280; }
-.eco-expand-hint { font-size:11px; color:#4a5568; }
-.eco-quest-btn { background:#c8a84b; color:#0d0d1a; font-size:11px; font-weight:600; padding:6px 14px; border-radius:8px; cursor:pointer; border:none; font-family:'Cinzel',serif; letter-spacing:0.06em; }
+.eco-meta-item { font-size:12px; color:#5a5248; }
+.eco-expand-hint { font-size:11px; color:#6a6252; }
+.eco-quest-btn { background:linear-gradient(135deg, #c87020 0%, #a85a10 100%); color:#fff; font-size:11px; font-weight:700; padding:8px 16px; border-radius:20px; cursor:pointer; border:none; font-family:'Cinzel',serif; letter-spacing:0.08em; text-transform:uppercase; }
 
 /* ECO CARD — EXPANDED */
-.eco-expanded { background:#0f0f1c; border:0.5px solid #2e8b57; border-left:2px solid #2e8b57; border-radius:12px; overflow:hidden; margin-bottom:10px; }
-.eco-expanded-hdr { padding:14px 14px 10px; border-bottom:0.5px solid #1e1e30; }
-.eco-expanded-title { font-size:17px; color:#e8e0d0; font-weight:500; margin-bottom:6px; }
+.eco-expanded { background:linear-gradient(145deg, #1a1520 0%, #12101a 100%); border:1px solid #2a2435; border-radius:16px; overflow:hidden; margin-bottom:12px; }
+.eco-expanded-hdr { padding:16px 16px 12px; border-bottom:1px solid #1e1a28; }
+.eco-expanded-title { font-family:'Cinzel Decorative','Cinzel',serif; font-size:22px; font-weight:700; color:#e8e0d4; margin-bottom:8px; }
 .eco-expanded-tags { display:flex; gap:6px; flex-wrap:wrap; }
 .eco-swipe-container { position:relative; overflow:hidden; }
-.eco-swipe-track { display:flex; transition:transform 0.3s ease; }
-.eco-swipe-section { min-width:100%; padding:16px 14px; }
-.eco-section-label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#4a5568; margin-bottom:8px; }
-.eco-section-body { font-size:14px; color:#d1ccc0; line-height:1.6; }
+.eco-swipe-track { display:flex; transition:transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.eco-swipe-section { min-width:100%; padding:16px; }
+.eco-section-label { font-family:'Cinzel',serif; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#c87020; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.eco-section-body { font-size:15px; color:#c8bfb0; line-height:1.6; }
+.eco-section-body strong { color:#e8e0d4; font-weight:600; }
 .eco-two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px; }
-.eco-col-block { background:#1a1a2e; border-radius:8px; padding:10px; }
-.eco-col-label { font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:#4a5568; margin-bottom:6px; }
-.eco-col-body { font-size:13px; color:#d1ccc0; line-height:1.5; }
-.eco-cue-expanded { font-size:14px; color:#2e8b57; font-style:italic; line-height:1.5; border-left:2px solid #2e8b57; padding-left:12px; margin-top:14px; }
+.eco-col-block { background:#1e1a28; border:1px solid #2a2535; border-radius:10px; padding:12px; }
+.eco-col-label { font-family:'Cinzel',serif; font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#c87020; margin-bottom:6px; }
+.eco-col-body { font-size:14px; color:#c8bfb0; line-height:1.5; }
+.eco-cue-expanded { font-size:14px; color:#e8e0d4; font-style:italic; line-height:1.5; border-left:3px solid #c87020; padding:12px 14px; margin-top:14px; background:rgba(200,112,32,0.08); border-radius:0 8px 8px 0; }
 .eco-format-row { display:flex; gap:8px; margin-top:8px; }
-.eco-format-item { background:#1a1a2e; border-radius:8px; padding:10px 14px; text-align:center; flex:1; }
-.eco-format-val { font-size:16px; color:#e8e0d0; font-weight:500; }
-.eco-format-lbl { font-size:10px; color:#4a5568; text-transform:uppercase; letter-spacing:0.08em; margin-top:3px; }
-.eco-dots { display:flex; justify-content:center; gap:6px; padding:8px 0 4px; }
-.eco-dot { width:6px; height:6px; border-radius:50%; background:#2a2a3e; cursor:pointer; transition:background 0.2s; border:none; }
-.eco-dot.active { background:#2e8b57; }
+.eco-format-item { background:#1e1a28; border:1px solid #2a2535; border-radius:10px; padding:10px 14px; text-align:center; flex:1; }
+.eco-format-val { font-size:16px; color:#e8e0d4; font-weight:500; }
+.eco-format-lbl { font-size:10px; color:#6a6252; text-transform:uppercase; letter-spacing:0.08em; margin-top:3px; }
+.eco-dots { display:flex; justify-content:center; gap:8px; padding:8px 0 4px; }
+.eco-dot { width:8px; height:8px; border-radius:50%; background:#1e1a28; border:1.5px solid #2a2535; cursor:pointer; transition:all 0.3s ease; }
+.eco-dot.active { background:#c87020; border-color:#c87020; box-shadow:0 0 8px rgba(200,112,32,0.4); }
 .eco-dot-labels { display:flex; justify-content:space-around; padding:0 14px 12px; }
-.eco-dot-label { font-size:10px; color:#4a5568; text-align:center; transition:color 0.2s; }
-.eco-dot-label.active { color:#2e8b57; }
-.eco-swipe-nav { display:flex; justify-content:space-between; padding:0 14px 14px; align-items:center; }
-.eco-nav-btn { font-size:12px; color:#c8a84b; cursor:pointer; background:none; border:none; padding:6px 0; font-family:'Cinzel',serif; }
-.eco-nav-btn.disabled { color:#2a2a3e; pointer-events:none; }
-.eco-action-row { display:flex; justify-content:space-between; align-items:center; padding:10px 14px 14px; border-top:0.5px solid #1e1e30; }
-.eco-upvote { font-size:13px; color:#6b7280; }
-.eco-collapse-btn { font-size:12px; color:#4a5568; cursor:pointer; background:none; border:none; font-family:'Cinzel',serif; }
+.eco-dot-label { font-size:10px; color:#6a6252; text-align:center; transition:color 0.2s; font-family:'Cinzel',serif; letter-spacing:0.04em; }
+.eco-dot-label.active { color:#c87020; }
+.eco-swipe-nav { display:flex; justify-content:space-between; padding:0 16px 14px; align-items:center; }
+.eco-nav-btn { font-size:11px; color:#8a7e6e; cursor:pointer; background:none; border:1px solid #2a2535; border-radius:10px; padding:8px 16px; font-family:'Cinzel',serif; letter-spacing:0.06em; transition:all 0.2s; }
+.eco-nav-btn:hover { border-color:#3a3445; color:#c87020; }
+.eco-nav-btn.disabled { color:#2a2a3e; pointer-events:none; opacity:0.3; }
+.eco-nav-btn.next { color:#c87020; border-color:rgba(200,112,32,0.3); }
+.eco-attention-cue { margin:0 16px 12px; padding:12px 14px; background:rgba(200,112,32,0.08); border-left:3px solid #c87020; border-radius:0 8px 8px 0; }
+.eco-attention-cue-label { font-family:'Cinzel',serif; font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#c87020; margin-bottom:4px; display:flex; align-items:center; gap:5px; }
+.eco-attention-cue-text { font-size:14px; color:#e8e0d4; line-height:1.5; font-style:italic; }
+.eco-action-row { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-top:1px solid #1e1a28; }
+.eco-upvote { font-size:13px; color:#5a5248; }
+.eco-collapse-btn { font-size:11px; color:#8a7e6e; cursor:pointer; background:none; border:1px solid #2a2535; border-radius:8px; padding:6px 12px; font-family:'Cinzel',serif; letter-spacing:0.04em; transition:all 0.2s; }
+.eco-collapse-btn:hover { border-color:#3a3445; }
+
+/* PLAYLIST VIEW — Collection Carousel */
+.playlist-top-bar { display:flex; align-items:center; justify-content:space-between; padding:0 0 12px; }
+.playlist-back-btn { display:flex; align-items:center; gap:6px; background:none; border:none; color:#c87020; font-family:'Cinzel',serif; font-size:12px; cursor:pointer; letter-spacing:0.08em; }
+.playlist-progress-text { font-family:'Cinzel',serif; font-size:11px; color:#6a6252; letter-spacing:0.08em; }
+.playlist-dots { display:flex; justify-content:center; gap:8px; padding:8px 0 16px; }
+.playlist-dot { width:10px; height:10px; border-radius:50%; background:#1e1a28; border:1.5px solid #2a2535; cursor:pointer; transition:all 0.3s ease; }
+.playlist-dot.active { background:#c87020; border-color:#c87020; box-shadow:0 0 8px rgba(200,112,32,0.4); }
+.playlist-dot.completed { background:#4aaa28; border-color:#4aaa28; box-shadow:0 0 6px rgba(74,170,40,0.3); }
+.playlist-carousel { position:relative; width:100%; overflow:hidden; border-radius:16px; }
+.playlist-track { display:flex; transition:transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.playlist-card { min-width:100%; width:100%; flex-shrink:0; overflow:hidden; }
+.playlist-nav-row { display:flex; justify-content:space-between; align-items:center; padding:14px 0; }
+.playlist-nav-btn { display:flex; align-items:center; gap:6px; background:none; border:1px solid #2a2535; border-radius:10px; padding:8px 18px; color:#8a7e6e; font-family:'Cinzel',serif; font-size:11px; cursor:pointer; letter-spacing:0.06em; transition:all 0.2s; }
+.playlist-nav-btn:hover { border-color:#3a3445; color:#c87020; }
+.playlist-nav-btn.next { color:#c87020; border-color:rgba(200,112,32,0.3); }
+.playlist-nav-btn:disabled { opacity:0.3; cursor:default; pointer-events:none; }
+.playlist-actions { display:flex; gap:8px; justify-content:center; padding:4px 0 8px; }
+.playlist-action-btn { display:flex; align-items:center; gap:5px; background:none; border:1px solid #2a2535; border-radius:8px; padding:6px 14px; color:#8a7e6e; font-family:'Crimson Pro','Cinzel',serif; font-size:12px; cursor:pointer; transition:all 0.2s; }
+.playlist-action-btn:hover { border-color:#3a3445; color:#c87020; }
+.game-strip { display:flex; gap:8px; padding:10px 16px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.game-strip::-webkit-scrollbar { display:none; }
+.game-chip { flex-shrink:0; display:flex; align-items:center; gap:6px; padding:5px 11px; background:#1e1a28; border:1px solid #2a2535; border-radius:20px; font-size:12px; color:#a89e8e; white-space:nowrap; font-family:'Crimson Pro',serif; }
+.game-chip-num { font-family:'Cinzel',serif; font-size:9px; font-weight:700; color:#c87020; background:rgba(200,112,32,0.15); width:17px; height:17px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.playlist-action-btn.quest { background:rgba(74,170,40,0.1); border-color:rgba(74,170,40,0.3); color:#4aaa28; }
 
 .game-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .game-editor-modal { background: #0e0e0e; border: 1px solid rgba(200,150,10,0.3); border-radius: 2px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; }
@@ -2494,7 +2527,7 @@ function buildSkillTreeHTML(data, ad) {
         </div>
       </div>
       <div id="grimoire-category" style="display:none;padding:16px;padding-bottom:200px">
-        <div onclick="backToGrimoireHome()" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer">
+        <div id="grimoire-cat-back" onclick="backToGrimoireHome()" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer">
           <span style="font-size:11px;color:${ad.color}">←</span>
           <span style="font-size:10px;color:rgba(198,196,223,0.3);letter-spacing:0.06em">Grimoire</span>
         </div>
@@ -2510,13 +2543,15 @@ function buildSkillTreeHTML(data, ad) {
         <!-- Tag filter pills -->
         <div style="display:flex;flex-wrap:wrap;gap:4px;padding-bottom:8px;margin-bottom:10px" id="grim-cat-tag-row"></div>
 
-        <!-- Technique list -->
-        <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:8px">Techniques</div>
-        <div id="grimoire-tech-list"></div>
+        <!-- Technique list (hidden when filtering by card type) -->
+        <div id="grimoire-tech-section">
+          <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:8px">Techniques</div>
+          <div id="grimoire-tech-list"></div>
+        </div>
 
         <!-- Category-scoped community content -->
         <div id="grimoire-cat-content" style="margin-top:16px;padding-top:16px;border-top:0.5px solid rgba(255,255,255,0.04)">
-          <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:8px">Community Content</div>
+          <div id="grimoire-cat-content-label" style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.2);margin-bottom:8px">Community Content</div>
           <div id="grimoire-cat-feed" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
       </div>
@@ -2875,6 +2910,12 @@ function buildSkillTreeHTML(data, ad) {
         <div id="codex-active-quests"></div>
       </div>
 
+      <!-- Weakness Nudges — forward-looking training suggestions -->
+      <div id="codex-nudges-section" style="display:none;padding:14px 16px;background:#0e0e0e;border-top:1px solid rgba(255,255,255,0.04)">
+        <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px">Suggested Next</div>
+        <div id="codex-nudges"></div>
+      </div>
+
       <!-- Training Insights -->
       <div style="padding:14px 16px;background:#0e0e0e;border-top:1px solid rgba(255,255,255,0.04)">
         <div style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px">Training Insights</div>
@@ -3223,11 +3264,236 @@ Tags:`;
   }
 }
 
+// ─── SESSION-AWARE RECOMMENDATION ENGINE ───
+
+// Phase progression: natural "what comes next" relationships
+const PHASE_PROGRESSION = {
+  'standing': ['takedown'],
+  'takedown': ['guard','passing'],
+  'guard': ['passing','submission'],
+  'passing': ['pinning'],
+  'pinning': ['submission'],
+  'submission': ['pinning','guard']  // where you end up after a sub attempt
+};
+
+// Build a bidirectional technique relationship graph from TECHNIQUES.leads
+// Also maps game names → technique names for reverse lookups
+let _techGraph = null;
+let _gameToTech = null;
+let _techToPhase = null;
+
+function ensureTechGraph(){
+  if(_techGraph) return;
+  _techGraph = {};      // techName → Set of related techNames
+  _gameToTech = {};     // gameName(lower) → { technique, phase }
+  _techToPhase = {};    // techName(lower) → phase(lower)
+
+  Object.entries(TECHNIQUES).forEach(([phase, techs]) => {
+    techs.forEach(t => {
+      const name = t.name.toLowerCase();
+      _techToPhase[name] = phase.toLowerCase();
+      if(t.game) _gameToTech[t.game.toLowerCase()] = { technique: name, phase: phase.toLowerCase() };
+      if(!_techGraph[name]) _techGraph[name] = new Set();
+
+      // Bidirectional: if A leads→B, then A↔B are related
+      (t.leads||[]).forEach(lead => {
+        const ln = lead.toLowerCase();
+        if(!_techGraph[ln]) _techGraph[ln] = new Set();
+        _techGraph[name].add(ln);
+        _techGraph[ln].add(name);
+      });
+    });
+  });
+
+  // Also index DEFENSE_TECHNIQUES game names
+  if(typeof DEFENSE_TECHNIQUES !== 'undefined'){
+    Object.entries(DEFENSE_TECHNIQUES).forEach(([phase, techs]) => {
+      techs.forEach(t => {
+        if(t.game) _gameToTech[t.game.toLowerCase()] = { technique: t.name.toLowerCase(), phase: phase.toLowerCase() };
+      });
+    });
+  }
+}
+
+// Given a technique name, return related techniques with relevance tiers
+// tier 1: direct graph neighbors (leads to / leads from)
+// tier 2: same-phase siblings
+// tier 3: next-phase techniques (phase progression)
+function getRelatedTechniques(techName){
+  ensureTechGraph();
+  const name = techName.toLowerCase();
+  const related = { direct: new Set(), samePhase: new Set(), nextPhase: new Set() };
+  const phase = _techToPhase[name];
+
+  // Tier 1: direct graph neighbors
+  if(_techGraph[name]){
+    _techGraph[name].forEach(t => related.direct.add(t));
+  }
+
+  if(!phase) return related;
+
+  // Tier 2: same-phase techniques (siblings)
+  Object.entries(_techToPhase).forEach(([t, p]) => {
+    if(p === phase && t !== name) related.samePhase.add(t);
+  });
+
+  // Tier 3: techniques in the next natural phase
+  const nextPhases = PHASE_PROGRESSION[phase] || [];
+  nextPhases.forEach(np => {
+    Object.entries(_techToPhase).forEach(([t, p]) => {
+      if(p === np) related.nextPhase.add(t);
+    });
+  });
+
+  return related;
+}
+
+// Build a training profile from recent session history
+// Returns: { phaseFreq, activeTechniques, phaseGaps, recentTechSet }
+function buildTrainingProfile(sessionCount){
+  const n = sessionCount || 12;
+  const recent = (stSessionHistory || []).slice(0, n);
+  const profile = {
+    phaseFreq: {},        // phase → count (how often trained)
+    activeTechniques: {}, // techName → count
+    phaseGaps: [],        // phases sorted weakest-first
+    recentTechSet: new Set()  // flat set of all recent technique names (lowercase)
+  };
+
+  if(recent.length === 0) return profile;
+
+  // Count phase appearances from drills, eco games, and rolling
+  recent.forEach(s => {
+    (s.drillPhases||[]).forEach(p => {
+      const pl = p.toLowerCase();
+      profile.phaseFreq[pl] = (profile.phaseFreq[pl]||0) + 1;
+    });
+    (s.ecoGames||[]).forEach(g => {
+      if(g.phase){
+        const pl = g.phase.toLowerCase();
+        profile.phaseFreq[pl] = (profile.phaseFreq[pl]||0) + 1;
+      }
+    });
+    (s.rollFocusItems||[]).forEach(i => {
+      if(i.phase){
+        const pl = i.phase.toLowerCase();
+        profile.phaseFreq[pl] = (profile.phaseFreq[pl]||0) + (s.rounds||1);
+      }
+    });
+
+    // Count technique appearances
+    (s.rollFocusItems||[]).forEach(i => {
+      if(i.technique){
+        const tl = i.technique.toLowerCase();
+        profile.activeTechniques[tl] = (profile.activeTechniques[tl]||0) + 1;
+        profile.recentTechSet.add(tl);
+      }
+    });
+    (s.drillTechniques||[]).forEach(t => {
+      const tl = t.toLowerCase();
+      profile.activeTechniques[tl] = (profile.activeTechniques[tl]||0) + 1;
+      profile.recentTechSet.add(tl);
+    });
+    // Eco game names → technique lookups
+    (s.ecoGames||[]).forEach(g => {
+      if(g.game_name){
+        ensureTechGraph();
+        const lookup = _gameToTech[g.game_name.toLowerCase()];
+        if(lookup){
+          profile.activeTechniques[lookup.technique] = (profile.activeTechniques[lookup.technique]||0) + 1;
+          profile.recentTechSet.add(lookup.technique);
+        }
+      }
+    });
+  });
+
+  // Build phase gaps: all 6 phases sorted by lowest frequency
+  const allPhases = ['standing','takedown','guard','passing','pinning','submission'];
+  // Also add heatmap data for broader context
+  allPhases.forEach(p => {
+    const heatVal = (stHeatmap||{})[p.charAt(0).toUpperCase()+p.slice(1)] || 0;
+    profile.phaseFreq[p] = (profile.phaseFreq[p]||0) + Math.floor(heatVal * 0.1); // dampen heatmap influence
+  });
+  profile.phaseGaps = allPhases.slice().sort((a,b) => (profile.phaseFreq[a]||0) - (profile.phaseFreq[b]||0));
+
+  return profile;
+}
+
+// Score a community game using session-aware signals
+// Returns additional score points to add on top of existing scoring
+function scoreGameByTraining(game, trainingProfile){
+  ensureTechGraph();
+  let bonus = 0;
+  const gd = game.game_data || {};
+  const gameName = (gd.game_name || gd.chain_name || '').toLowerCase();
+  const gamePhase = (game.phase || gd.phase || '').toLowerCase();
+  const gameSteps = (gd.steps || []).map(s => (s.technique||'').toLowerCase()).filter(Boolean);
+
+  // Resolve game → technique via lookup
+  const gameTech = _gameToTech[gameName];
+  const allGameTechs = [...gameSteps];
+  if(gameTech) allGameTechs.push(gameTech.technique);
+
+  // ── Signal 1: Phase frequency boost (+1 to +4)
+  // Games in phases you train most get a boost
+  const maxFreq = Math.max(...Object.values(trainingProfile.phaseFreq), 1);
+  if(gamePhase && trainingProfile.phaseFreq[gamePhase]){
+    const ratio = trainingProfile.phaseFreq[gamePhase] / maxFreq;
+    bonus += Math.round(ratio * 4); // 0-4 points
+  }
+
+  // ── Signal 2: Active technique familiarity (+2 per overlap)
+  // Games involving techniques you've been actively training
+  allGameTechs.forEach(gt => {
+    if(trainingProfile.activeTechniques[gt]){
+      bonus += 2;
+    }
+  });
+
+  // ── Signal 3: Related technique boost (+3 for direct, +1 for same-phase/next-phase)
+  // If you've been training Mount, and this game involves Armbar (which leads↔Mount), bonus
+  allGameTechs.forEach(gt => {
+    trainingProfile.recentTechSet.forEach(trainedTech => {
+      const related = getRelatedTechniques(trainedTech);
+      if(related.direct.has(gt)){
+        bonus += 3;  // strong: direct graph connection
+      } else if(related.samePhase.has(gt)){
+        bonus += 0.5;  // mild: same phase sibling
+      } else if(related.nextPhase.has(gt)){
+        bonus += 1.5;  // moderate: natural progression (mount → submissions)
+      }
+    });
+  });
+
+  // ── Signal 4: Phase gap nudge (up to +3 for weakest phases)
+  // Sprinkle in content from undertrained phases
+  const gaps = trainingProfile.phaseGaps;
+  if(gaps.length >= 2 && gamePhase){
+    if(gamePhase === gaps[0]) bonus += 3;       // weakest phase
+    else if(gamePhase === gaps[1]) bonus += 1.5; // second weakest
+  }
+
+  // ── Signal 5: Engagement feedback (+2 for phase with high engagement, -2 for already-seen)
+  // If user has heavily engaged with games in this phase, boost similar games
+  if(gamePhase){
+    const phaseEng = getPhaseEngagement(gamePhase);
+    if(phaseEng.totalPlays >= 2) bonus += 2;       // user actively plays games in this phase
+    else if(phaseEng.totalAdds >= 2) bonus += 1;    // user adds games in this phase
+  }
+  // Slight penalty for games user has already viewed heavily (keep feed fresh)
+  const directEng = getEngagementScore(game);
+  if(directEng > 8) bonus -= 2;  // already well-engaged — deprioritize to show new content
+  else if(directEng > 0 && directEng <= 4) bonus += 1; // mild prior interest — slight boost
+
+  return bonus;
+}
+
 function getRecommendedGames(games) {
   if (!games || games.length === 0) return [];
 
   const userArch = stCurrentResultData?.archetype || '';
   const userChain = (stCurrentResultData?.chain || []).map(c => c.technique);
+  const tp = buildTrainingProfile(12);
 
   // Score each game
   const scored = games.map(game => {
@@ -3243,6 +3509,9 @@ function getRecommendedGames(games) {
 
     // Upvotes count
     score += (game.upvotes || 0) * 0.5;
+
+    // Session-aware scoring: training history, technique relationships, phase gaps
+    score += scoreGameByTraining(game, tp);
 
     return { game, score };
   });
@@ -3492,6 +3761,7 @@ function openSkillTree(){
       updateCodexHistory();
       updateCodexProfileDisplay();
       renderActiveQuests();
+      renderWeaknessNudges();
       renderTrainingInsights();
       // Update hero XP and profile
       var xpEl = document.getElementById('codex-xp-display');
@@ -6273,6 +6543,10 @@ function saveFullSession(){
   updateCodexHeatmap();
   updateCodexBadges();
   updateCodexHistory();
+  renderWeaknessNudges();
+
+  // Track eco games played in this session
+  trackSessionPlays();
 
   // Persist to localStorage
   saveGrimoireData();
@@ -6290,49 +6564,280 @@ function saveFullSession(){
   showSessionComplete(xp, type);
 }
 
-async function pushSessionToSupabase(session){
-  if(!sbClient || !session) return;
+// ─── ENGAGEMENT TRACKING ───
+// Tracks how users interact with recommended content to close the feedback loop
+
+const ENGAGEMENT_KEY = 'grimoire_engagement';
+let stEngagement = {}; // gameId/gameName → { views, adds, bookmarks, shares, plays, lastInteraction }
+
+function loadEngagement(){
   try {
-    const ad = stCurrentArchData || AD.BERSERKER;
-    const profile = stUserProfile || {};
+    const e = localStorage.getItem(ENGAGEMENT_KEY);
+    if(e) stEngagement = JSON.parse(e);
+  } catch(e){ stEngagement = {}; }
+}
+loadEngagement();
 
-    // Extract structured fields for queryable columns
-    const techniques = [];
-    (session.rollFocusItems||[]).forEach(i => { if(i.technique && !techniques.includes(i.technique)) techniques.push(i.technique); });
-    (session.drillTechniques||[]).forEach(t => { if(!techniques.includes(t)) techniques.push(t); });
+function saveEngagement(){
+  try {
+    localStorage.setItem(ENGAGEMENT_KEY, JSON.stringify(stEngagement));
+  } catch(e){}
+}
 
-    const { error } = await sbClient.from('session_logs').insert({
-      user_id: profile.userId || 'anonymous',
-      archetype: ad.name,
-      belt: profile.belt || 'white',
-      session_type: session.type || 'drill',
-      drill_type: session.drillType || 'chain',
-      phases: session.drillPhases || [],
-      techniques: techniques,
-      eco_games_played: (session.ecoGames||[]).map(g => ({
-        game_name: g.game_name, phase: g.phase,
-        player_a_start: g.player_a_start, win_condition: g.win_condition
-      })),
-      chain_cards_used: (session.chainCards||[]).map(c => ({
-        title: c.title, tags: c.tags,
-        steps: (c.steps||[]).map(s => ({technique:s.technique, phase:s.phase}))
-      })),
-      roll_focus: (session.rollFocusItems||[]).map(i => ({
-        technique: i.technique, phase: i.phase,
-        landed: i.landed||0, attempted: i.attempted||0
-      })),
-      rounds: session.rounds || 0,
-      xp: session.xp || 0,
-      reflection_note: session.reflectionNote || '',
-      session_data: session,
-      heatmap_snapshot: Object.assign({}, stHeatmap)
-    });
+// Get a stable key for a game — prefer Supabase ID, fall back to normalized name
+function engagementKey(game){
+  if(!game) return null;
+  // Supabase row has .id
+  if(game.id && typeof game.id === 'string' && game.id.length > 8) return game.id;
+  // Fall back to game name (normalized)
+  const gd = game.game_data || game;
+  const name = (gd.game_name || gd.chain_name || gd.name || '').toLowerCase().trim();
+  return name || null;
+}
 
-    if(error) console.warn('[SessionLog] Supabase save error:', error.message);
-    else console.log('[SessionLog] Session saved to Supabase');
-  } catch(e){
-    console.warn('[SessionLog] Push failed:', e.message || e);
+function trackEngagement(game, action){
+  const key = engagementKey(game);
+  if(!key) return;
+  if(!stEngagement[key]){
+    stEngagement[key] = { views: 0, adds: 0, bookmarks: 0, shares: 0, plays: 0, collects: 0, lastInteraction: 0 };
   }
+  const e = stEngagement[key];
+  if(action === 'view') e.views++;
+  else if(action === 'add') e.adds++;
+  else if(action === 'bookmark') e.bookmarks++;
+  else if(action === 'share') e.shares++;
+  else if(action === 'play') e.plays++;
+  else if(action === 'collect') e.collects++;
+  e.lastInteraction = Date.now();
+
+  // Store game metadata for later scoring
+  if(!e.phase){
+    const gd = game.game_data || game;
+    e.phase = (game.phase || gd.phase || '').toLowerCase();
+    e.name = (gd.game_name || gd.chain_name || '').substring(0, 60);
+  }
+
+  saveEngagement();
+}
+
+// Track games played during session save — called from saveFullSession
+function trackSessionPlays(){
+  (stEcoGames||[]).forEach(function(g){
+    trackEngagement(g, 'play');
+  });
+}
+
+// Get engagement score for a game — used by recommendation scoring
+function getEngagementScore(game){
+  const key = engagementKey(game);
+  if(!key || !stEngagement[key]) return 0;
+  const e = stEngagement[key];
+  let score = 0;
+  // Heavier weight on actions that indicate stronger intent
+  score += e.plays * 4;      // actually played = strongest signal
+  score += e.adds * 3;       // added to session = high intent
+  score += e.collects * 2;   // saved to collection = moderate intent
+  score += e.bookmarks * 2;  // bookmarked = moderate intent
+  score += e.shares * 1.5;   // shared = mild positive signal
+  score += Math.min(e.views, 5) * 0.5; // views capped to avoid inflate from re-browsing
+  return score;
+}
+
+// Get engagement data for games the user has interacted with in a specific phase
+// Returns { totalPlays, totalAdds, topGames: [...] } for a phase
+function getPhaseEngagement(phase){
+  const pl = (phase||'').toLowerCase();
+  const result = { totalPlays: 0, totalAdds: 0, topGames: [] };
+  Object.entries(stEngagement).forEach(function([key, e]){
+    if(e.phase === pl){
+      result.totalPlays += e.plays;
+      result.totalAdds += e.adds;
+      if(e.plays > 0 || e.adds > 0){
+        result.topGames.push({ key: key, name: e.name, plays: e.plays, adds: e.adds, score: getEngagementScore({id: key}) });
+      }
+    }
+  });
+  result.topGames.sort(function(a,b){ return b.score - a.score; });
+  return result;
+}
+
+// ─── SUPABASE SYNC ENGINE ───
+// Reliable session sync with offline queue, retry, and deduplication
+
+let _syncQueue = [];       // sessions waiting to be pushed
+let _syncInProgress = false;
+let _syncRetryTimer = null;
+const SYNC_QUEUE_KEY = 'grimoire_sync_queue';
+const SYNC_MAX_RETRIES = 5;
+const SYNC_BASE_DELAY = 2000; // 2s, doubles each retry
+
+// Load any queued sessions from localStorage on startup
+function loadSyncQueue(){
+  try {
+    const q = localStorage.getItem(SYNC_QUEUE_KEY);
+    if(q) _syncQueue = JSON.parse(q);
+  } catch(e){ _syncQueue = []; }
+}
+
+function saveSyncQueue(){
+  try {
+    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(_syncQueue));
+  } catch(e){}
+}
+
+// Build the Supabase row payload from a session object
+function buildSessionPayload(session){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const profile = stUserProfile || {};
+  const techniques = [];
+  (session.rollFocusItems||[]).forEach(i => { if(i.technique && !techniques.includes(i.technique)) techniques.push(i.technique); });
+  (session.drillTechniques||[]).forEach(t => { if(!techniques.includes(t)) techniques.push(t); });
+
+  return {
+    user_id: profile.userId || 'anonymous',
+    archetype: ad.name,
+    belt: profile.belt || 'white',
+    session_type: session.type || 'drill',
+    drill_type: session.drillType || 'chain',
+    phases: session.drillPhases || [],
+    techniques: techniques,
+    eco_games_played: (session.ecoGames||[]).map(g => ({
+      game_name: g.game_name, phase: g.phase,
+      player_a_start: g.player_a_start, win_condition: g.win_condition
+    })),
+    chain_cards_used: (session.chainCards||[]).map(c => ({
+      title: c.title, tags: c.tags,
+      steps: (c.steps||[]).map(s => ({technique:s.technique, phase:s.phase}))
+    })),
+    roll_focus: (session.rollFocusItems||[]).map(i => ({
+      technique: i.technique, phase: i.phase,
+      landed: i.landed||0, attempted: i.attempted||0
+    })),
+    rounds: session.rounds || 0,
+    xp: session.xp || 0,
+    reflection_note: session.reflectionNote || '',
+    session_data: session,
+    heatmap_snapshot: Object.assign({}, stHeatmap)
+  };
+}
+
+// Push a single session — returns true on success, false on failure
+async function pushSingleSession(queueEntry){
+  if(!sbClient) return false;
+  try {
+    const { error } = await sbClient.from('session_logs').insert(queueEntry.payload);
+    if(error){
+      console.warn('[Sync] Supabase error:', error.message);
+      return false;
+    }
+    return true;
+  } catch(e){
+    console.warn('[Sync] Push failed:', e.message || e);
+    return false;
+  }
+}
+
+// Main entry: queue a session and start the flush cycle
+async function pushSessionToSupabase(session){
+  if(!session) return;
+
+  // Deduplicate — don't queue if this timestamp is already queued or synced
+  const ts = session.timestamp;
+  if(_syncQueue.some(q => q.timestamp === ts)) return;
+
+  const entry = {
+    timestamp: ts,
+    payload: buildSessionPayload(session),
+    retries: 0,
+    queuedAt: Date.now()
+  };
+
+  _syncQueue.push(entry);
+  saveSyncQueue();
+  flushSyncQueue();
+}
+
+// Process the queue: push each entry, retry failures with backoff
+async function flushSyncQueue(){
+  if(_syncInProgress || _syncQueue.length === 0) return;
+  if(!sbClient) return;
+
+  _syncInProgress = true;
+  const remaining = [];
+
+  for(const entry of _syncQueue){
+    const success = await pushSingleSession(entry);
+    if(success){
+      console.log('[Sync] Session synced (ts:', entry.timestamp, ')');
+      // Mark as synced in stSessionHistory
+      const idx = stSessionHistory.findIndex(s => s.timestamp === entry.timestamp);
+      if(idx >= 0){
+        stSessionHistory[idx]._synced = true;
+        saveGrimoireData();
+      }
+    } else {
+      entry.retries++;
+      if(entry.retries < SYNC_MAX_RETRIES){
+        remaining.push(entry);
+      } else {
+        console.warn('[Sync] Giving up on session after', SYNC_MAX_RETRIES, 'retries (ts:', entry.timestamp, ')');
+        // Keep it in queue but mark as failed — don't lose data
+        entry.failed = true;
+        remaining.push(entry);
+      }
+    }
+  }
+
+  _syncQueue = remaining;
+  saveSyncQueue();
+  _syncInProgress = false;
+
+  // Schedule retry if there are still pending items (not permanently failed)
+  const pendingRetries = remaining.filter(e => !e.failed);
+  if(pendingRetries.length > 0){
+    const maxRetries = Math.max(...pendingRetries.map(e => e.retries));
+    const delay = Math.min(SYNC_BASE_DELAY * Math.pow(2, maxRetries - 1), 60000); // cap at 60s
+    clearTimeout(_syncRetryTimer);
+    _syncRetryTimer = setTimeout(flushSyncQueue, delay);
+    console.log('[Sync]', pendingRetries.length, 'sessions pending, retrying in', Math.round(delay/1000) + 's');
+  }
+}
+
+// On page load: load queue and try to flush
+loadSyncQueue();
+// Flush after a short delay to let Supabase client initialize
+setTimeout(function(){
+  if(_syncQueue.length > 0){
+    console.log('[Sync] Found', _syncQueue.length, 'queued sessions, flushing...');
+    flushSyncQueue();
+  }
+  // Also check for unsynced sessions in history that aren't in the queue
+  // (handles edge case where app crashed before queuing)
+  (stSessionHistory||[]).forEach(function(s){
+    if(!s._synced && s.timestamp){
+      const alreadyQueued = _syncQueue.some(q => q.timestamp === s.timestamp);
+      if(!alreadyQueued){
+        _syncQueue.push({
+          timestamp: s.timestamp,
+          payload: buildSessionPayload(s),
+          retries: 0,
+          queuedAt: Date.now()
+        });
+      }
+    }
+  });
+  if(_syncQueue.length > 0){
+    saveSyncQueue();
+    flushSyncQueue();
+  }
+}, 3000);
+
+// Also flush on coming back online
+if(typeof window !== 'undefined'){
+  window.addEventListener('online', function(){
+    console.log('[Sync] Back online, flushing queue...');
+    setTimeout(flushSyncQueue, 1000);
+  });
 }
 
 function showSessionComplete(xp, type){
@@ -6490,6 +6995,26 @@ function setGrimCatFilter(filter){
       btn.style.background='#131313'; btn.style.border='0.5px solid rgba(255,255,255,0.06)'; btn.style.color='rgba(198,196,223,0.3)';
     }
   });
+
+  // Toggle technique list visibility — techniques only show for 'All'
+  const techSection = document.getElementById('grimoire-tech-section');
+  if(techSection) techSection.style.display = (filter === 'All') ? '' : 'none';
+
+  // Update community content label based on active filter
+  const contentLabel = document.getElementById('grimoire-cat-content-label');
+  if(contentLabel){
+    if(filter === 'All') contentLabel.textContent = 'Community Content';
+    else contentLabel.textContent = filter;
+  }
+
+  // Remove top border/margin on content section when techniques are hidden
+  const catContent = document.getElementById('grimoire-cat-content');
+  if(catContent){
+    catContent.style.marginTop = (filter === 'All') ? '16px' : '0';
+    catContent.style.paddingTop = (filter === 'All') ? '16px' : '0';
+    catContent.style.borderTop = (filter === 'All') ? '0.5px solid rgba(255,255,255,0.04)' : 'none';
+  }
+
   loadGrimCatContent(stCurrentGrimCat);
 }
 
@@ -7170,9 +7695,9 @@ async function loadGrimoireTrending(targetId){
     let query = sbClient.from('community_games').select('*').order('upvotes',{ascending:false}).limit(30);
     const { data, error } = await query;
     let clean = (data||[]).filter(g => { const n = (g.game_data||{}).game_name || (g.game_data||{}).chain_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
-    // Client-side card_type filter (stored inside game_data)
+    // Client-side card_type filter (stored inside game_data) — default to eco_game if unset
     if(stGrimoireFilter === 'Attack Chains') clean = clean.filter(g => (g.game_data||{}).card_type === 'attack_chain');
-    else if(stGrimoireFilter === 'Eco Games') clean = clean.filter(g => (g.game_data||{}).card_type === 'eco_game');
+    else if(stGrimoireFilter === 'Eco Games') clean = clean.filter(g => { var ct = (g.game_data||{}).card_type; return !ct || ct === 'eco_game'; });
     else if(stGrimoireFilter === 'Quest Cards') clean = clean.filter(g => (g.game_data||{}).card_type === 'quest_card');
     // Apply tag filters
     clean = filterByTags(clean, stGrimoireTagFilters);
@@ -7189,6 +7714,17 @@ async function loadGrimoireTrending(targetId){
 
 // --- COLLECTIONS ---
 let stCollections = [];
+let stCollectionsCollapsed = false; // persisted toggle state
+try { stCollectionsCollapsed = localStorage.getItem('grimoire_collections_collapsed') === 'true'; } catch(e){}
+
+function toggleCollections(){
+  stCollectionsCollapsed = !stCollectionsCollapsed;
+  try { localStorage.setItem('grimoire_collections_collapsed', stCollectionsCollapsed); } catch(e){}
+  var body = document.getElementById('grimoire-collections-body');
+  var arrow = document.getElementById('grimoire-collections-arrow');
+  if(body) body.style.display = stCollectionsCollapsed ? 'none' : '';
+  if(arrow) arrow.textContent = stCollectionsCollapsed ? '▸' : '▾';
+}
 
 async function loadCollections(){
   var el = document.getElementById('grimoire-collections');
@@ -7209,42 +7745,75 @@ async function loadCollections(){
     if(error || stCollections.length === 0){
       el.style.display = 'block';
       el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-        + '<span style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25)">Collections</span>'
+        + '<div onclick="toggleCollections()" style="display:flex;align-items:center;gap:6px;cursor:pointer">'
+          + '<span id="grimoire-collections-arrow" style="font-size:10px;color:rgba(198,196,223,0.3)">'+(stCollectionsCollapsed ? '▸' : '▾')+'</span>'
+          + '<span style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25)">Collections</span>'
+        + '</div>'
         + '<button onclick="showCollectionCreator()" style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.35);background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);padding:4px 10px;cursor:pointer;font-family:Cinzel,serif;border-radius:3px">+ New</button>'
         + '</div>'
-        + '<div style="font-size:9px;color:rgba(198,196,223,0.25);padding:12px 0">No collections yet — create one to group your favourite eco games.</div>';
+        + '<div id="grimoire-collections-body" style="'+(stCollectionsCollapsed?'display:none':'')+'"><div style="font-size:9px;color:rgba(198,196,223,0.25);padding:12px 0">No collections yet — create one to group your favourite eco games.</div></div>';
       return;
+    }
+    // Fetch game names for preview strips
+    var allGameIds = [];
+    stCollections.forEach(function(c){ (c.game_ids||[]).forEach(function(gid){ if(allGameIds.indexOf(gid) === -1) allGameIds.push(gid); }); });
+    var gameNameMap = {};
+    if(allGameIds.length > 0){
+      try {
+        var gRes = await sbClient.from('community_games').select('id,game_data').in('id', allGameIds);
+        if(gRes.data) gRes.data.forEach(function(g){ var gd = g.game_data || {}; gameNameMap[g.id] = gd.game_name || gd.chain_name || 'Game'; });
+      } catch(e){}
     }
     el.style.display = 'block';
     var cardsHtml = stCollections.map(function(c){
-      var beltColors = {white:'#e8e8e8',blue:'#2266cc',purple:'#8844cc',brown:'#8B5C2A',black:'#333',all:ad.color};
-      var bc = beltColors[c.belt_level] || ad.color;
       var count = (c.game_ids||[]).length;
       var isMine = c.creator_id === myId;
-      return '<div onclick="openCollection(\''+c.id+'\')" style="background:#1c1b1b;border:0.5px solid '+(isMine ? ad.color+'55' : bc+'33')+';padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px">'
-        + '<div style="width:4px;height:28px;background:'+(isMine ? ad.color : bc)+';border-radius:1px;opacity:0.6;flex-shrink:0"></div>'
-        + '<div style="flex:1;min-width:0">'
-        + '<div style="display:flex;align-items:center;gap:6px">'
-        + '<div style="font-size:11px;color:#f4ead8;font-family:Cinzel,serif;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.title+'</div>'
-        + (isMine ? '<span style="font-size:6px;letter-spacing:0.1em;text-transform:uppercase;color:'+ad.color+';opacity:0.6;flex-shrink:0">yours</span>' : '')
+      var tags = c.tags || [];
+      var desc = c.description || '';
+      var tagsHtml = Array.isArray(tags) && tags.length > 0 ? '<div style="display:flex;gap:5px;flex-wrap:wrap;padding:0 16px 10px">' + tags.slice(0,5).map(function(t){ return '<span style="font-family:Cinzel,serif;font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:#6a6252;background:rgba(200,112,32,0.08);border:1px solid rgba(200,112,32,0.15);padding:2px 8px;border-radius:12px">'+t+'</span>'; }).join('') + '</div>' : '';
+      return '<div onclick="openCollection(\''+c.id+'\')" style="background:linear-gradient(145deg,#1a1520 0%,#12101a 100%);border:1px solid #2a2435;border-radius:16px;overflow:hidden;cursor:pointer;transition:all 0.3s ease;margin-bottom:4px">'
+        // Header: inline badge + title + creator
+        + '<div style="padding:14px 16px 10px">'
+          + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+            + '<span style="font-family:Cinzel,serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#c87020;background:rgba(200,112,32,0.12);padding:3px 8px;border-radius:10px;border:1px solid rgba(200,112,32,0.2);flex-shrink:0">📋 '+count+'</span>'
+            + '<div style="font-family:Cinzel,serif;font-size:14px;font-weight:700;color:#e8e0d4;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.title+'</div>'
+          + '</div>'
+          + '<div style="font-size:12px;color:#8a7e6e;display:flex;align-items:center;gap:4px">'
+            + (isMine ? '<span style="color:#c87020">✦</span> You' : (c.creator_name || 'Unknown'))
+          + '</div>'
         + '</div>'
-        + '<div style="font-size:8px;color:rgba(198,196,223,0.3);margin-top:2px">'+count+' '+(count===1?'card':'cards')
-        + (c.upvotes > 0 ? ' · ♥ '+c.upvotes : '')
+        // Description
+        + (desc ? '<div style="padding:0 16px 8px;font-size:13px;color:#7a6e5e;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+desc+'</div>' : '')
+        // Game preview strip
+        + (function(){ var gids = c.game_ids || []; if(gids.length === 0) return ''; return '<div class="game-strip">' + gids.map(function(gid,i){ var gName = gameNameMap[gid] || 'Game'; return '<div class="game-chip"><span class="game-chip-num">'+(i+1)+'</span> '+gName+'</div>'; }).join('') + '</div>'; })()
+        // Tags
+        + tagsHtml
+        // Footer: stats + play button
+        + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid #1e1a28">'
+          + '<div style="display:flex;gap:12px;font-size:11px;color:#5a5248">'
+            + '<span style="display:flex;align-items:center;gap:3px"><span class="material-symbols-outlined" style="font-size:14px">sports_martial_arts</span> '+count+' game'+(count!==1?'s':'')+'</span>'
+            + (c.upvotes > 0 ? '<span style="display:flex;align-items:center;gap:3px"><span class="material-symbols-outlined" style="font-size:14px">favorite</span> '+c.upvotes+'</span>' : '')
+          + '</div>'
+          + '<div style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#c87020 0%,#a85a10 100%);border:none;border-radius:20px;padding:6px 14px;font-family:Cinzel,serif;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#fff"><span class="material-symbols-outlined" style="font-size:15px">play_arrow</span> Play</div>'
         + '</div>'
-        + '</div>'
-        + '<span style="font-size:14px;color:rgba(198,196,223,0.15);flex-shrink:0">→</span>'
         + '</div>';
     }).join('');
-    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-      + '<span style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25)">Collections</span>'
-      + '<button onclick="showCollectionCreator()" style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.35);background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);padding:4px 10px;cursor:pointer;font-family:Cinzel,serif;border-radius:3px">+ New</button>'
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+      + '<div onclick="toggleCollections()" style="display:flex;align-items:center;gap:6px;cursor:pointer">'
+        + '<span id="grimoire-collections-arrow" style="font-size:10px;color:rgba(198,196,223,0.3);transition:transform 0.2s">'+(stCollectionsCollapsed ? '▸' : '▾')+'</span>'
+        + '<span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#6a6252">Collections</span>'
+        + '<span style="font-size:8px;color:rgba(198,196,223,0.2)">'+stCollections.length+'</span>'
       + '</div>'
-      + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">'+cardsHtml+'</div>';
+      + '<button onclick="showCollectionCreator()" style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:#c87020;background:rgba(200,112,32,0.08);border:1px solid rgba(200,112,32,0.15);padding:5px 12px;cursor:pointer;border-radius:12px">+ New</button>'
+      + '</div>'
+      + '<div id="grimoire-collections-body" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;'+(stCollectionsCollapsed?'display:none':'')+'">'+cardsHtml+'</div>';
   } catch(e){ el.style.display = 'none'; }
 }
 
 let stCurrentCollectionGames = [];
 let stCurrentCollectionId = null;
+
+var playlistState = { currentIdx: 0, total: 0, collId: null, games: [] };
 
 async function openCollection(collId){
   var col = stCollections.find(function(c){ return c.id === collId; });
@@ -7259,28 +7828,146 @@ async function openCollection(collId){
   var myId = (stUserProfile||{}).userId || '';
   var isMyCollection = col.creator_id === myId;
 
-  document.getElementById('grimoire-cat-title').textContent = col.title;
-  document.getElementById('grimoire-cat-count').innerHTML = (col.description||'')
-    + '<br><span style="font-size:8px;color:rgba(198,196,223,0.25)">'+(col.game_ids||[]).length+' cards · by '+(isMyCollection ? 'you' : col.creator_name)+'</span>'
-    + '<br><div style="display:flex;gap:6px;margin-top:8px">'
-    + '<button onclick="addCollectionToQuest()" style="padding:7px 16px;background:linear-gradient(135deg,#2e8b5722,#2e8b5711);border:1px solid #2e8b57;font-family:Cinzel,serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:#2e8b57;cursor:pointer;border-radius:4px">+ Add All to Quest</button>'
-    + '</div>';
+  // Hide category elements — not needed in playlist mode
+  var catBack = document.getElementById('grimoire-cat-back');
+  var catFilters = document.getElementById('grimoire-cat-filters');
+  var catTagRow = document.getElementById('grim-cat-tag-row');
+  var techList = document.getElementById('grimoire-tech-list');
+  if(catBack) catBack.style.display = 'none';
+  if(catFilters) catFilters.style.display = 'none';
+  if(catTagRow) catTagRow.style.display = 'none';
+  if(techList) techList.parentElement && (techList.previousElementSibling ? techList.previousElementSibling.style.display = 'none' : null);
+  if(techList) techList.style.display = 'none';
+
+  document.getElementById('grimoire-cat-title').textContent = '';
+  document.getElementById('grimoire-cat-count').innerHTML = '';
 
   stCurrentCollectionGames = [];
   var contentEl = document.getElementById('grimoire-cat-content');
   if(!contentEl) return;
-  if(!col.game_ids || col.game_ids.length === 0){ contentEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">This collection is empty</div>'; return; }
+  contentEl.style.borderTop = 'none';
+  contentEl.style.marginTop = '0';
+  contentEl.style.paddingTop = '0';
+
+  if(!col.game_ids || col.game_ids.length === 0){
+    contentEl.innerHTML = '<div class="playlist-top-bar"><button class="playlist-back-btn" onclick="backToGrimoireHome()">← Grimoire</button></div><div style="font-size:13px;color:#6a6252;font-style:italic;font-family:serif;text-align:center;padding:40px 0">This collection is empty</div>';
+    return;
+  }
+
+  // Show loading state
+  contentEl.innerHTML = '<div class="playlist-top-bar"><button class="playlist-back-btn" onclick="backToGrimoireHome()">← Grimoire</button></div><div style="text-align:center;padding:40px 0;color:#6a6252;font-size:13px">Loading playlist...</div>';
 
   try {
     var { data, error } = await sbClient.from('community_games').select('*').in('id', col.game_ids);
-    if(error || !data || data.length === 0){ contentEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">No content found</div>'; return; }
-    // Sort by the order in game_ids
+    if(error || !data || data.length === 0){ contentEl.innerHTML = '<div class="playlist-top-bar"><button class="playlist-back-btn" onclick="backToGrimoireHome()">← Grimoire</button></div><div style="font-size:13px;color:#6a6252;font-style:italic;font-family:serif;text-align:center;padding:40px 0">No content found</div>'; return; }
+
     var ordered = col.game_ids.map(function(gid){ return data.find(function(g){ return g.id === gid; }); }).filter(Boolean);
     stCurrentCollectionGames = ordered;
-    contentEl.innerHTML = ordered.map(function(g){ return renderGrimoireCard(g, false, isMyCollection ? 'collection' : 'default'); }).join('');
+    playlistState = { currentIdx: 0, total: ordered.length, collId: collId, games: ordered };
+
+    var totalG = ordered.length;
+    var dotsHtml = ordered.map(function(_,i){ return '<div class="playlist-dot'+(i===0?' active':'')+'" onclick="playlistGoTo('+i+')"></div>'; }).join('');
+
+    var cardsHtml = ordered.map(function(g, idx){
+      var gd = g.game_data || g;
+      var phase = gd.phase || gd.position || gd.category || '';
+      var gameNumHtml = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px">'
+        + '<span style="font-family:Cinzel,serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#c87020">Game '+(idx+1)+' of '+totalG+'</span>'
+        + (phase ? '<span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:10px;background:rgba(200,112,32,0.1);color:#c87020;border:1px solid rgba(200,112,32,0.2)">'+phase+'</span>' : '')
+        + '</div>';
+      return '<div class="playlist-card">' + gameNumHtml + renderGrimoireCard(g, false, isMyCollection ? 'collection' : 'default') + '</div>';
+    }).join('');
+
+    var deleteBtn = isMyCollection ? '<button class="playlist-action-btn" onclick="deleteCollection(\''+collId+'\')" style="color:#8b2e2e;border-color:rgba(139,46,46,0.3)">✕ Delete</button>' : '';
+
+    contentEl.innerHTML = `
+      <div class="playlist-top-bar">
+        <button class="playlist-back-btn" onclick="backToGrimoireHome()">← Grimoire</button>
+        <span class="playlist-progress-text" id="playlist-progress">Game 1 of ${totalG}</span>
+      </div>
+
+      <div style="text-align:center;margin-bottom:4px">
+        <div style="font-family:'Cinzel',serif;font-size:17px;font-weight:700;color:#e8e0d4;margin-bottom:3px">${col.title}</div>
+        ${col.description ? '<div style="font-size:13px;color:#7a6e5e;line-height:1.4;margin-bottom:6px">'+col.description+'</div>' : ''}
+        <div style="font-size:11px;color:#5a5248">${totalG} game${totalG!==1?'s':''} · by ${isMyCollection ? 'you' : (col.creator_name||'Unknown')}</div>
+      </div>
+
+      <div class="playlist-dots" id="playlist-dots">${dotsHtml}</div>
+
+      <div class="playlist-carousel">
+        <div class="playlist-track" id="playlist-track">${cardsHtml}</div>
+      </div>
+
+      <div class="playlist-nav-row">
+        <button class="playlist-nav-btn" id="playlist-prev" onclick="playlistNav(-1)" disabled>← Prev</button>
+        <button class="playlist-nav-btn next" id="playlist-next" onclick="playlistNav(1)"${totalG <= 1 ? ' disabled' : ''}>Next →</button>
+      </div>
+
+      <div class="playlist-actions">
+        <button class="playlist-action-btn quest" onclick="addCollectionToQuest()">+ Add All to Quest</button>
+        ${deleteBtn}
+      </div>
+    `;
+
+    // Setup touch swipe for carousel
+    var carousel = contentEl.querySelector('.playlist-carousel');
+    if(carousel){
+      var touchX = 0;
+      carousel.addEventListener('touchstart', function(e){ touchX = e.touches[0].clientX; }, {passive:true});
+      carousel.addEventListener('touchend', function(e){
+        var diff = touchX - e.changedTouches[0].clientX;
+        if(Math.abs(diff) > 50){ playlistNav(diff > 0 ? 1 : -1); }
+      }, {passive:true});
+    }
+
   } catch(e){
-    contentEl.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Error loading collection</div>';
+    contentEl.innerHTML = '<div class="playlist-top-bar"><button class="playlist-back-btn" onclick="backToGrimoireHome()">← Grimoire</button></div><div style="font-size:13px;color:#6a6252;font-style:italic;font-family:serif;text-align:center;padding:40px 0">Error loading collection</div>';
   }
+}
+
+function playlistGoTo(idx){
+  if(idx < 0 || idx >= playlistState.total) return;
+  playlistState.currentIdx = idx;
+  var track = document.getElementById('playlist-track');
+  if(track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+  // Update dots
+  var dots = document.querySelectorAll('#playlist-dots .playlist-dot');
+  dots.forEach(function(d, i){
+    d.classList.remove('active','completed');
+    if(i === idx) d.classList.add('active');
+    else if(i < idx) d.classList.add('completed');
+  });
+  // Update progress text
+  var prog = document.getElementById('playlist-progress');
+  if(prog) prog.textContent = 'Game ' + (idx+1) + ' of ' + playlistState.total;
+  // Update nav buttons
+  var prevBtn = document.getElementById('playlist-prev');
+  var nextBtn = document.getElementById('playlist-next');
+  if(prevBtn) prevBtn.disabled = (idx === 0);
+  if(nextBtn) nextBtn.disabled = (idx === playlistState.total - 1);
+}
+
+function playlistNav(dir){
+  playlistGoTo(playlistState.currentIdx + dir);
+}
+
+async function deleteCollection(collId){
+  var col = stCollections.find(function(c){ return c.id === collId; });
+  if(!col) return;
+  var myId = (stUserProfile||{}).userId || '';
+  if(col.creator_id !== myId){ showToast('Only the creator can delete a collection'); return; }
+  var cardCount = (col.game_ids||[]).length;
+  var msg = 'Delete "' + col.title + '"' + (cardCount > 0 ? ' (' + cardCount + ' cards)' : '') + '?\n\nThis cannot be undone.';
+  if(!confirm(msg)) return;
+  try {
+    var {error} = await sbClient.from('collections').delete().eq('id', collId).eq('creator_id', myId);
+    if(error){ showToast('Error deleting — check RLS policy'); console.error('deleteCollection error:', error); return; }
+    stCollections = stCollections.filter(function(c){ return c.id !== collId; });
+    stCurrentCollectionId = null;
+    showToast('Collection deleted');
+    backToGrimoireHome();
+    loadCollections();
+  } catch(e){ showToast('Error deleting collection'); console.error(e); }
 }
 
 async function removeFromCollection(cardId){
@@ -7408,6 +8095,9 @@ async function saveCollection(){
 }
 
 async function addToCollection(gameId){
+  // Track collection engagement — look up game from registry by Supabase ID
+  var regGame = Object.values(ecoCardGameRegistry).find(function(g){ return g.id === gameId; });
+  if(regGame) trackEngagement(regGame, 'collect');
   var myId = (stUserProfile||{}).userId || '';
   var myCollections = stCollections.filter(function(c){ return c.creator_id === myId; });
   if(!sbClient || myCollections.length === 0){ showToast('Create a collection first'); showCollectionCreator(); return; }
@@ -7473,11 +8163,21 @@ async function loadForYouFeed(){
 
   try {
     const { data, error } = await sbClient.from('community_games').select('*').order('upvotes',{ascending:false}).limit(40);
-    const clean = (data||[]).filter(g => { const n = (g.game_data||{}).game_name || (g.game_data||{}).chain_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    let clean = (data||[]).filter(g => { const n = (g.game_data||{}).game_name || (g.game_data||{}).chain_name || ''; return n.trim() !== '' && n !== 'Eco Game' && n !== 'Untitled'; });
+    // Apply card_type filter — default missing card_type to eco_game
+    if(stGrimoireFilter === 'Attack Chains') clean = clean.filter(g => (g.game_data||{}).card_type === 'attack_chain');
+    else if(stGrimoireFilter === 'Eco Games') clean = clean.filter(g => { var ct = (g.game_data||{}).card_type; return !ct || ct === 'eco_game'; });
+    else if(stGrimoireFilter === 'Quest Cards') clean = clean.filter(g => (g.game_data||{}).card_type === 'quest_card');
+    // Apply tag filters
+    clean = filterByTags(clean, stGrimoireTagFilters);
     if(error || clean.length===0){
-      el.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:24px;margin-bottom:8px">✦</div><div style="font-size:12px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic">No content yet. Create eco games and quest cards to build your feed.</div></div>';
+      const label = stGrimoireFilter === 'All' ? 'content' : stGrimoireFilter.toLowerCase();
+      el.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:24px;margin-bottom:8px">✦</div><div style="font-size:12px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic">No '+label+' yet matching your profile. Create eco games and quest cards to build your feed.</div></div>';
       return;
     }
+    // Build training profile from recent sessions for session-aware scoring
+    const tp = buildTrainingProfile(12);
+
     // Score each item by relevance to the user
     const scored = clean.map(g => {
       let score = 0;
@@ -7498,6 +8198,9 @@ async function loadForYouFeed(){
       if(tags.includes(userBelt)) score += 1;
       // Upvotes tiebreaker
       score += Math.min((g.upvotes||0) * 0.1, 2);
+
+      // Session-aware scoring: phase frequency, active techniques, related techniques, phase gaps
+      score += scoreGameByTraining(g, tp);
 
       return { game: g, score };
     });
@@ -7603,24 +8306,27 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
         const cStr = Array.isArray(constraints) ? constraints.join(', ') : String(constraints);
         const parts = cStr.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
         if(parts.length <= 1) return cStr;
-        return parts.map(p=>'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="color:#2e8b57;flex-shrink:0">—</span><span>'+p+'</span></div>').join('');
+        return parts.map(p=>'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px"><span style="color:#c87020;flex-shrink:0">—</span><span>'+p+'</span></div>').join('');
       })()}</div>`});
 
     if(win) {
       sections.push({label:'Win Condition', body:`
         <div class="eco-section-body">${win}</div>
-        ${cue ? `<div class="eco-cue-expanded">${cue}</div>` : ''}
-        ${skill ? `<div style="margin-top:10px;font-size:12px;color:#4a5568;font-style:italic">Skill that emerges: ${skill}</div>` : ''}`});
+        ${skill ? `<div style="margin-top:12px;padding:10px 14px;background:rgba(74,170,40,0.06);border:1px solid rgba(74,170,40,0.12);border-radius:8px;font-size:13px;color:#8a7e6e;line-height:1.5"><span style="font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4aaa28;display:block;margin-bottom:4px">Skill Emerges</span>${skill}</div>` : ''}`});
     } else {
       sections.push({label:'Format', body:`
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="background:rgba(46,139,87,0.15);border:0.5px solid rgba(46,139,87,0.3);color:#2e8b57;padding:3px 10px;border-radius:12px;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;font-family:'Cinzel',serif">Continuous</span>
-          <span style="font-size:11px;color:rgba(198,196,223,0.5)">No score — just play</span>
+          <span style="background:rgba(200,112,32,0.1);border:1px solid rgba(200,112,32,0.2);color:#c87020;padding:3px 10px;border-radius:12px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-family:'Cinzel',serif">Continuous</span>
+          <span style="font-size:11px;color:#6a6252">No score — just play</span>
         </div>
-        ${cue ? `<div class="eco-cue-expanded">${cue}</div>` : ''}
-        ${skill ? `<div style="margin-top:10px;font-size:12px;color:#4a5568;font-style:italic">Skill that emerges: ${skill}</div>` : ''}`});
+        ${cue ? `<div class="eco-cue-expanded"><div style="font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#c87020;margin-bottom:4px">Attention Cue</div>${cue}</div>` : ''}
+        ${skill ? `<div style="margin-top:12px;padding:10px 14px;background:rgba(74,170,40,0.06);border:1px solid rgba(74,170,40,0.12);border-radius:8px;font-size:13px;color:#8a7e6e;line-height:1.5"><span style="font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4aaa28;display:block;margin-bottom:4px">Skill Emerges</span>${skill}</div>` : ''}`});
     }
   }
+
+  // Map section labels to Material Symbols icons
+  const sectionIcons = {'Overview':'visibility','Start Position':'flag','Continuous Goal':'target','Goals':'target',"Partner's Resistance":'sports_martial_arts','Constraints':'block','Win Condition':'emoji_events','Format':'timer','Sequence':'route'};
+  sections.forEach(function(s){ s.icon = sectionIcons[s.label] || 'circle'; });
 
   const totalSections = sections.length;
   const dotLabels = sections.map(s => s.label.split(' ')[0]); // Short labels for dots
@@ -7644,28 +8350,39 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
 
   return `
     <div id="eco-card-${id}">
-      <!-- COLLAPSED STATE — compact title row -->
-      <div class="eco-collapsed" id="eco-col-${id}" onclick="expandEcoCard(${id})" style="padding:10px 12px;cursor:pointer">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:${cardTypeColor};background:${cardTypeColor}15;padding:3px 7px;flex-shrink:0;font-family:'Cinzel',serif">${cardTypeLabel}</span>
+      <!-- COLLAPSED STATE — mockup-inspired card -->
+      <div class="eco-collapsed" id="eco-col-${id}" onclick="expandEcoCard(${id})">
+        <div style="display:flex;align-items:flex-start;gap:10px">
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;color:#f4ead8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-            <div style="font-size:8px;color:rgba(198,196,223,0.2);margin-top:1px">${phase}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:${cardTypeColor};background:${cardTypeColor}15;padding:3px 8px;border-radius:10px;border:1px solid ${cardTypeColor}30;flex-shrink:0">${cardTypeLabel}</span>
+              <div style="font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:#e8e0d4;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:${cardTypeColor};background:rgba(${effectiveCardType === 'attack_chain' ? '200,168,75' : '46,139,87'},0.1);border:1px solid rgba(${effectiveCardType === 'attack_chain' ? '200,168,75' : '46,139,87'},0.2);padding:2px 8px;border-radius:10px">${phase}</span>
+              ${g.technique && g.technique !== phase ? `<span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:#8a7e6e;background:rgba(106,98,82,0.1);border:1px solid rgba(106,98,82,0.15);padding:2px 8px;border-radius:10px">${g.technique}</span>` : ''}
+              ${(function(){ var t = g.tags || gd.tags || []; if(!Array.isArray(t) || t.length === 0) return ''; var phaseLower = (phase||'').toLowerCase(); var techLower = (g.technique||'').toLowerCase(); var filtered = t.filter(function(tag){ var tl = tag.toLowerCase(); return tl !== phaseLower && tl !== techLower; }); return filtered.slice(0,2).map(function(tag){ return '<span style="font-family:\'Cinzel\',serif;font-size:7px;letter-spacing:0.06em;text-transform:uppercase;color:#6a6252;background:rgba(200,112,32,0.06);border:1px solid rgba(200,112,32,0.12);padding:2px 7px;border-radius:10px">'+tag+'</span>'; }).join(''); })()}
+            </div>
+            ${problem ? `<div style="font-size:12px;color:#7a6e5e;line-height:1.4;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${problem}</div>` : ''}
           </div>
-          ${saveBtnHtml ? `<span onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:#c8a84b;background:rgba(200,150,10,0.1);padding:4px 8px;flex-shrink:0;cursor:pointer;font-family:'Cinzel',serif">+ Grimoire</span>` : ''}
-          <span style="font-size:11px;color:rgba(198,196,223,0.2);flex-shrink:0">▾</span>
+          ${saveBtnHtml ? `<span onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#c87020;background:rgba(200,112,32,0.1);border:1px solid rgba(200,112,32,0.2);padding:5px 10px;border-radius:10px;flex-shrink:0;cursor:pointer">+ Grimoire</span>` : ''}
+          <span style="font-size:11px;color:#3a3445;flex-shrink:0;margin-top:4px">▾</span>
         </div>
-        ${videoThumbCompact ? '<div style="margin-top:8px">'+videoThumbCompact+'</div>' : ''}
+        ${videoThumbCompact ? '<div style="margin-top:10px">'+videoThumbCompact+'</div>' : ''}
       </div>
 
       <!-- EXPANDED STATE — swipeable sections -->
       <div class="eco-expanded" id="eco-exp-${id}" style="display:none">
         <div class="eco-expanded-hdr">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#c87020">${effectiveCardType === 'attack_chain' ? 'Attack Chain' : 'Eco Game'}</span>
+            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:10px;background:rgba(200,112,32,0.1);color:#c87020;border:1px solid rgba(200,112,32,0.2)">${phase}</span>
+          </div>
           <div class="eco-expanded-title">${name}</div>
-          <div class="eco-expanded-tags">
-            <span class="eco-tag-green">Eco game</span>
-            <span class="eco-tag-phase">${phase}</span>
-            <span class="eco-tag-bot">${bot}</span>
+          ${problem ? `<div style="font-size:14px;color:#8a7e6e;line-height:1.5;font-style:italic">${problem}</div>` : ''}
+          <div class="eco-expanded-tags" style="margin-top:8px">
+            <span class="eco-tag-phase">${bot}</span>
+            ${duration ? `<span class="eco-tag-phase">⏱ ${duration}</span>` : ''}
           </div>
         </div>
         ${videoThumbHtml ? '<div style="padding:0 12px">'+videoThumbHtml+'</div>' : ''}
@@ -7674,11 +8391,16 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
           <div class="eco-swipe-track" id="eco-track-${id}">
             ${sections.map(s => `
               <div class="eco-swipe-section">
-                <div class="eco-section-label">${s.label}</div>
+                <div class="eco-section-label"><span class="material-symbols-outlined" style="font-size:16px">${s.icon}</span> ${s.label}</div>
                 ${s.body}
               </div>`).join('')}
           </div>
         </div>
+
+        ${cue ? `<div class="eco-attention-cue">
+          <div class="eco-attention-cue-label"><span class="material-symbols-outlined" style="font-size:15px">visibility</span> Attention Cue</div>
+          <div class="eco-attention-cue-text">${cue}</div>
+        </div>` : ''}
 
         <div class="eco-dots" id="eco-dots-${id}">
           ${sections.map((_,i) => `<button class="eco-dot${i===0?' active':''}" onclick="ecoSwipeTo(${id},${i},${totalSections})"></button>`).join('')}
@@ -7693,7 +8415,11 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
         </div>
 
         <div class="eco-action-row">
-          <span class="eco-upvote">♥ ${game.upvotes||0}</span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="eco-upvote">♥ ${game.upvotes||0}</span>
+            <button class="eco-collapse-btn" onclick="event.stopPropagation();shareEcoCard(${id})" title="Share"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">share</span> Share</button>
+            <button class="eco-collapse-btn" onclick="event.stopPropagation();bookmarkEcoCard(${id})" title="Bookmark"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">bookmark_border</span></button>
+          </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
             ${removeBtnHtml}
             ${mode !== 'collection' && game.id ? `<button class="eco-collapse-btn" onclick="event.stopPropagation();addToCollection('${game.id}')" style="color:#9b59b6">📁 Collection</button>` : ''}
@@ -7715,11 +8441,42 @@ function expandEcoCard(id){
   document.getElementById('eco-exp-'+id).style.display='block';
   ecoSwipeState[id] = 0;
   ecoSwipeTo(id, 0, 99);
+  // Track view engagement
+  trackEngagement(ecoCardGameRegistry[id], 'view');
 }
 
 function collapseEcoCard(id){
   document.getElementById('eco-exp-'+id).style.display='none';
   document.getElementById('eco-col-'+id).style.display='block';
+}
+
+function shareEcoCard(cardId){
+  const game = ecoCardGameRegistry[cardId];
+  if(!game) return;
+  trackEngagement(game, 'share');
+  const gd = game.game_data || game;
+  const name = gd.game_name || gd.chain_name || 'Eco Game';
+  const text = name + ' — ' + (gd.problem || 'BJJ Ecological Game');
+  if(navigator.share){
+    navigator.share({title: name, text: text}).catch(function(){});
+  } else {
+    navigator.clipboard.writeText(text).then(function(){ showToast('Copied to clipboard'); }).catch(function(){ showToast('Could not share'); });
+  }
+}
+
+function bookmarkEcoCard(cardId){
+  trackEngagement(ecoCardGameRegistry[cardId], 'bookmark');
+  const btn = event.currentTarget;
+  const icon = btn.querySelector('.material-symbols-outlined');
+  if(icon && icon.textContent === 'bookmark_border'){
+    icon.textContent = 'bookmark';
+    icon.style.color = '#c87020';
+    showToast('Bookmarked');
+  } else if(icon){
+    icon.textContent = 'bookmark_border';
+    icon.style.color = '';
+    showToast('Bookmark removed');
+  }
 }
 
 async function saveOracleGameToGrimoire(cardId){
@@ -7785,6 +8542,8 @@ function ecoSwipeNav(id, dir, total){
 function ecoCardAddToQuest(id){
   const game = ecoCardGameRegistry[id];
   if(!game) return;
+  // Track add-to-quest engagement
+  trackEngagement(game, 'add');
   // Registry may store raw Supabase row (game_data nested) or flat game object
   const gd = game.game_data || game;
   addCommunityGameFromQuest(gd, game.phase || gd.phase || '');
@@ -7806,6 +8565,19 @@ function backToGrimoireHome(){
   document.getElementById('grimoire-category').style.display='none';
   document.getElementById('grimoire-detail').style.display='none';
   document.getElementById('grimoire-discover').style.display='none';
+  // Restore category elements hidden by playlist mode
+  var catBack = document.getElementById('grimoire-cat-back');
+  var catFilters = document.getElementById('grimoire-cat-filters');
+  var catTagRow = document.getElementById('grim-cat-tag-row');
+  if(catBack) catBack.style.display = '';
+  var techList = document.getElementById('grimoire-tech-list');
+  var contentEl = document.getElementById('grimoire-cat-content');
+  if(catFilters) catFilters.style.display = '';
+  if(catTagRow) catTagRow.style.display = '';
+  if(techList){ techList.style.display = ''; if(techList.previousElementSibling) techList.previousElementSibling.style.display = ''; }
+  if(contentEl){ contentEl.style.borderTop = ''; contentEl.style.marginTop = ''; contentEl.style.paddingTop = ''; }
+  // Reset playlist state
+  playlistState = { currentIdx: 0, total: 0, collId: null, games: [] };
   // Reset feed state
   stGrimFeedCategory = null;
   stGrimFeedTechnique = null;
@@ -9774,6 +10546,160 @@ function skipToSaveLesson(){ saveFullSession(); }
 function startRolling(){ }
 function updateP1ContinueBtn(){ updateSaveBtn(); }
 
+// ─── WEAKNESS NUDGES ───
+// Surfaces phase imbalances and suggests related techniques/games
+
+function renderWeaknessNudges(){
+  var section = document.getElementById('codex-nudges-section');
+  var el = document.getElementById('codex-nudges');
+  if(!section || !el) return;
+
+  // Need at least 3 sessions for meaningful data
+  if((stSessionHistory||[]).length < 3){
+    section.style.display = 'none';
+    return;
+  }
+
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var tp = buildTrainingProfile(12);
+  ensureTechGraph();
+
+  // Find the 2 weakest phases that have a meaningful gap
+  var gaps = tp.phaseGaps; // already sorted weakest-first
+  var maxFreq = Math.max(...Object.values(tp.phaseFreq), 1);
+  var nudges = [];
+
+  // Only nudge phases that are significantly below average
+  var avgFreq = Object.values(tp.phaseFreq).reduce(function(a,b){return a+b;},0) / 6;
+
+  for(var i = 0; i < gaps.length && nudges.length < 2; i++){
+    var phase = gaps[i];
+    var freq = tp.phaseFreq[phase] || 0;
+    // Only nudge if this phase is below 40% of average (real gap, not just slightly less)
+    if(freq >= avgFreq * 0.6) continue;
+
+    // Find suggested techniques in this phase from the technique graph
+    var phaseCap = phase.charAt(0).toUpperCase() + phase.slice(1);
+    var phaseTechs = (TECHNIQUES[phaseCap] || []);
+
+    // Prioritize techniques that connect to what they already train
+    var scored = phaseTechs.map(function(t){
+      var s = 0;
+      var tl = t.name.toLowerCase();
+      // Bonus if this technique is a graph neighbor of something they train
+      tp.recentTechSet.forEach(function(trained){
+        if(_techGraph[trained] && _techGraph[trained].has(tl)) s += 3;
+      });
+      // Small bonus for matching archetype
+      if(t.arch === (ad.name||'').toLowerCase()) s += 1;
+      return { tech: t, score: s };
+    });
+    scored.sort(function(a,b){ return b.score - a.score; });
+
+    // Pick top 2 suggestions for this phase
+    var suggestions = scored.slice(0, 2).map(function(s){ return s.tech; });
+
+    // Build the nudge reason
+    var reason = '';
+    var strongestPhase = gaps[gaps.length - 1];
+    var strongestCap = strongestPhase.charAt(0).toUpperCase() + strongestPhase.slice(1);
+    if(freq === 0){
+      reason = 'No ' + phaseCap + ' training logged recently';
+    } else {
+      var pctOfMax = Math.round((freq / maxFreq) * 100);
+      reason = phaseCap + ' is ' + pctOfMax + '% of your ' + strongestCap + ' volume';
+    }
+
+    // Check if suggestions connect to their training
+    var connectionNote = '';
+    if(suggestions.length > 0 && scored[0].score >= 3){
+      // Find which trained technique connects
+      var connectedTo = [];
+      tp.recentTechSet.forEach(function(trained){
+        if(_techGraph[trained] && _techGraph[trained].has(suggestions[0].name.toLowerCase())){
+          connectedTo.push(trained.charAt(0).toUpperCase() + trained.slice(1));
+        }
+      });
+      if(connectedTo.length > 0){
+        connectionNote = 'Connects to your ' + connectedTo.slice(0,2).join(' & ') + ' training';
+      }
+    }
+
+    nudges.push({
+      phase: phaseCap,
+      freq: freq,
+      reason: reason,
+      connectionNote: connectionNote,
+      suggestions: suggestions
+    });
+  }
+
+  if(nudges.length === 0){
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  var phaseIcons = {Standing:'footprint', Takedown:'south', Guard:'cycle', Passing:'door_open', Pinning:'push_pin', Submission:'skull'};
+
+  var html = nudges.map(function(nudge){
+    var icon = phaseIcons[nudge.phase] || 'trending_up';
+
+    var card = '<div style="background:#1c1b1b;padding:12px;margin-bottom:8px;border-left:2px solid ' + ad.color + '55">';
+
+    // Header: phase + reason
+    card += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    card += '<span class="material-symbols-outlined" style="font-size:16px;color:' + ad.color + ';opacity:0.5">' + icon + '</span>';
+    card += '<div>';
+    card += '<div style="font-family:Cinzel,serif;font-size:11px;color:#f4ead8;font-weight:600">' + nudge.phase + '</div>';
+    card += '<div style="font-size:8px;color:rgba(198,196,223,0.35);margin-top:1px">' + nudge.reason + '</div>';
+    card += '</div>';
+    card += '</div>';
+
+    // Connection note if applicable
+    if(nudge.connectionNote){
+      card += '<div style="font-size:8px;color:' + ad.color + '88;margin-bottom:8px;padding-left:24px;font-style:italic">' + nudge.connectionNote + '</div>';
+    }
+
+    // Suggested techniques as chips
+    if(nudge.suggestions.length > 0){
+      card += '<div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:24px">';
+      nudge.suggestions.forEach(function(tech){
+        // Eco game button — clicking navigates to Grimoire filtered for this game
+        card += '<button onclick="searchGrimoireForGame(\'' + tech.game.replace(/'/g,"\\'") + '\')" style="padding:5px 10px;background:' + ad.color + '0a;border:0.5px solid ' + ad.color + '33;font-family:Cinzel,serif;font-size:8px;letter-spacing:0.08em;color:' + ad.color + 'cc;cursor:pointer;display:flex;align-items:center;gap:4px">';
+        card += '<span class="material-symbols-outlined" style="font-size:10px">play_arrow</span>';
+        card += tech.name;
+        card += '</button>';
+      });
+      card += '</div>';
+    }
+
+    card += '</div>';
+    return card;
+  }).join('');
+
+  el.innerHTML = html;
+}
+
+// Helper: navigate to Grimoire and search for a specific game
+function searchGrimoireForGame(gameName){
+  // Switch to Grimoire tab
+  var tabs = document.querySelectorAll('.nav-item');
+  tabs.forEach(function(t){
+    if(t.textContent.trim().toLowerCase().includes('grimoire')){
+      t.click();
+    }
+  });
+  // Try to populate search if available
+  setTimeout(function(){
+    var search = document.getElementById('grimoire-search');
+    if(search){
+      search.value = gameName;
+      search.dispatchEvent(new Event('input', {bubbles:true}));
+    }
+  }, 200);
+}
+
 function updateCodexHeatmap(){
   const ad = stCurrentArchData || AD.BERSERKER;
   const cats = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
@@ -10200,6 +11126,7 @@ function saveSessionEdit(idx){
   updateCodexHeatmap();
   updateCodexHistory();
   renderActiveQuests();
+  renderWeaknessNudges();
   renderTrainingInsights();
 
   document.getElementById('session-editor-modal').remove();

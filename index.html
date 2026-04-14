@@ -3647,15 +3647,18 @@ function openGameEditor(game, technique, phase, mode) {
     `;
   });
 
+  // Hide "Add to Grimoire" if game already has a Supabase UUID id (already in Grimoire)
+  const gameAlreadyInGrimoire = game && !!(game.id && typeof game.id === 'string' && game.id.length > 8);
+
   html += `
     <div class="editor-buttons">
       <button class="btn-secondary" onclick="this.closest('.game-editor-overlay').remove()">Cancel</button>
       <button class="btn-primary" onclick="saveAndShareGame('${mode}', '${technique}', '${phase}')">
         ${mode === 'edit' ? 'Save Changes' : 'Save to Quest'}
       </button>
-      <button class="btn-primary" style="background:rgba(200,150,10,0.3);color:rgba(200,150,10,0.8)" onclick="saveAndShareGame('${mode}', '${technique}', '${phase}', true)">
+      ${gameAlreadyInGrimoire ? '' : `<button class="btn-primary" style="background:rgba(200,150,10,0.3);color:rgba(200,150,10,0.8)" onclick="saveAndShareGame('${mode}', '${technique}', '${phase}', true)">
         + Add to Grimoire
-      </button>
+      </button>`}
     </div>
     </div>
   `;
@@ -4603,7 +4606,7 @@ function removeDrillTech(name){
   updateSaveBtn();
 }
 
-function onDrillTechSearch(value){
+async function onDrillTechSearch(value){
   const dropdown = document.getElementById('drill-tech-dropdown');
   if(!dropdown) return;
   const q = (value||'').toLowerCase().trim();
@@ -4611,29 +4614,54 @@ function onDrillTechSearch(value){
     dropdown.style.display = 'none';
     return;
   }
-  // Search all techniques across all phases
+  // Search all hardcoded techniques across all phases
   const results = [];
   Object.entries(TECHNIQUES).forEach(([phase, techs]) => {
     techs.forEach(t => {
       if(t.name.toLowerCase().includes(q) && !stDrillTechniques.includes(t.name)){
-        results.push({name: t.name, phase: phase});
+        results.push({name: t.name, phase: phase, source: 'system'});
       }
     });
   });
+
+  // Also search user-added / community techniques from Supabase
+  if(sbClient){
+    try {
+      const wildcard = '%' + q + '%';
+      const {data} = await sbClient.from('community_games')
+        .select('technique, phase')
+        .ilike('technique', wildcard)
+        .limit(30);
+      const fundamentalNames = new Set();
+      Object.values(TECHNIQUES).forEach(arr => arr.forEach(t => fundamentalNames.add(t.name.toLowerCase())));
+      const seen = new Set(results.map(r => r.name.toLowerCase()));
+      (data||[]).forEach(row => {
+        const name = row.technique || '';
+        if(!name || fundamentalNames.has(name.toLowerCase()) || seen.has(name.toLowerCase()) || stDrillTechniques.includes(name)) return;
+        seen.add(name.toLowerCase());
+        results.push({name: name, phase: row.phase || 'Custom', source: 'community'});
+      });
+    } catch(e){ console.error('[TechSearch] community query error', e); }
+  }
+
   if(results.length === 0){
     dropdown.style.display = 'none';
     return;
   }
+  const ad = stCurrentArchData || AD.BERSERKER;
   dropdown.style.display = 'block';
-  dropdown.innerHTML = results.slice(0, 12).map(r =>
-    `<div onclick="selectDrillTech('${r.name.replace(/'/g,"\\'")}')"
+  dropdown.innerHTML = results.slice(0, 12).map(r => {
+    const badge = r.source === 'community'
+      ? '<span style="font-size:6px;letter-spacing:0.08em;text-transform:uppercase;background:'+ad.color+'22;color:'+ad.color+';padding:1px 5px;border-radius:2px;margin-left:6px">Community</span>'
+      : '';
+    return `<div onclick="selectDrillTech('${r.name.replace(/'/g,"\\'")}')"
       style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid rgba(255,255,255,0.04);transition:background 0.1s"
       onmouseenter="this.style.background='rgba(200,168,75,0.08)'"
       onmouseleave="this.style.background='transparent'">
-      <span style="font-size:12px;color:#f4ead8;font-family:'Crimson Pro',serif">${r.name}</span>
+      <span style="display:flex;align-items:center"><span style="font-size:12px;color:#f4ead8;font-family:'Crimson Pro',serif">${r.name}</span>${badge}</span>
       <span style="font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(198,196,223,0.25);font-family:'Cinzel',serif">${r.phase}</span>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 }
 
 function selectDrillTech(name){
@@ -4969,30 +4997,50 @@ async function searchCommunityFromQuest(source){
 function addCommunityGameFromQuest(gameData, phase){
   if(!gameData || !gameData.game_name) return;
 
-  const alreadyHasGame = stEcoGames.some(g => g.game_name === gameData.game_name);
-  if(!alreadyHasGame){
-    stEcoGames.push({
-      game_name: gameData.game_name,
-      phase: phase || gameData.phase || '',
-      player_a_start: gameData.player_a_start || '',
-      player_b_start: gameData.player_b_start || '',
-      constraints: gameData.constraints || '',
-      win_condition: gameData.win_condition || '',
-      attention_cue: gameData.attention_cue || '',
-      skill_emerges: gameData.skill_emerges || '',
-      video_url: gameData.video_url || '',
-      problem: gameData.problem || '',
-      player_b_goal: gameData.player_b_goal || '',
-      round_length: gameData.round_length || '',
-      source: 'community'
-    });
-  }
+  // Route attack chains to stChainCards, eco games to stEcoGames
+  const cardType = gameData.card_type || '';
+  const hasSteps = Array.isArray(gameData.steps) && gameData.steps.length > 0;
+  const isChain = (cardType === 'attack_chain') || hasSteps;
 
-  // Switch to eco drill tab so user can see the added game
-  stDrillType = 'eco';
-  setDrillType('eco');
-  updateSaveBtn();
-  showToast('Game added to session');
+  if(isChain){
+    const chainTitle = gameData.chain_name || gameData.game_name;
+    const alreadyHasChain = stChainCards.some(c => c.title === chainTitle);
+    if(!alreadyHasChain){
+      stChainCards.push({
+        title: chainTitle,
+        tags: gameData.tags || [],
+        steps: gameData.steps || []
+      });
+      renderChainCardList();
+    }
+    stDrillType = 'chain';
+    setDrillType('chain');
+    updateSaveBtn();
+    showToast('Chain added to session');
+  } else {
+    const alreadyHasGame = stEcoGames.some(g => g.game_name === gameData.game_name);
+    if(!alreadyHasGame){
+      stEcoGames.push({
+        game_name: gameData.game_name,
+        phase: phase || gameData.phase || '',
+        player_a_start: gameData.player_a_start || '',
+        player_b_start: gameData.player_b_start || '',
+        constraints: gameData.constraints || '',
+        win_condition: gameData.win_condition || '',
+        attention_cue: gameData.attention_cue || '',
+        skill_emerges: gameData.skill_emerges || '',
+        video_url: gameData.video_url || '',
+        problem: gameData.problem || '',
+        player_b_goal: gameData.player_b_goal || '',
+        round_length: gameData.round_length || '',
+        source: 'community'
+      });
+    }
+    stDrillType = 'eco';
+    setDrillType('eco');
+    updateSaveBtn();
+    showToast('Game added to session');
+  }
 }
 
 // Legacy lesson item functions (still needed for addToQuestCard entry point)
@@ -7990,35 +8038,54 @@ async function removeFromCollection(cardId){
 function addCollectionToQuest(){
   if(!stCurrentCollectionGames || stCurrentCollectionGames.length === 0){ showToast('No games to add'); return; }
   var added = 0;
+  var addedChains = 0;
+  var addedEco = 0;
   stCurrentCollectionGames.forEach(function(game){
     var gd = game.game_data || game;
     var phase = game.phase || gd.phase || '';
-    if(!gd.game_name) return;
-    var alreadyHas = stEcoGames.some(function(g){ return g.game_name === gd.game_name; });
-    if(!alreadyHas){
-      stEcoGames.push({
-        game_name: gd.game_name,
-        phase: phase,
-        player_a_start: gd.player_a_start || '',
-        player_b_start: gd.player_b_start || '',
-        constraints: gd.constraints || '',
-        win_condition: gd.win_condition || '',
-        attention_cue: gd.attention_cue || '',
-        skill_emerges: gd.skill_emerges || '',
-        video_url: gd.video_url || '',
-        problem: gd.problem || '',
-        player_b_goal: gd.player_b_goal || '',
-        round_length: gd.round_length || '',
-        source: 'community'
-      });
-      added++;
+    if(!gd.game_name && !gd.chain_name) return;
+
+    // Route attack chains to stChainCards
+    var cardType = gd.card_type || '';
+    var hasSteps = Array.isArray(gd.steps) && gd.steps.length > 0;
+    var isChain = (cardType === 'attack_chain') || hasSteps;
+
+    if(isChain){
+      var chainTitle = gd.chain_name || gd.game_name;
+      var alreadyHasChain = stChainCards.some(function(c){ return c.title === chainTitle; });
+      if(!alreadyHasChain){
+        stChainCards.push({ title: chainTitle, tags: gd.tags || game.tags || [], steps: gd.steps || [] });
+        added++; addedChains++;
+      }
+    } else {
+      var alreadyHas = stEcoGames.some(function(g){ return g.game_name === gd.game_name; });
+      if(!alreadyHas){
+        stEcoGames.push({
+          game_name: gd.game_name,
+          phase: phase,
+          player_a_start: gd.player_a_start || '',
+          player_b_start: gd.player_b_start || '',
+          constraints: gd.constraints || '',
+          win_condition: gd.win_condition || '',
+          attention_cue: gd.attention_cue || '',
+          skill_emerges: gd.skill_emerges || '',
+          video_url: gd.video_url || '',
+          problem: gd.problem || '',
+          player_b_goal: gd.player_b_goal || '',
+          round_length: gd.round_length || '',
+          source: 'community'
+        });
+        added++; addedEco++;
+      }
     }
   });
   if(added > 0){
-    stDrillType = 'eco';
-    setDrillType('eco');
+    // Switch to whichever type was added (prefer chain if any chains were added)
+    stDrillType = addedChains > 0 ? 'chain' : 'eco';
+    setDrillType(stDrillType);
+    if(addedChains > 0) renderChainCardList();
     updateSaveBtn();
-    showToast(added + ' game' + (added > 1 ? 's' : '') + ' added to Quest');
+    showToast(added + ' item' + (added > 1 ? 's' : '') + ' added to Quest');
     switchSTTab(2);
   } else {
     showToast('All games already in Quest');
@@ -8333,7 +8400,9 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
 
   let addBtnHtml;
   let removeBtnHtml = '';
-  let saveBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="background:rgba(200,150,10,0.15);border-color:rgba(200,150,10,0.3);color:#c8a84b">+ Grimoire</button>`;
+  // Hide "Add to Grimoire" if game already exists in the Grimoire (has a Supabase UUID id)
+  const alreadyInGrimoire = !!(game.id && typeof game.id === 'string' && game.id.length > 8);
+  let saveBtnHtml = alreadyInGrimoire ? '' : `<button class="eco-quest-btn" onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="background:rgba(200,150,10,0.15);border-color:rgba(200,150,10,0.3);color:#c8a84b">+ Grimoire</button>`;
   if(mode === 'quest' && questIdx !== null){
     addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();removeEcoGame(${questIdx})" style="background:rgba(200,50,50,0.15);border-color:rgba(200,50,50,0.3);color:#e05555">✕ Remove</button>`;
     saveBtnHtml = '';
@@ -12116,7 +12185,7 @@ function fcClearAll(){
 }
 
 // --- TECHNIQUE DRAWER ---
-function fcOpenDrawer(nodeId){
+async function fcOpenDrawer(nodeId){
   var node = fcNodes.find(function(n){ return n.id === nodeId; });
   if(!node) return;
   fcDrawerNodeId = nodeId;
@@ -12142,12 +12211,27 @@ function fcOpenDrawer(nodeId){
       + '</div>';
   }).join('');
 
+  // Load user-added / community techniques for this phase from Supabase
+  var customTechHtml = '';
+  if(isOff){
+    var customNames = await loadCustomTechniques(node.phase);
+    if(customNames.length > 0){
+      customTechHtml = '<div style="padding:6px 16px 4px;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:' + stanceColor + '66;border-top:0.5px solid rgba(255,255,255,0.06);margin-top:4px">Community Techniques</div>';
+      customTechHtml += customNames.map(function(name){
+        var isSelected = node.technique === name;
+        return '<div class="fc-drawer-item' + (isSelected?' selected':'') + '" onclick="fcPickTechnique(\'' + nodeId + '\',\'' + name.replace(/'/g,"\\'") + '\',\'\')" style="' + (isSelected?'background:'+stanceColor+'11;border-left:2px solid '+stanceColor:'') + '">'
+          + '<div class="fc-drawer-item-name">' + name + ' <span style="font-size:6px;letter-spacing:0.08em;text-transform:uppercase;background:' + stanceColor + '22;color:' + stanceColor + ';padding:1px 5px;border-radius:2px;margin-left:4px;vertical-align:middle">Community</span></div>'
+          + '</div>';
+      }).join('');
+    }
+  }
+
   drawer.innerHTML = '<div class="fc-drawer-head">'
     + '<div class="fc-drawer-title">' + node.phase + ' \u00b7 <span style="color:' + stanceColor + '">' + stanceLabel + '</span></div>'
     + '<button class="fc-drawer-close" onclick="fcCloseDrawer()">\u2715</button>'
     + '</div>'
     + '<div style="padding:4px 16px 8px"><input id="fc-drawer-search" placeholder="Search techniques..." oninput="fcFilterDrawer()" style="width:100%;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:11px;padding:8px 10px;outline:none;font-family:Crimson Pro,serif;box-sizing:border-box" /></div>'
-    + '<div id="fc-drawer-list">' + itemsHtml + '</div>';
+    + '<div id="fc-drawer-list">' + itemsHtml + customTechHtml + '</div>';
 
   document.body.appendChild(drawer);
 

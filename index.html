@@ -976,7 +976,19 @@ const TOUR_STEPS = [
   },
   {
     target: function(){ return document.getElementById('st-tab-0'); },
-    text: 'When you\'re ready to build, head to the <strong>Chain</strong> tab. Connect techniques into your personal attack chain — your game plan on the mat.',
+    text: 'The <strong>Chain</strong> tab is where you build. Connect techniques into your own attack chain, or let the Oracle forge one — and create eco games for each transition.',
+    position: 'below',
+    pad: 8
+  },
+  {
+    target: function(){ return document.getElementById('st-tab-2'); },
+    text: 'The <strong>Quest</strong> tab is your session plan. Add eco games and chains here, set a roll focus, and take it to class. After training, log your rounds to track progress.',
+    position: 'below',
+    pad: 8
+  },
+  {
+    target: function(){ return document.getElementById('st-tab-3'); },
+    text: 'The <strong>Codex</strong> tracks everything — your Active Quests, training history, and insights. The more you log, the smarter your recommendations get.',
     position: 'below',
     pad: 8
   }
@@ -1163,7 +1175,7 @@ const CTX_TIPS = {
   }
 };
 
-function showContextTip(key, targetEl){
+function showContextTip(key, targetEl, skipViewportCheck){
   // Check if already shown
   if(localStorage.getItem('grimoire_ctx_' + key) === 'true') return;
   const tip = CTX_TIPS[key];
@@ -1175,9 +1187,18 @@ function showContextTip(key, targetEl){
   // Don't show if element has zero size
   const tRect = targetEl.getBoundingClientRect();
   if(tRect.height === 0) return;
-  // Only show when the card's center is visible in viewport (not just an edge)
-  const cardCenter = tRect.top + tRect.height / 2;
-  if(cardCenter < 40 || cardCenter > window.innerHeight - 40) return;
+  // Viewport check — skip for queued/chained tips (user is already interacting)
+  if(!skipViewportCheck){
+    const cardCenter = tRect.top + tRect.height / 2;
+    if(cardCenter < 40 || cardCenter > window.innerHeight - 40) return;
+  }
+
+  // Scroll target into view if needed (for queued tips inside expanded cards)
+  if(skipViewportCheck && (tRect.bottom < 0 || tRect.top > window.innerHeight)){
+    targetEl.scrollIntoView({ behavior:'smooth', block:'center' });
+    setTimeout(function(){ _renderContextTip(key, targetEl, tip); }, 400);
+    return;
+  }
 
   _renderContextTip(key, targetEl, tip);
 }
@@ -1251,7 +1272,7 @@ function dismissContextTip(key){
     _ctxTipQueue = _ctxTipQueue.filter(t => t.key !== key && localStorage.getItem('grimoire_ctx_'+t.key) !== 'true');
     if(_ctxTipQueue.length > 0){
       const next = _ctxTipQueue[0];
-      setTimeout(function(){ showContextTip(next.key, next.el); }, 400);
+      setTimeout(function(){ showContextTip(next.key, next.el, true); }, 400);
     }
   }
 }
@@ -9315,11 +9336,15 @@ function expandEcoCard(id){
   ecoSwipeTo(id, 0, 99);
   // Track view engagement
   trackEngagement(ecoCardGameRegistry[id], 'view');
-  // Dismiss any existing contextual tip so card tips can take over
+  // Force-remove any existing contextual tip WITHOUT triggering queue advance
+  // (dismissContextTip has a 400ms queue-advance timeout that races with our new queue)
   var existingTip = document.querySelector('.ctx-tip');
   if(existingTip){
-    var tipId = existingTip.id.replace('ctx-tip-','');
-    dismissContextTip(tipId);
+    if(existingTip._ctxTarget){
+      existingTip._ctxTarget.style.outline = '';
+      existingTip._ctxTarget.style.outlineOffset = '';
+    }
+    existingTip.remove(); // instant removal, no fade, no queue advance
   }
   _ctxTipQueue = []; // clear any old queue
   // Build a queue of contextual tips for this card — shown one at a time
@@ -9335,7 +9360,7 @@ function expandEcoCard(id){
     const pending = tips.filter(t => localStorage.getItem('grimoire_ctx_'+t.key) !== 'true');
     if(pending.length > 0){
       _ctxTipQueue = pending;
-      showContextTip(pending[0].key, pending[0].el);
+      showContextTip(pending[0].key, pending[0].el, true);
     }
   }, 600);
 }

@@ -421,6 +421,95 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 
 .belt-rank { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 4px; }
+
+/* ===== GUIDED TOUR ===== */
+.tour-overlay {
+  position: fixed; inset: 0; z-index: 9998;
+  background: transparent;
+  transition: opacity 0.3s ease;
+  pointer-events: auto;
+}
+.tour-spotlight {
+  position: fixed; z-index: 9999;
+  border-radius: 14px;
+  box-shadow: 0 0 0 4000px rgba(0,0,0,0.75);
+  transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+.tour-tooltip {
+  position: fixed; z-index: 10000;
+  background: linear-gradient(145deg, #221c44, #1a1535);
+  border: 1px solid rgba(200,150,10,0.3);
+  border-radius: 16px;
+  padding: 18px 20px;
+  max-width: 320px;
+  width: calc(100vw - 48px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  animation: tourTipIn 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes tourTipIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tour-step-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.tour-text {
+  font-family: 'Crimson Pro', serif;
+  font-size: 15px;
+  color: #f4ead8;
+  line-height: 1.55;
+  margin-bottom: 16px;
+}
+.tour-text strong { color: #e8b828; font-weight: 600; }
+.tour-btns {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tour-skip-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(198,196,223,0.35);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.tour-skip-btn:hover { color: rgba(198,196,223,0.6); }
+.tour-next-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.tour-next-btn:hover { filter: brightness(1.1); }
+.tour-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.tour-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(198,196,223,0.15);
+  transition: all 0.3s;
+}
+.tour-dot.active { background: currentColor; box-shadow: 0 0 8px currentColor; }
+.tour-dot.completed { background: currentColor; opacity: 0.5; }
 </style>
 </head>
 <body>
@@ -728,6 +817,21 @@ const QS=[
     {l:'Pretty even — both ways',d:'I am comfortable either way depending on the roll'},
     {l:'Depends on the opponent',d:'I go where they do not want me'},
   ]},
+
+  // BLOCK 5 — FOCUS (feeds Active Quests)
+  {id:'weakness',block:'Focus',text:'What part of your game needs the most work?',hint:'Be honest — this becomes your first training quest.',opts:[
+    {l:'My takedowns',d:'I can\'t get people down reliably'},
+    {l:'My guard retention',d:'I get passed too easily'},
+    {l:'My guard passing',d:'I can\'t get through their guard consistently'},
+    {l:'My submissions',d:'I can get position but can\'t finish'},
+    {l:'My escapes',d:'I get stuck in bad positions too long'},
+  ],other:true},
+  {id:'quest_goal',block:'Focus',text:'If you could level up one thing over the next month, what would it be?',hint:'Pick a focus area, or write your own goal.',opts:[
+    {l:'Dominate from standing',d:'Grip fighting, takedowns, and clinch control'},
+    {l:'Build an unstoppable guard',d:'Sweeps, retention, and attacks from bottom'},
+    {l:'Become a passing machine',d:'Get through any guard consistently'},
+    {l:'Control and finish from top',d:'Pins, transitions, and submission hunting'},
+  ],other:true},
 ];
 
 let cur=0;
@@ -834,8 +938,359 @@ function dismissTutorial(tabKey){
 }
 
 function resetTutorials(){
+  resetAllOnboarding();
+}
+
+// ===== GUIDED TOOLTIP TOUR =====
+const TOUR_STEPS = [
+  {
+    target: function(){
+      // Target the position grid (the parent div of the category cards)
+      var home = document.getElementById('grimoire-home');
+      if(!home) return null;
+      var grid = home.querySelector('[style*="grid-template-columns: 1fr 1fr"]') || home.querySelector('[style*="grid-template-columns:1fr 1fr"]');
+      return grid;
+    },
+    text: 'This is your <strong>Grimoire</strong> — a library of techniques, training games, and attack chains. Start by <strong>tapping a position</strong> to explore what\'s inside.',
+    position: 'below',
+    pad: 10
+  },
+  {
+    target: function(){
+      // Target the first position card
+      var home = document.getElementById('grimoire-home');
+      if(!home) return null;
+      var grid = home.querySelector('[style*="grid-template-columns: 1fr 1fr"]') || home.querySelector('[style*="grid-template-columns:1fr 1fr"]');
+      if(!grid) return null;
+      return grid.children[0] || null;
+    },
+    text: 'Each position contains <strong>techniques</strong> and <strong>ecological games</strong> — training drills you play with a partner. Tap one to see what\'s inside.',
+    position: 'below',
+    pad: 6
+  },
+  {
+    target: function(){ return document.getElementById('grimoire-filter-row'); },
+    text: 'Use these filters to browse by <strong>content type</strong> — attack chains, eco games, or quest cards. The tune button shows advanced tag filters.',
+    position: 'below',
+    pad: 8
+  },
+  {
+    target: function(){ return document.getElementById('st-tab-0'); },
+    text: 'When you\'re ready to build, head to the <strong>Chain</strong> tab. Connect techniques into your personal attack chain — your game plan on the mat.',
+    position: 'below',
+    pad: 8
+  }
+];
+
+let tourCurrentStep = -1;
+let tourOverlayEl = null;
+let tourSpotlightEl = null;
+let tourTooltipEl = null;
+let tourArchColor = '#c8960a';
+
+function startGrimoireTour(){
+  // Check if already completed
+  if(localStorage.getItem('grimoire_tour_completed') === 'true') return;
+
+  const ad = stCurrentArchData || AD.BERSERKER;
+  tourArchColor = ad.color || '#c8960a';
+
+  // Create overlay elements
+  tourOverlayEl = document.createElement('div');
+  tourOverlayEl.className = 'tour-overlay';
+  tourOverlayEl.onclick = function(){}; // prevent click-through
+  document.body.appendChild(tourOverlayEl);
+
+  tourSpotlightEl = document.createElement('div');
+  tourSpotlightEl.className = 'tour-spotlight';
+  document.body.appendChild(tourSpotlightEl);
+
+  tourTooltipEl = document.createElement('div');
+  tourTooltipEl.className = 'tour-tooltip';
+  document.body.appendChild(tourTooltipEl);
+
+  // Dismiss the tutorial banner if showing
+  dismissTutorial('grimoire');
+
+  tourCurrentStep = -1;
+  tourNextStep();
+}
+
+function tourNextStep(){
+  tourCurrentStep++;
+  if(tourCurrentStep >= TOUR_STEPS.length){
+    tourComplete();
+    return;
+  }
+  tourRenderStep(tourCurrentStep);
+}
+
+function tourRenderStep(idx){
+  const step = TOUR_STEPS[idx];
+  const targetEl = typeof step.target === 'function' ? step.target() : document.querySelector(step.target);
+
+  if(!targetEl){
+    // Skip this step if target not found
+    tourNextStep();
+    return;
+  }
+
+  // Scroll target into view
+  targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Delay to let scroll finish
+  setTimeout(function(){
+    const rect = targetEl.getBoundingClientRect();
+    const pad = step.pad || 8;
+
+    // Position spotlight
+    tourSpotlightEl.style.top = (rect.top - pad) + 'px';
+    tourSpotlightEl.style.left = (rect.left - pad) + 'px';
+    tourSpotlightEl.style.width = (rect.width + pad*2) + 'px';
+    tourSpotlightEl.style.height = (rect.height + pad*2) + 'px';
+
+    // Build tooltip content
+    const totalSteps = TOUR_STEPS.length;
+    const isLast = idx === totalSteps - 1;
+
+    let dotsHtml = '';
+    for(let i = 0; i < totalSteps; i++){
+      const cls = i < idx ? 'tour-dot completed' : i === idx ? 'tour-dot active' : 'tour-dot';
+      dotsHtml += '<div class="'+cls+'" style="color:'+tourArchColor+'"></div>';
+    }
+
+    tourTooltipEl.innerHTML =
+      '<div class="tour-step-label" style="color:'+tourArchColor+'">Step '+(idx+1)+' of '+totalSteps+'</div>' +
+      '<div class="tour-text">'+step.text+'</div>' +
+      '<div class="tour-btns">' +
+        '<button class="tour-skip-btn" onclick="tourComplete()">Skip tour</button>' +
+        '<div class="tour-dots">'+dotsHtml+'</div>' +
+        '<button class="tour-next-btn" style="background:'+tourArchColor+'" onclick="tourNextStep()">'+(isLast ? 'Got it!' : 'Next →')+'</button>' +
+      '</div>';
+
+    // Position tooltip — always keep fully within viewport
+    const tooltipHeight = tourTooltipEl.offsetHeight || 160;
+    const viewH = window.innerHeight;
+    const viewW = window.innerWidth;
+    const roomAbove = rect.top - pad > tooltipHeight + 20;
+    const roomBelow = rect.bottom + pad + tooltipHeight + 20 < viewH;
+
+    if((step.position === 'above' || !roomBelow) && roomAbove){
+      // Place above the target
+      tourTooltipEl.style.top = Math.max(8, rect.top - pad - 12 - tooltipHeight) + 'px';
+      tourTooltipEl.style.bottom = 'auto';
+    } else if(roomBelow){
+      // Place below the target
+      tourTooltipEl.style.top = (rect.bottom + pad + 12) + 'px';
+      tourTooltipEl.style.bottom = 'auto';
+    } else {
+      // Fallback — place below with scroll-safe top
+      tourTooltipEl.style.top = Math.max(8, Math.min(rect.bottom + pad + 12, viewH - tooltipHeight - 8)) + 'px';
+      tourTooltipEl.style.bottom = 'auto';
+    }
+    tourTooltipEl.style.left = Math.max(24, Math.min(viewW - 344, rect.left)) + 'px';
+
+    // Re-trigger animation
+    tourTooltipEl.style.animation = 'none';
+    tourTooltipEl.offsetHeight; // force reflow
+    tourTooltipEl.style.animation = '';
+
+  }, 350);
+}
+
+function tourComplete(){
+  localStorage.setItem('grimoire_tour_completed', 'true');
+  // Fade out
+  if(tourOverlayEl){ tourOverlayEl.style.opacity = '0'; setTimeout(function(){ tourOverlayEl.remove(); }, 300); }
+  if(tourSpotlightEl){ tourSpotlightEl.style.opacity = '0'; setTimeout(function(){ tourSpotlightEl.remove(); }, 300); }
+  if(tourTooltipEl){ tourTooltipEl.style.opacity = '0'; setTimeout(function(){ tourTooltipEl.remove(); }, 300); }
+  tourCurrentStep = -1;
+}
+
+// ===== CONTEXTUAL TOOLTIPS (first-time triggers) =====
+const CTX_TIPS = {
+  open_chain_tab: {
+    text: 'Welcome to the <strong>Chain Builder</strong>. Tap positions on the left to add techniques, then <strong>connect two nodes</strong> to map out your attack chain. You can also <strong>consult the Oracle</strong> on any technique — it\'ll build a chain or create eco games for you.',
+    position: 'below'
+  },
+  chain_connected: {
+    text: 'The Oracle will create an <strong>eco game for each connection</strong> you made — a focused drill for that transition. Link more techniques to generate more games, each one targeted to a specific part of your chain.',
+    position: 'above'
+  },
+  open_category: {
+    text: 'Here you\'ll find <strong>techniques</strong> and <strong>training content</strong> for this position. Scroll down to see eco games and attack chains.',
+    position: 'top'
+  },
+  add_technique: {
+    text: 'Don\'t see a technique you train? The Grimoire is always growing — tap <strong>Add Technique</strong> to add your own. New content is being created by the community all the time.',
+    position: 'above'
+  },
+  see_eco_game: {
+    text: 'This is an <strong>eco game</strong> — a training drill you play with a partner. The "Develops" line tells you what skill it builds. Tap for full details.',
+    position: 'below'
+  },
+  see_attack_chain: {
+    text: 'This is an <strong>attack chain</strong> — a sequence of techniques that flow together. Think of it as a game plan from one position to the next.',
+    position: 'below'
+  },
+  add_to_quest: {
+    text: 'Added to your <strong>Quest Card</strong>! Your Quest Card is your session plan — eco games, chains, and a roll focus bundled together. Head to the <strong>Quest tab</strong> to see it.',
+    position: 'top'
+  },
+  see_upvotes: {
+    text: 'Every card is built by the community. <strong>Upvote</strong> what works for you — the more people contribute, the better the library gets for everyone.',
+    position: 'above'
+  },
+  open_quest_tab: {
+    text: 'This is your <strong>Quest Card</strong> — your game plan for class. Add eco games, set a roll focus, and after training, log your rounds to track progress.',
+    position: 'top'
+  },
+  open_codex_tab: {
+    text: 'Your <strong>Codex</strong> tracks everything. Active Quests span multiple sessions — the more you log, the better your insights and recommendations get.',
+    position: 'top'
+  },
+  expand_card: {
+    text: 'Like this one? Tap <strong>+ Quest</strong> to add it to your session plan. You can build a whole practice around the games and chains you find here.',
+    position: 'below'
+  },
+  see_video: {
+    text: 'Some cards link to <strong>videos on YouTube, Instagram, or TikTok</strong>. Watch the video to see the technique in action — then use the card as your at-a-glance reference during training.',
+    position: 'below'
+  },
+  quest_match: {
+    text: 'This content matches one of your <strong>Active Quests</strong>. Add it to your Quest Card to practice it in your next session.',
+    position: 'below'
+  }
+};
+
+function showContextTip(key, targetEl){
+  // Check if already shown
+  if(localStorage.getItem('grimoire_ctx_' + key) === 'true') return;
+  const tip = CTX_TIPS[key];
+  if(!tip || !targetEl) return;
+  // Don't show during the guided tour
+  if(tourCurrentStep >= 0) return;
+  // Don't show if another contextual tip is already visible
+  if(document.querySelector('.ctx-tip')) return;
+  // Don't show if element has zero size
+  const tRect = targetEl.getBoundingClientRect();
+  if(tRect.height === 0) return;
+  // Only show when the card's center is visible in viewport (not just an edge)
+  const cardCenter = tRect.top + tRect.height / 2;
+  if(cardCenter < 40 || cardCenter > window.innerHeight - 40) return;
+
+  _renderContextTip(key, targetEl, tip);
+}
+
+function _renderContextTip(key, targetEl, tip){
+  // Double-check not already shown (in case of delayed call)
+  if(localStorage.getItem('grimoire_ctx_' + key) === 'true') return;
+  if(document.getElementById('ctx-tip-' + key)) return;
+
+  const ad = stCurrentArchData || AD.BERSERKER;
+
+  // Create tooltip element
+  const el = document.createElement('div');
+  el.className = 'ctx-tip';
+  el.id = 'ctx-tip-' + key;
+  el.innerHTML = `
+    <div style="font-size:14px;color:#f4ead8;line-height:1.5;margin-bottom:10px">${tip.text}</div>
+    <button onclick="dismissContextTip('${key}')" style="font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#fff;background:${ad.color};border:none;padding:7px 16px;border-radius:8px;cursor:pointer">Got it</button>
+  `;
+
+  // Style
+  el.style.cssText = 'position:fixed;z-index:8000;background:linear-gradient(145deg,#221c44,#1a1535);border:1px solid '+ad.color+'55;border-radius:14px;padding:14px 16px;max-width:300px;width:calc(100vw - 48px);box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:tourTipIn 0.35s cubic-bezier(0.16,1,0.3,1);';
+
+  // Highlight the target card so it's clear what the tooltip refers to
+  targetEl.style.outline = '2px solid ' + ad.color;
+  targetEl.style.outlineOffset = '4px';
+  targetEl.style.borderRadius = '12px';
+  el._ctxTarget = targetEl;
+
+  document.body.appendChild(el);
+
+  // Position relative to target — always keep fully within viewport
+  const rect = targetEl.getBoundingClientRect();
+  const tipH = el.offsetHeight;
+  const viewH = window.innerHeight;
+  const wantsAbove = tip.position === 'top' || tip.position === 'above';
+  const roomAbove = rect.top > tipH + 20;
+  const roomBelow = rect.bottom + tipH + 20 < viewH;
+
+  if(wantsAbove && roomAbove){
+    el.style.top = Math.max(8, rect.top - tipH - 12) + 'px';
+    el.style.bottom = 'auto';
+  } else if(roomBelow){
+    el.style.top = (rect.bottom + 12) + 'px';
+    el.style.bottom = 'auto';
+  } else {
+    el.style.top = Math.max(8, Math.round((viewH - tipH) / 2)) + 'px';
+    el.style.bottom = 'auto';
+  }
+  el.style.left = Math.max(24, Math.min(window.innerWidth - 324, rect.left)) + 'px';
+}
+
+let _ctxTipQueue = []; // queue of {key, el} for chained tips on a single card
+
+function dismissContextTip(key){
+  localStorage.setItem('grimoire_ctx_' + key, 'true');
+  const el = document.getElementById('ctx-tip-' + key);
+  if(el){
+    // Remove highlight from target card
+    if(el._ctxTarget){
+      el._ctxTarget.style.outline = '';
+      el._ctxTarget.style.outlineOffset = '';
+    }
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.2s';
+    setTimeout(function(){ el.remove(); }, 200);
+  }
+  // Advance the queue — show next pending tip after a brief pause
+  if(_ctxTipQueue.length > 0){
+    // Remove the one we just dismissed and any already-seen
+    _ctxTipQueue = _ctxTipQueue.filter(t => t.key !== key && localStorage.getItem('grimoire_ctx_'+t.key) !== 'true');
+    if(_ctxTipQueue.length > 0){
+      const next = _ctxTipQueue[0];
+      setTimeout(function(){ showContextTip(next.key, next.el); }, 400);
+    }
+  }
+}
+
+// Scroll-based contextual tip checker — fires pending tips when cards scroll into view
+let _ctxScrollTimer = null;
+function _ctxCheckOnScroll(){
+  if(_ctxScrollTimer) return;
+  _ctxScrollTimer = setTimeout(function(){
+    _ctxScrollTimer = null;
+    if(tourCurrentStep >= 0 || document.querySelector('.ctx-tip')) return;
+    var grimTab = document.getElementById('st-grimoire');
+    if(!grimTab || grimTab.style.display === 'none') return;
+    // Check eco game
+    if(localStorage.getItem('grimoire_ctx_see_eco_game') !== 'true'){
+      var eco = grimTab.querySelector('[data-card-type="eco_game"] .eco-collapsed');
+      if(eco) showContextTip('see_eco_game', eco);
+    }
+    // Check attack chain (only after eco tip is done)
+    if(localStorage.getItem('grimoire_ctx_see_eco_game') === 'true' && localStorage.getItem('grimoire_ctx_see_attack_chain') !== 'true'){
+      var chain = grimTab.querySelector('[data-card-type="attack_chain"] .eco-collapsed');
+      if(chain) showContextTip('see_attack_chain', chain);
+    }
+    // Check add technique button (when inside a category view)
+    if(localStorage.getItem('grimoire_ctx_add_technique') !== 'true'){
+      var addBtn = document.getElementById('grimoire-add-tech-btn');
+      if(addBtn) showContextTip('add_technique', addBtn);
+    }
+  }, 300);
+}
+window.addEventListener('scroll', _ctxCheckOnScroll, true);
+
+function resetAllOnboarding(){
+  localStorage.removeItem('grimoire_tour_completed');
   localStorage.removeItem('grimoire_tutorials_dismissed');
-  showToast('Tutorials reset — switch tabs to see them');
+  Object.keys(CTX_TIPS).forEach(function(key){
+    localStorage.removeItem('grimoire_ctx_' + key);
+  });
+  if(typeof showToast === 'function') showToast('Tutorials reset — switch tabs to see them again');
 }
 
 // --- API KEY MANAGEMENT (password-gated) ---
@@ -1071,7 +1526,7 @@ function renderQ(){
   const block=document.createElement('div');
   block.className='q-block';
 
-  const blockLabel = cur<1?'Body':cur<5?'Identity':cur<11?'Technique':cur<14?'Self Assessment':'Game Style';
+  const blockLabel = cur<1?'Body':cur<5?'Identity':cur<11?'Technique':cur<14?'Self Assessment':cur<18?'Game Style':'Focus';
   const saved=ans[q.id+'_text']||'';
   const isOther=ans[q.id]==='__other';
 
@@ -1274,7 +1729,26 @@ Respond ONLY with valid JSON, no markdown:
       "harder_against_why": "1-2 sentences.",
       "adjustment": "1-2 sentences."
     }
-  }
+  },
+  "active_quests": [
+    {
+      "quest_name": "Short evocative quest name — 2-4 words, e.g. 'Guard Retention Fortress' or 'Kimura Hunter'",
+      "description": "1 sentence describing what this quest develops, in practical BJJ terms",
+      "phase": "The primary position phase this quest targets — one of Standing/Takedown/Guard/Passing/Pinning/Submission",
+      "techniques": ["2-3 specific techniques this quest focuses on"],
+      "suggested_games": ["1-2 eco game names that would train this skill"],
+      "sessions_target": 6
+    },
+    {
+      "quest_name": "Second quest — based on their stated goal",
+      "description": "1 sentence",
+      "phase": "Primary phase",
+      "techniques": ["2-3 techniques"],
+      "suggested_games": ["1-2 eco game names"],
+      "sessions_target": 8
+    }
+  ],
+  "QUEST_INSTRUCTIONS": "Generate exactly 2 active quests. Quest 1 is based on their stated WEAKNESS (question 19). Quest 2 is based on their stated GOAL (question 20). If they typed a custom answer, interpret it into a specific quest. Quest names should be evocative but clear. Sessions_target should be 5-10 based on scope."
 }`;
 
     try{
@@ -1287,7 +1761,7 @@ Respond ONLY with valid JSON, no markdown:
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
       },
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2500,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3200,messages:[{role:'user',content:prompt}]})
     });
     const d=await r.json();
     const t=d.content?.[0]?.text||'{}';
@@ -1607,12 +2081,12 @@ function showResult(data){
 
     <!-- ⑤ BUILD YOUR SKILL TREE — full width gold CTA -->
     <div style="padding:0;background:#0e0e0e">
-            <button onclick="openSkillTree()"
+            <button onclick="showQuestSetup()"
         style="width:100%;padding:20px;font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#1a1000;font-weight:700;border:none;cursor:pointer;background:linear-gradient(135deg,#ffe088 0%,#e9c349 40%,#c8900a 100%);position:relative;overflow:hidden;display:block;transition:filter 0.15s"
         onmouseover="this.style.filter='brightness(1.08)'"
         onmouseout="this.style.filter=''">
         <span style="position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,0.1),transparent);pointer-events:none"></span>
-        Build Your Skill Tree
+        Explore Your Grimoire
       </button>
     </div>
 
@@ -1767,7 +2241,7 @@ function showResult(data){
               }).join("")}
             </div>
             <div style="text-align:center;margin-bottom:7px">
-              <span style="display:inline-block;padding:6px 14px;background:linear-gradient(135deg,#ffe088,#e9c349 50%,#a07000);font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:#1a1000;font-weight:700;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)">Build Your Skill Tree</span>
+              <span style="display:inline-block;padding:6px 14px;background:linear-gradient(135deg,#ffe088,#e9c349 50%,#a07000);font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.16em;text-transform:uppercase;color:#1a1000;font-weight:700;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)">Explore Your Grimoire</span>
             </div>
             <div style="display:flex;justify-content:space-between">
               <span style="font-family:'Cinzel',serif;font-size:5px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(233,195,73,0.18)">bjjgrimoire.com</span>
@@ -2462,49 +2936,79 @@ function buildSkillTreeHTML(data, ad) {
         <button onclick="dismissTutorial('grimoire')" style="position:absolute;top:6px;right:8px;background:none;border:none;color:rgba(198,196,223,0.3);font-size:14px;cursor:pointer;padding:2px 4px;line-height:1">×</button>
       </div>
       <div id="grimoire-home" style="padding:16px">
-        <!-- Explore / For You toggle -->
-        <div style="display:flex;gap:6px;margin-bottom:10px" id="grimoire-view-toggle">
-          <button onclick="switchGrimoireView('explore')" id="grim-toggle-explore" style="padding:7px 16px;border-radius:20px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-family:'Cinzel',serif;cursor:pointer;background:${ad.color};color:#0e0e0e;border:none;font-weight:600">Explore</button>
-          <button onclick="switchGrimoireView('foryou')" id="grim-toggle-foryou" style="padding:7px 16px;border-radius:20px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-family:'Cinzel',serif;cursor:pointer;background:#131313;color:rgba(198,196,223,0.35);border:0.5px solid rgba(255,255,255,0.08)">For You</button>
+        <!-- Welcome greeting — personalized to archetype -->
+        <div id="grimoire-welcome" style="margin-bottom:14px">
+          <div style="font-family:'Cinzel',serif;font-size:clamp(22px,6vw,30px);font-weight:700;color:#f4ead8;line-height:1.2;margin-bottom:4px">Welcome, <span style="color:${ad.color}">${ad.name}</span>.</div>
+          <div style="font-size:14px;color:rgba(198,196,223,0.35);font-style:italic;line-height:1.5">Explore techniques, training games, and attack chains forged for your style.</div>
         </div>
 
-        <!-- Filter pills -->
-        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:12px;scrollbar-width:none" id="grimoire-filter-row">
-          ${['All','Attack Chains','Eco Games','Quest Cards'].map((f,i)=>`
-            <button onclick="setGrimoireFilter('${f}')" class="grim-filter" data-filter="${f}" style="padding:5px 12px;border-radius:20px;font-size:9px;white-space:nowrap;cursor:pointer;flex-shrink:0;font-family:'Cinzel',serif;letter-spacing:0.06em;${i===0?'background:#1a1205;border:1px solid '+ad.color+';color:'+ad.color:'background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.3)'}">${f}</button>`).join('')}
+        <!-- Explore / For You toggle — underline tab style -->
+        <div style="display:flex;gap:0;border-bottom:1px solid rgba(200,150,10,0.1);margin-bottom:14px" id="grimoire-view-toggle">
+          <button onclick="switchGrimoireView('explore')" id="grim-toggle-explore" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.08em;color:#f4ead8;background:none;border:none;padding:10px 0;margin-right:28px;cursor:pointer;position:relative;border-bottom:2px solid ${ad.color}">Explore</button>
+          <button onclick="switchGrimoireView('foryou')" id="grim-toggle-foryou" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.08em;color:rgba(198,196,223,0.35);background:none;border:none;padding:10px 0;cursor:pointer;position:relative;border-bottom:2px solid transparent">For You</button>
         </div>
 
-        <!-- Tag filter pills -->
-        <div style="display:flex;flex-wrap:wrap;gap:4px;padding-bottom:8px;margin-bottom:10px" id="grim-tag-row"></div>
+        <!-- Filter pills with icons + tag toggle -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+          <div style="display:flex;gap:6px;overflow-x:auto;flex:1;padding-bottom:2px;scrollbar-width:none" id="grimoire-filter-row">
+            ${[
+              {f:'All', icon:'select_all'},
+              {f:'Attack Chains', icon:'link'},
+              {f:'Eco Games', icon:'sports_martial_arts'},
+              {f:'Quest Cards', icon:'assignment'}
+            ].map((item,i)=>`
+              <button onclick="setGrimoireFilter('${item.f}')" class="grim-filter" data-filter="${item.f}" style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;font-size:9px;white-space:nowrap;cursor:pointer;flex-shrink:0;font-family:'Cinzel',serif;letter-spacing:0.06em;${i===0?'background:#1a1205;border:1px solid '+ad.color+';color:'+ad.color:'background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.3)'}"><span class="material-symbols-outlined" style="font-size:13px">${item.icon}</span>${item.f}</button>`).join('')}
+          </div>
+          <button onclick="var tr=document.getElementById('grim-tag-row');tr.style.display=tr.style.display==='none'?'flex':'none'" style="width:32px;height:32px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.08);background:#131313;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0" title="Toggle tag filters">
+            <span class="material-symbols-outlined" style="font-size:16px;color:rgba(198,196,223,0.35)">tune</span>
+          </button>
+        </div>
+
+        <!-- Tag filter pills — hidden by default, shown via tune/filter button -->
+        <div style="display:none;flex-wrap:wrap;gap:4px;padding-bottom:8px;margin-bottom:10px" id="grim-tag-row"></div>
 
         <!-- EXPLORE VIEW -->
         <div id="grimoire-explore-view">
-          <!-- 6 Compact Category Cards (3x2 grid) -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">
+          <!-- Browse by Position header -->
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+            <span style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.35)">Browse by Position</span>
+          </div>
+          <!-- 6 Category Cards (2x3 grid) — hero element -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
             ${[
-              {cat:'Standing', icon:'⚔', accent:'#c8a84b', bg:'#1a1205'},
-              {cat:'Takedown', icon:'⤵', accent:'#2b6cb0', bg:'#0a1428'},
-              {cat:'Guard', icon:'🛡', accent:'#2e8b57', bg:'#0f2a1a'},
-              {cat:'Passing', icon:'↗', accent:'#6b3fa0', bg:'#1a0e2a'},
-              {cat:'Pinning', icon:'⊕', accent:'#e8621a', bg:'#1a1205'},
-              {cat:'Submission', icon:'✦', accent:'#e84747', bg:'#1a0808'}
-            ].map(c=>`
-              <div onclick="openGrimoireCategory('${c.cat}')" style="background:linear-gradient(135deg,${c.bg},#131313);border:0.5px solid ${c.accent}44;padding:10px 8px;cursor:pointer;position:relative;overflow:hidden;text-align:center">
-                <div style="position:absolute;top:0;left:0;width:100%;height:1.5px;background:${c.accent}"></div>
-                <div style="font-size:14px;margin-bottom:3px">${c.icon}</div>
-                <div style="font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#f4ead8;font-weight:500">${c.cat}</div>
-                <div style="font-size:7px;color:rgba(198,196,223,0.25);margin-top:1px">${(TECHNIQUES[c.cat]||[]).length + (DEFENSE_TECHNIQUES[c.cat]||[]).length}</div>
-              </div>`).join('')}
+              {cat:'Standing', icon:'⚔', accent:'#c8a84b', bg:'#1a1205', desc:'Grip fighting, clinch, pummeling'},
+              {cat:'Takedown', icon:'⤵', accent:'#2b6cb0', bg:'#0a1428', desc:'Level changes, explosive shots'},
+              {cat:'Guard', icon:'🛡', accent:'#2e8b57', bg:'#0f2a1a', desc:'Retention, sweeps, submissions'},
+              {cat:'Passing', icon:'↗', accent:'#6b3fa0', bg:'#1a0e2a', desc:'Pressure, mobility, slicing'},
+              {cat:'Pinning', icon:'⊕', accent:'#e8621a', bg:'#1a1205', desc:'Side control, mount, back'},
+              {cat:'Submission', icon:'✦', accent:'#e84747', bg:'#1a0808', desc:'Strangles, joint locks, finishes'}
+            ].map(c=>{
+              const techCount = (TECHNIQUES[c.cat]||[]).length + (DEFENSE_TECHNIQUES[c.cat]||[]).length;
+              // Highlight the archetype's primary position
+              const archPhases = {BERSERKER:'Pinning',ROGUE:'Guard',BATTLERAGER:'Takedown',WARLOCK:'Submission'};
+              const isSuggested = archPhases[(stCurrentResultData?.archetype||'').toUpperCase()] === c.cat;
+              return `
+              <div onclick="openGrimoireCategory('${c.cat}')" style="background:linear-gradient(145deg,${c.bg},#0e0a1a);border:1px solid ${isSuggested ? ad.color+'66' : c.accent+'33'};border-radius:14px;padding:16px 14px 14px;cursor:pointer;position:relative;overflow:hidden;transition:all 0.2s${isSuggested ? ';box-shadow:0 0 20px '+ad.color+'15' : ''}">
+                ${isSuggested ? '<span style="position:absolute;top:8px;right:8px;font-family:\'Cinzel\',serif;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:'+ad.color+';background:'+ad.color+'18;padding:2px 8px;border-radius:8px">Your Style</span>' : ''}
+                <div style="font-size:26px;margin-bottom:8px">${c.icon}</div>
+                <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:#f4ead8;margin-bottom:3px">${c.cat}</div>
+                <div style="font-size:12px;color:rgba(198,196,223,0.35);line-height:1.35;margin-bottom:8px">${c.desc}</div>
+                <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:${c.accent};background:${c.accent}15;padding:3px 8px;border-radius:8px">${techCount} techniques</span>
+                <span class="material-symbols-outlined" style="position:absolute;bottom:14px;right:14px;font-size:16px;color:rgba(198,196,223,0.2)">chevron_right</span>
+              </div>`}).join('')}
           </div>
 
-          <!-- Collections -->
-          <div id="grimoire-collections" style="display:none"></div>
-
           <!-- Trending + community feed -->
-          <div style="font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:8px">Trending</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(198,196,223,0.35)">Trending</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:rgba(198,196,223,0.25);cursor:pointer">Recent <span class="material-symbols-outlined" style="font-size:14px">expand_more</span></span>
+          </div>
           <div id="grimoire-trending" style="display:flex;flex-direction:column;gap:8px">
             <div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Loading community content...</div>
           </div>
+
+          <!-- Collections — below trending, collapsed by default -->
+          <div id="grimoire-collections" style="display:none;margin-top:16px"></div>
 
           <!-- + Create buttons -->
           <div style="display:flex;gap:8px;margin-top:16px">
@@ -3627,13 +4131,17 @@ function openGameEditor(game, technique, phase, mode) {
     { k: 'round_length', label: 'Round Length' },
   ];
 
+  // Merge game_data (Supabase rows nest fields inside game_data) with top-level props
+  const gd = (game && game.game_data) ? game.game_data : {};
+  const merged = Object.assign({}, gd, game || {});
+
   let html = `
     <div class="game-editor-modal" onclick="event.stopPropagation();">
       <h2>${mode === 'edit' ? 'Edit Game' : 'Create Community Game'}</h2>
   `;
 
   fields.forEach(f => {
-    const value = game && game[f.k] ? game[f.k] : '';
+    const value = merged[f.k] || '';
     const isLarge = ['problem', 'continuous_goal', 'constraints', 'attention_cue', 'skill_emerges'].includes(f.k);
 
     html += `
@@ -3716,6 +4224,218 @@ function openCreateGameModal(technique, phase) {
   openGameEditor(null, technique, phase, 'create');
 }
 
+// ===== QUEST SETUP SCREEN =====
+let stActiveQuests = [];
+try { stActiveQuests = JSON.parse(localStorage.getItem('grimoire_quests') || '[]'); } catch(e){ stActiveQuests = []; }
+
+function showQuestSetup(){
+  const data = stCurrentResultData;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const quests = data?.active_quests || [];
+  if(!quests.length){
+    // No quests from Claude — skip to Grimoire
+    openSkillTree();
+    return;
+  }
+
+  // Hide result screen
+  document.getElementById('result').style.display = 'none';
+  const appWrap = document.querySelector('.app');
+  if(appWrap) appWrap.style.display = 'none';
+
+  // Remove old quest setup if exists
+  const old = document.getElementById('quest-setup-screen');
+  if(old) old.remove();
+
+  const questCardsHtml = quests.map((q,i) => {
+    const phaseIcons = {Standing:'⚔',Takedown:'⤵',Guard:'🛡',Passing:'↗',Pinning:'⊕',Submission:'✦'};
+    const icon = phaseIcons[q.phase] || '⚔';
+    return `
+    <div id="quest-setup-card-${i}" style="background:linear-gradient(145deg,#1a1520,#12101a);border:1px solid ${ad.color}44;border-radius:16px;padding:18px;margin-bottom:12px;transition:all 0.3s">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:44px;height:44px;border-radius:12px;background:${ad.color}18;border:1px solid ${ad.color}44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:${ad.color};margin-bottom:2px">Quest ${i+1}</div>
+          <div style="font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:#f4ead8;line-height:1.25">${q.quest_name}</div>
+        </div>
+      </div>
+      <div style="font-size:14px;color:#8a7e6e;line-height:1.5;margin-bottom:12px;font-style:italic">${q.description}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:${ad.color};background:${ad.color}15;border:1px solid ${ad.color}30;padding:3px 10px;border-radius:10px">${q.phase}</span>
+        <span style="font-size:11px;color:rgba(198,196,223,0.3)">·</span>
+        <span style="font-size:12px;color:rgba(198,196,223,0.35)">${q.sessions_target || 6} sessions</span>
+      </div>
+      ${q.techniques && q.techniques.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">${q.techniques.map(t => '<span style="font-family:\'Cinzel\',serif;font-size:7px;letter-spacing:0.06em;text-transform:uppercase;color:#6a6252;background:rgba(200,112,32,0.06);border:1px solid rgba(200,112,32,0.1);padding:2px 8px;border-radius:10px">'+t+'</span>').join('')}</div>` : ''}
+      <div style="display:flex;gap:8px">
+        <button onclick="acceptQuest(${i})" id="quest-accept-${i}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:${ad.color};border:none;border-radius:10px;font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#fff;cursor:pointer;transition:all 0.2s">
+          <span class="material-symbols-outlined" style="font-size:16px">check_circle</span> Accept
+        </button>
+        <button onclick="editQuestSetup(${i})" style="padding:10px 14px;background:transparent;border:1px solid rgba(200,150,10,0.2);border-radius:10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(198,196,223,0.4);cursor:pointer">
+          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">edit</span>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const screenHtml = `
+  <div id="quest-setup-screen" style="background:#0e0e0e;min-height:100vh;max-width:480px;margin:0 auto;padding:40px 24px 80px;animation:qIn 0.4s ease">
+    <div style="text-align:center;margin-bottom:8px">
+      <div style="width:52px;height:52px;border-radius:50%;background:${ad.color}18;border:1px solid ${ad.color}44;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <span class="material-symbols-outlined" style="font-size:26px;color:${ad.color}">flag</span>
+      </div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:clamp(22px,5.5vw,30px);color:#f4ead8;line-height:1.2;margin-bottom:6px">Your First Quests</div>
+      <div style="font-size:14px;color:rgba(198,196,223,0.35);line-height:1.5;max-width:340px;margin:0 auto;font-style:italic">Based on your answers, here's what to focus on first. Accept these quests or edit them to match your goals.</div>
+    </div>
+
+    <div style="margin:28px 0 20px" id="quest-setup-cards">
+      ${questCardsHtml}
+    </div>
+
+    <button onclick="addCustomQuestSetup()" style="width:100%;padding:12px;background:transparent;border:1px dashed rgba(200,150,10,0.2);border-radius:12px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.35);cursor:pointer;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:6px">
+      <span class="material-symbols-outlined" style="font-size:16px">add</span> Add your own quest
+    </button>
+
+    <button onclick="finishQuestSetup()" id="quest-setup-continue" style="width:100%;padding:16px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#1a1000;font-weight:700;border:none;cursor:pointer;background:linear-gradient(135deg,#ffe088 0%,#e9c349 40%,#c8900a 100%);clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);transition:filter 0.15s">
+      Explore Your Grimoire →
+    </button>
+
+    <div style="text-align:center;margin-top:14px">
+      <button onclick="skipQuestSetup()" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;color:rgba(198,196,223,0.25);background:none;border:none;cursor:pointer">Skip for now</button>
+    </div>
+  </div>`;
+
+  document.body.insertAdjacentHTML('beforeend', screenHtml);
+  window.scrollTo(0,0);
+}
+
+function acceptQuest(idx){
+  const data = stCurrentResultData;
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const quest = data?.active_quests?.[idx];
+  if(!quest) return;
+
+  // Mark as accepted
+  quest._accepted = true;
+
+  // Update button visually
+  const btn = document.getElementById('quest-accept-'+idx);
+  if(btn){
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">check</span> Accepted';
+    btn.style.background = '#2e8b57';
+    btn.style.pointerEvents = 'none';
+  }
+  const card = document.getElementById('quest-setup-card-'+idx);
+  if(card) card.style.borderColor = '#2e8b5766';
+}
+
+function editQuestSetup(idx){
+  const data = stCurrentResultData;
+  const quest = data?.active_quests?.[idx];
+  if(!quest) return;
+
+  const card = document.getElementById('quest-setup-card-'+idx);
+  if(!card) return;
+  const ad = stCurrentArchData || AD.BERSERKER;
+
+  // Replace card content with edit form
+  card.innerHTML = `
+    <div style="margin-bottom:10px">
+      <label style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.35);display:block;margin-bottom:4px">Quest Name</label>
+      <input id="quest-edit-name-${idx}" value="${quest.quest_name}" style="width:100%;background:#0e0a1a;border:1px solid rgba(200,150,10,0.2);color:#f4ead8;font-family:'Cinzel',serif;font-size:14px;padding:10px 12px;border-radius:8px;outline:none">
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.35);display:block;margin-bottom:4px">Description</label>
+      <input id="quest-edit-desc-${idx}" value="${quest.description}" style="width:100%;background:#0e0a1a;border:1px solid rgba(200,150,10,0.2);color:#c8bfb0;font-family:'Crimson Pro',serif;font-size:14px;padding:10px 12px;border-radius:8px;outline:none">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.35);display:block;margin-bottom:4px">Phase</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${['Standing','Takedown','Guard','Passing','Pinning','Submission'].map(p => `
+          <button onclick="document.querySelectorAll('#quest-edit-phases-${idx} button').forEach(b=>{b.style.background='transparent';b.style.borderColor='rgba(200,150,10,0.15)';b.style.color='rgba(198,196,223,0.35)'});this.style.background='${ad.color}22';this.style.borderColor='${ad.color}';this.style.color='${ad.color}';this.dataset.selected='true'" data-phase="${p}" ${p===quest.phase?`style="background:${ad.color}22;border:1px solid ${ad.color};color:${ad.color};padding:5px 10px;border-radius:10px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;cursor:pointer"` : `style="background:transparent;border:1px solid rgba(200,150,10,0.15);color:rgba(198,196,223,0.35);padding:5px 10px;border-radius:10px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;cursor:pointer"`}>${p}</button>
+        `).join('')}
+      </div>
+      <div id="quest-edit-phases-${idx}" style="display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="saveQuestEdit(${idx})" style="flex:1;padding:10px;background:${ad.color};border:none;border-radius:10px;font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#fff;cursor:pointer">Save</button>
+      <button onclick="showQuestSetup()" style="padding:10px 14px;background:transparent;border:1px solid rgba(200,150,10,0.2);border-radius:10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(198,196,223,0.4);cursor:pointer">Cancel</button>
+    </div>
+  `;
+}
+
+function saveQuestEdit(idx){
+  const data = stCurrentResultData;
+  const quest = data?.active_quests?.[idx];
+  if(!quest) return;
+
+  const nameEl = document.getElementById('quest-edit-name-'+idx);
+  const descEl = document.getElementById('quest-edit-desc-'+idx);
+  if(nameEl) quest.quest_name = nameEl.value;
+  if(descEl) quest.description = descEl.value;
+
+  // Find selected phase
+  const phaseBtn = document.querySelector('#quest-setup-card-'+idx+' button[data-phase][style*="background"]');
+  if(phaseBtn && phaseBtn.dataset.phase) quest.phase = phaseBtn.dataset.phase;
+
+  quest._accepted = true;
+  showQuestSetup(); // Re-render
+}
+
+function addCustomQuestSetup(){
+  const data = stCurrentResultData;
+  if(!data.active_quests) data.active_quests = [];
+  data.active_quests.push({
+    quest_name: 'My Custom Quest',
+    description: 'Describe what you want to work on',
+    phase: 'Guard',
+    techniques: [],
+    suggested_games: [],
+    sessions_target: 6,
+    _accepted: false
+  });
+  // Re-render
+  const old = document.getElementById('quest-setup-screen');
+  if(old) old.remove();
+  const appWrap = document.querySelector('.app');
+  if(appWrap) appWrap.style.display = 'none';
+  showQuestSetup();
+}
+
+function finishQuestSetup(){
+  const data = stCurrentResultData;
+  const quests = (data?.active_quests || []).filter(q => q._accepted);
+
+  // Save accepted quests — map to Codex-compatible schema
+  stActiveQuests = quests.map(q => ({
+    id: 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    technique: q.quest_name || (q.techniques||[])[0] || 'Focus Quest',
+    quest_name: q.quest_name,
+    description: q.description,
+    phase: q.phase,
+    techniques: q.techniques || [],
+    suggested_games: q.suggested_games || [],
+    sessions_target: q.sessions_target || 6,
+    created: Date.now(),
+    sessions: [],
+    totalLanded: 0,
+    totalAttempted: 0,
+    totalEscaped: 0,
+    totalSurvived: 0
+  }));
+  saveQuests();
+
+  // Remove quest setup screen and open skill tree
+  const screen = document.getElementById('quest-setup-screen');
+  if(screen) screen.remove();
+  openSkillTree();
+}
+
+function skipQuestSetup(){
+  const screen = document.getElementById('quest-setup-screen');
+  if(screen) screen.remove();
+  openSkillTree();
+}
+
 function openSkillTree(){
   if(!stCurrentResultData || !stCurrentArchData){
     const archKey = 'ROGUE';
@@ -3771,8 +4491,10 @@ function openSkillTree(){
       if(xpEl) xpEl.textContent = stTotalXp + ' XP';
       var heroProf = document.getElementById('codex-hero-profile');
       if(heroProf) heroProf.textContent = stUserProfile.name + (stUserProfile.belt !== 'white' ? ' · ' + stUserProfile.belt + ' belt' : '');
-      // Show chain tutorial on first open
-      showTutorialBanner('chain');
+      // Land on Grimoire tab (index 1) instead of Chain — let new users explore first
+      switchSTTab(1);
+      // Start guided tour for first-time users (after a short delay for DOM to render)
+      setTimeout(function(){ startGrimoireTour(); }, 600);
     }
   }, 100);
 }
@@ -3804,11 +4526,18 @@ function switchSTTab(idx){
   const tabKeys = ['chain','grimoire','quest','codex'];
   showTutorialBanner(tabKeys[idx]);
   if(idx===1){ renderGrimTagRow('grim-tag-row', stGrimoireTagFilters); loadGrimoireTrending(); loadCollections(); }
-  if(idx===2) renderQuestTab();
-  if(idx===0 && graphState.needsRedraw){
-    graphState.needsRedraw = false;
-    drawGraph();
-    renderGraphIcons();
+  if(idx===2){ renderQuestTab(); setTimeout(()=>{ const qc = document.getElementById('st-quest'); if(qc) showContextTip('open_quest_tab', qc); },600); }
+  if(idx===3){ setTimeout(()=>{ const cc = document.getElementById('st-codex'); if(cc) showContextTip('open_codex_tab', cc); },600); }
+  if(idx===0){
+    setTimeout(()=>{
+      var target = document.getElementById('fc-empty') || document.getElementById('fc-flow') || document.getElementById('fc-palette');
+      if(target) showContextTip('open_chain_tab', target);
+    }, 600);
+    if(graphState.needsRedraw){
+      graphState.needsRedraw = false;
+      drawGraph();
+      renderGraphIcons();
+    }
   }
 }
 
@@ -4082,7 +4811,8 @@ async function saveQuestCardToGrimoire(){
       attack_chains: stChainCards.map(c => ({
         title: c.title || 'Attack Chain',
         tags: c.tags || [],
-        steps: (c.steps||[]).map(s => ({technique: s.technique, phase: s.phase, note: s.note||''}))
+        steps: (c.steps||[]).map(s => ({technique: s.technique, phase: s.phase, note: s.note||''})),
+        video_url: c.video_url || ''
       })),
       roll_focus: stRollFocusItems.map(i => ({
         technique: i.technique || '',
@@ -4299,6 +5029,7 @@ async function onChainSearch(val){
             title: gd.chain_name || gd.game_name || g.technique || 'Chain',
             steps: gd.steps||[],
             tags: tags,
+            video_url: gd.video_url||'',
             creator: g.creator_name||'',
             upvotes: g.upvotes||0
           });
@@ -4342,7 +5073,7 @@ function selectChainFromSearch(idx){
   // Add to stChainCards if not already there
   const already = stChainCards.some(c => c.title === r.title);
   if(!already){
-    stChainCards.push({ title: r.title, tags: r.tags||[], steps: r.steps||[] });
+    stChainCards.push({ title: r.title, tags: r.tags||[], steps: r.steps||[], video_url: r.video_url||'' });
     renderChainCardList();
     updateSaveBtn();
     renderPrepareView();
@@ -4705,6 +5436,8 @@ function renderChainCard(card, questIdx){
   const stepCount = card.steps ? card.steps.length : 0;
   const preview = card.steps ? card.steps.map(s=>s.technique).join(' → ') : '';
   const ad = stCurrentArchData || AD.BERSERKER;
+  const videoHtml = card.video_url ? renderVideoThumb(card.video_url, false) : '';
+  const videoCompact = card.video_url ? renderVideoThumb(card.video_url, true) : '';
 
   // Build expanded steps HTML
   const stepsHtml = (card.steps||[]).map((s,i) => {
@@ -4732,6 +5465,7 @@ function renderChainCard(card, questIdx){
         </div>
         <div class="cc-title">${card.title || 'Untitled Chain'}</div>
         <div class="cc-subtitle">${preview}</div>
+        ${videoCompact ? '<div style="margin-top:6px">'+videoCompact+'</div>' : ''}
         <div class="cc-expand-hint">Tap to expand ↓</div>
       </div>
 
@@ -4742,6 +5476,7 @@ function renderChainCard(card, questIdx){
           <button onclick="event.stopPropagation();removeChainCard(${questIdx})" style="font-size:10px;color:rgba(198,196,223,0.15);cursor:pointer;padding:2px 4px;background:none;border:none;font-family:'Cinzel',serif;line-height:1">✕</button>
         </div>
         ${card.tags && card.tags.length ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">'+card.tags.map(t=>'<span class="cc-tag">'+t+'</span>').join('')+'</div>' : ''}
+        ${videoHtml ? '<div style="margin-bottom:12px">'+videoHtml+'</div>' : ''}
         ${stepsHtml}
         <div class="cc-action-row">
           <button onclick="collapseChainCard(${id})" style="font-size:9px;color:rgba(198,196,223,0.3);background:none;border:0.5px solid rgba(255,255,255,0.08);padding:6px 12px;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.08em;text-transform:uppercase;border-radius:4px">Collapse ↑</button>
@@ -5009,7 +5744,8 @@ function addCommunityGameFromQuest(gameData, phase){
       stChainCards.push({
         title: chainTitle,
         tags: gameData.tags || [],
-        steps: gameData.steps || []
+        steps: gameData.steps || [],
+        video_url: gameData.video_url || ''
       });
       renderChainCardList();
     }
@@ -7463,6 +8199,12 @@ async function openGrimoireCategory(cat){
   document.getElementById('grimoire-detail').style.display='none';
   document.getElementById('grimoire-discover').style.display='none';
 
+  // Contextual tip: first time opening a category
+  setTimeout(function(){
+    var catView = document.getElementById('grimoire-category');
+    if(catView) showContextTip('open_category', catView);
+  }, 500);
+
   const titleEl = document.getElementById('grimoire-cat-title');
   const countEl = document.getElementById('grimoire-cat-count');
   if(titleEl) titleEl.textContent=cat;
@@ -7569,7 +8311,7 @@ function renderCatTechList(cat){
 
   // Add technique button
   html += `
-    <div onclick="openAddTechniqueModal('${cat}')" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:none;border:1px dashed rgba(200,150,10,0.25);margin-top:12px;cursor:pointer">
+    <div id="grimoire-add-tech-btn" onclick="openAddTechniqueModal('${cat}')" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:none;border:1px dashed rgba(200,150,10,0.25);margin-top:12px;cursor:pointer">
       <span style="font-size:14px;color:rgba(200,150,10,0.6)">+</span>
       <span style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(200,150,10,0.5);font-family:'Cinzel',serif">Add Technique</span>
     </div>`;
@@ -7704,14 +8446,14 @@ function switchGrimoireView(view){
   const exploreView = document.getElementById('grimoire-explore-view');
   const foryouView = document.getElementById('grimoire-foryou-view');
   if(view==='explore'){
-    if(exploreBtn){ exploreBtn.style.background=ad.color; exploreBtn.style.color='#0e0e0e'; exploreBtn.style.border='none'; exploreBtn.style.fontWeight='600'; }
-    if(foryouBtn){ foryouBtn.style.background='#131313'; foryouBtn.style.color='rgba(198,196,223,0.35)'; foryouBtn.style.border='0.5px solid rgba(255,255,255,0.08)'; foryouBtn.style.fontWeight='400'; }
+    if(exploreBtn){ exploreBtn.style.color='#f4ead8'; exploreBtn.style.borderBottom='2px solid '+ad.color; }
+    if(foryouBtn){ foryouBtn.style.color='rgba(198,196,223,0.35)'; foryouBtn.style.borderBottom='2px solid transparent'; }
     if(exploreView) exploreView.style.display='block';
     if(foryouView) foryouView.style.display='none';
     renderGrimoireFeed();
   } else {
-    if(foryouBtn){ foryouBtn.style.background=ad.color; foryouBtn.style.color='#0e0e0e'; foryouBtn.style.border='none'; foryouBtn.style.fontWeight='600'; }
-    if(exploreBtn){ exploreBtn.style.background='#131313'; exploreBtn.style.color='rgba(198,196,223,0.35)'; exploreBtn.style.border='0.5px solid rgba(255,255,255,0.08)'; exploreBtn.style.fontWeight='400'; }
+    if(foryouBtn){ foryouBtn.style.color='#f4ead8'; foryouBtn.style.borderBottom='2px solid '+ad.color; }
+    if(exploreBtn){ exploreBtn.style.color='rgba(198,196,223,0.35)'; exploreBtn.style.borderBottom='2px solid transparent'; }
     if(exploreView) exploreView.style.display='none';
     if(foryouView) foryouView.style.display='block';
     loadForYouFeed();
@@ -7755,6 +8497,25 @@ async function loadGrimoireTrending(targetId){
       return;
     }
     el.innerHTML = clean.map(g => renderGrimoireCard(g)).join('');
+    // Contextual tips: show one at a time — eco game first, attack chain on next visit
+    setTimeout(function(){
+      var ecoCard = el.querySelector('[data-card-type="eco_game"] .eco-collapsed');
+      var chainCard = el.querySelector('[data-card-type="attack_chain"] .eco-collapsed');
+      var ecoSeen = localStorage.getItem('grimoire_ctx_see_eco_game') === 'true';
+      // Show eco game tip first; once dismissed, attack chain shows next time
+      if(ecoCard && !ecoSeen){
+        showContextTip('see_eco_game', ecoCard);
+      } else if(chainCard){
+        showContextTip('see_attack_chain', chainCard);
+      }
+      // Quest match tooltip (staggered so it doesn't overlap)
+      var questCard = el.querySelector('[data-quest-match]');
+      if(questCard){
+        var qName = questCard.getAttribute('data-quest-match');
+        if(qName) CTX_TIPS.quest_match.text = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;color:#c8960a">target</span>This matches your quest: <strong>' + qName + '</strong>. Add it to your Quest Card to practice it in your next session.';
+        setTimeout(function(){ showContextTip('quest_match', questCard); }, 400);
+      }
+    }, 800);
   } catch(e){
     el.innerHTML = '<div style="font-size:10px;color:rgba(198,196,223,0.2);font-style:italic;font-family:serif">Browse categories above to explore techniques</div>';
   }
@@ -7762,8 +8523,8 @@ async function loadGrimoireTrending(targetId){
 
 // --- COLLECTIONS ---
 let stCollections = [];
-let stCollectionsCollapsed = false; // persisted toggle state
-try { stCollectionsCollapsed = localStorage.getItem('grimoire_collections_collapsed') === 'true'; } catch(e){}
+let stCollectionsCollapsed = true; // default collapsed for cleaner first impression
+try { var _cc = localStorage.getItem('grimoire_collections_collapsed'); if(_cc !== null) stCollectionsCollapsed = _cc === 'true'; } catch(e){}
 
 function toggleCollections(){
   stCollectionsCollapsed = !stCollectionsCollapsed;
@@ -8054,7 +8815,7 @@ function addCollectionToQuest(){
       var chainTitle = gd.chain_name || gd.game_name;
       var alreadyHasChain = stChainCards.some(function(c){ return c.title === chainTitle; });
       if(!alreadyHasChain){
-        stChainCards.push({ title: chainTitle, tags: gd.tags || game.tags || [], steps: gd.steps || [] });
+        stChainCards.push({ title: chainTitle, tags: gd.tags || game.tags || [], steps: gd.steps || [], video_url: gd.video_url || '' });
         added++; addedChains++;
       }
     } else {
@@ -8273,6 +9034,15 @@ async function loadForYouFeed(){
     });
     scored.sort((a,b) => b.score - a.score);
     el.innerHTML = scored.map(s => renderGrimoireCard(s.game)).join('');
+    // Quest match tooltip in ForYou feed
+    setTimeout(function(){
+      var questCard = el.querySelector('[data-quest-match]');
+      if(questCard){
+        var qName = questCard.getAttribute('data-quest-match');
+        if(qName) CTX_TIPS.quest_match.text = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;color:#c8960a">target</span>This matches your quest: <strong>' + qName + '</strong>. Add it to your Quest Card to practice it in your next session.';
+        showContextTip('quest_match', questCard);
+      }
+    }, 1000);
   } catch(e){
     el.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:12px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic">Connect to explore community content</div></div>';
   }
@@ -8417,27 +9187,60 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
 
   const editBtnHtml = `<button class="eco-collapse-btn" onclick="event.stopPropagation();ecoCardEdit(${id})" style="color:#c8a84b">✎ Edit</button>`;
 
+  // Check if card matches any Active Quest
+  const questMatchName = (function(){
+    if(!stActiveQuests || !stActiveQuests.length) return '';
+    const cardPhase = (phase||'').toLowerCase();
+    const cardTechs = (chainSteps||[]).map(s=>(s.technique||'').toLowerCase()).concat([(g.technique||'').toLowerCase(), name.toLowerCase()]);
+    for(var qi=0; qi<stActiveQuests.length; qi++){
+      var q = stActiveQuests[qi];
+      var qName = q.quest_name || q.technique || 'Quest';
+      var qPhase = (q.phase||'').toLowerCase();
+      var qTechs = (q.techniques||[]).map(t=>t.toLowerCase());
+      // Also match against the quest technique name itself
+      if(q.technique) qTechs.push(q.technique.toLowerCase());
+      if(qPhase && cardPhase === qPhase) return qName;
+      for(var ti=0; ti<qTechs.length; ti++){
+        for(var ci=0; ci<cardTechs.length; ci++){
+          if(cardTechs[ci] && qTechs[ti] && cardTechs[ci].includes(qTechs[ti])) return qName;
+        }
+      }
+    }
+    return '';
+  })();
+
   return `
-    <div id="eco-card-${id}">
-      <!-- COLLAPSED STATE — mockup-inspired card -->
+    <div id="eco-card-${id}" data-card-type="${effectiveCardType}" ${questMatchName ? 'data-quest-match="'+questMatchName.replace(/"/g,'&quot;')+'"' : ''}>
+      <!-- COLLAPSED STATE — redesigned card with benefit line -->
       <div class="eco-collapsed" id="eco-col-${id}" onclick="expandEcoCard(${id})">
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:${cardTypeColor};background:${cardTypeColor}15;padding:3px 8px;border-radius:10px;border:1px solid ${cardTypeColor}30;flex-shrink:0">${cardTypeLabel}</span>
-              <div style="font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:#e8e0d4;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:${cardTypeColor};background:rgba(${effectiveCardType === 'attack_chain' ? '200,168,75' : '46,139,87'},0.1);border:1px solid rgba(${effectiveCardType === 'attack_chain' ? '200,168,75' : '46,139,87'},0.2);padding:2px 8px;border-radius:10px">${phase}</span>
-              ${g.technique && g.technique !== phase ? `<span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:#8a7e6e;background:rgba(106,98,82,0.1);border:1px solid rgba(106,98,82,0.15);padding:2px 8px;border-radius:10px">${g.technique}</span>` : ''}
-              ${(function(){ var t = g.tags || gd.tags || []; if(!Array.isArray(t) || t.length === 0) return ''; var phaseLower = (phase||'').toLowerCase(); var techLower = (g.technique||'').toLowerCase(); var filtered = t.filter(function(tag){ var tl = tag.toLowerCase(); return tl !== phaseLower && tl !== techLower; }); return filtered.slice(0,2).map(function(tag){ return '<span style="font-family:\'Cinzel\',serif;font-size:7px;letter-spacing:0.06em;text-transform:uppercase;color:#6a6252;background:rgba(200,112,32,0.06);border:1px solid rgba(200,112,32,0.12);padding:2px 7px;border-radius:10px">'+tag+'</span>'; }).join(''); })()}
-            </div>
-            ${problem ? `<div style="font-size:12px;color:#7a6e5e;line-height:1.4;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${problem}</div>` : ''}
+        <!-- Card type badge + video icon row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="display:flex;align-items:center;gap:5px;font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;border-radius:6px;color:${effectiveCardType === 'attack_chain' ? '#c87020' : effectiveCardType === 'quest_card' ? '#28a8d8' : '#e8b828'};background:${effectiveCardType === 'attack_chain' ? 'rgba(200,112,32,0.12)' : effectiveCardType === 'quest_card' ? 'rgba(40,168,216,0.12)' : 'rgba(232,184,40,0.12)'}"><span class="material-symbols-outlined" style="font-size:13px">${effectiveCardType === 'attack_chain' ? 'link' : effectiveCardType === 'quest_card' ? 'assignment' : 'sports_martial_arts'}</span>${effectiveCardType === 'attack_chain' ? 'Attack Chain' : effectiveCardType === 'quest_card' ? 'Quest Card' : 'Eco Game'}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${saveBtnHtml ? `<span onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#c87020;background:rgba(200,112,32,0.1);border:1px solid rgba(200,112,32,0.2);padding:4px 10px;border-radius:10px;cursor:pointer">+ Grimoire</span>` : ''}
+            ${videoUrl ? `<div onclick="event.stopPropagation()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer"><span class="material-symbols-outlined" style="font-size:14px;color:rgba(198,196,223,0.35)">play_circle</span></div>` : ''}
           </div>
-          ${saveBtnHtml ? `<span onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#c87020;background:rgba(200,112,32,0.1);border:1px solid rgba(200,112,32,0.2);padding:5px 10px;border-radius:10px;flex-shrink:0;cursor:pointer">+ Grimoire</span>` : ''}
-          <span style="font-size:11px;color:#3a3445;flex-shrink:0;margin-top:4px">▾</span>
         </div>
-        ${videoThumbCompact ? '<div style="margin-top:10px">'+videoThumbCompact+'</div>' : ''}
+        <!-- Card name -->
+        <div style="font-family:'Cinzel',serif;font-size:17px;font-weight:700;color:#e8e0d4;line-height:1.25;margin-bottom:${questMatchName ? '6' : '8'}px">${name}</div>
+        ${questMatchName ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:5px 10px;background:rgba(200,150,10,0.08);border:1px solid rgba(200,150,10,0.15);border-radius:8px"><span class="material-symbols-outlined" style="font-size:14px;color:#c8960a">target</span><span style="font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#c8960a">Matches: ${questMatchName}</span></div>` : ''}
+        <!-- Benefit line — skill_emerges pulled up from expanded view -->
+        ${skill ? `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:rgba(200,150,10,0.05);border-left:2px solid ${ad.color};border-radius:0 8px 8px 0;margin-bottom:10px">
+          <span style="font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:0.08em;color:${ad.color};white-space:nowrap;margin-top:1px">Develops:</span>
+          <span style="font-size:13px;color:#c8bfb0;line-height:1.4;font-style:italic">${skill}</span>
+        </div>` : (problem ? `<div style="font-size:13px;color:#7a6e5e;line-height:1.4;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-style:italic">${problem}</div>` : '')}
+        <!-- Tags — demoted, smaller -->
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px">
+          <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.06em;text-transform:uppercase;color:${cardTypeColor};background:${cardTypeColor}12;border:1px solid ${cardTypeColor}25;padding:2px 8px;border-radius:10px">${phase}</span>
+          ${g.technique && g.technique !== phase ? `<span style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.06em;text-transform:uppercase;color:#6a6252;background:rgba(106,98,82,0.08);border:1px solid rgba(106,98,82,0.12);padding:2px 7px;border-radius:10px">${g.technique}</span>` : ''}
+          ${(function(){ var t = g.tags || gd.tags || []; if(!Array.isArray(t) || t.length === 0) return ''; var phaseLower = (phase||'').toLowerCase(); var techLower = (g.technique||'').toLowerCase(); var filtered = t.filter(function(tag){ var tl = tag.toLowerCase(); return tl !== phaseLower && tl !== techLower; }); return filtered.slice(0,2).map(function(tag){ return '<span style="font-family:\'Cinzel\',serif;font-size:7px;letter-spacing:0.06em;text-transform:uppercase;color:#5a5248;background:rgba(200,112,32,0.06);border:1px solid rgba(200,112,32,0.1);padding:2px 7px;border-radius:10px">'+tag+'</span>'; }).join(''); })()}
+        </div>
+        <!-- Expand hint with fade gradient -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0 2px;position:relative">
+          <div style="position:absolute;top:-12px;left:-12px;right:-12px;height:14px;background:linear-gradient(to top,rgba(19,19,19,1) 0%,transparent 100%);pointer-events:none"></div>
+          <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(198,196,223,0.25)">Tap for details</span>
+          <span class="material-symbols-outlined" style="font-size:16px;color:rgba(198,196,223,0.25)">expand_more</span>
+        </div>
       </div>
 
       <!-- EXPANDED STATE — swipeable sections -->
@@ -8512,6 +9315,29 @@ function expandEcoCard(id){
   ecoSwipeTo(id, 0, 99);
   // Track view engagement
   trackEngagement(ecoCardGameRegistry[id], 'view');
+  // Dismiss any existing contextual tip so card tips can take over
+  var existingTip = document.querySelector('.ctx-tip');
+  if(existingTip){
+    var tipId = existingTip.id.replace('ctx-tip-','');
+    dismissContextTip(tipId);
+  }
+  _ctxTipQueue = []; // clear any old queue
+  // Build a queue of contextual tips for this card — shown one at a time
+  setTimeout(()=>{
+    const tips = [];
+    const questBtn = document.querySelector('#eco-exp-'+id+' .eco-quest-btn');
+    if(questBtn) tips.push({key:'expand_card', el:questBtn});
+    const videoEl = document.querySelector('#eco-exp-'+id+' a[href*="youtu"], #eco-exp-'+id+' a[href*="instagram"], #eco-exp-'+id+' a[href*="tiktok"]');
+    if(videoEl) tips.push({key:'see_video', el:videoEl});
+    const actionRow = document.querySelector('#eco-exp-'+id+' .eco-action-row');
+    if(actionRow) tips.push({key:'see_upvotes', el:actionRow});
+    // Filter out already-seen tips
+    const pending = tips.filter(t => localStorage.getItem('grimoire_ctx_'+t.key) !== 'true');
+    if(pending.length > 0){
+      _ctxTipQueue = pending;
+      showContextTip(pending[0].key, pending[0].el);
+    }
+  }, 600);
 }
 
 function collapseEcoCard(id){
@@ -8616,12 +9442,186 @@ function ecoCardAddToQuest(id){
   // Registry may store raw Supabase row (game_data nested) or flat game object
   const gd = game.game_data || game;
   addCommunityGameFromQuest(gd, game.phase || gd.phase || '');
+  // Contextual tip: first time adding to quest
+  setTimeout(function(){
+    var questTab = document.getElementById('st-tab-2');
+    if(questTab) showContextTip('add_to_quest', questTab);
+  }, 600);
 }
 
 function ecoCardEdit(id){
   const game = ecoCardGameRegistry[id];
   if(!game) return;
-  openGameEditor(game, game.game_name || 'Game', game.phase || '', 'edit');
+  // Merge game_data for card_type detection (Supabase rows nest data inside game_data)
+  const gd = game.game_data || {};
+  const effectiveCardType = game.card_type || gd.card_type || 'eco_game';
+  const hasSteps = Array.isArray(game.steps || gd.steps) && (game.steps || gd.steps).length > 0;
+
+  if(effectiveCardType === 'attack_chain' || hasSteps){
+    openChainEditFromGrimoire(game);
+  } else {
+    openGameEditor(game, game.game_name || gd.game_name || 'Game', game.phase || gd.phase || '', 'edit');
+  }
+}
+
+// --- EDIT EXISTING CHAIN FROM GRIMOIRE ---
+var _grimEditChain = null; // temp state for chain being edited from Grimoire
+
+function openChainEditFromGrimoire(game){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const editor = document.getElementById('chain-editor-screen');
+  if(!editor) return;
+
+  const gd = game.game_data || {};
+  const merged = Object.assign({}, gd, game);
+  const steps = merged.steps || [];
+  const title = merged.chain_name || merged.game_name || '';
+  const videoUrl = merged.video_url || gd.video_url || '';
+  const existingTags = merged.tags || gd.tags || [];
+
+  // Store for save function
+  _grimEditChain = { game: game, steps: steps.slice() };
+
+  if(steps.length === 0){ showToast('No chain steps found'); return; }
+
+  const allPhases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  const usedPhases = [...new Set(steps.map(function(s){ return s.phase; }))];
+  const hasDef = steps.some(function(s){ return s.stance === 'defense'; });
+  const archName = stCurrentResultData?.archetype || ad.name;
+  const levels = ['Beginner','Intermediate','Advanced'];
+  const defTags = ['Defense','Escape','Retention','Guard Recovery'];
+
+  // Normalize tag list for pre-selection
+  const tagSet = new Set((Array.isArray(existingTags) ? existingTags : []).map(function(t){ return t.toLowerCase(); }));
+
+  const stepsHtml = steps.map(function(s, i){
+    const isLast = i === steps.length - 1;
+    const isDef = s.stance === 'defense';
+    const dotColor = isDef ? '#8a9bb5' : (isLast ? '#4aaa28' : '');
+    const stanceTag = isDef ? '<span style="font-size:7px;letter-spacing:0.06em;text-transform:uppercase;color:#8a9bb5;background:rgba(138,155,181,0.1);border:0.5px solid rgba(138,155,181,0.25);padding:1px 5px;border-radius:8px;margin-left:6px">DEF</span>' : '';
+    return '<div class="ce-step" data-step-idx="' + i + '">'
+      + '<div class="ce-step-left">'
+      + '<div class="ce-step-dot' + (isLast && !isDef ? ' green' : '') + '" ' + (dotColor ? 'style="background:' + dotColor + ';box-shadow:0 0 6px ' + dotColor + '44"' : '') + '></div>'
+      + (!isLast ? '<div class="ce-step-line" ' + (isDef ? 'style="background:rgba(138,155,181,0.2)"' : '') + '></div>' : '')
+      + '</div>'
+      + '<div class="ce-step-content">'
+      + '<div class="ce-step-name">' + (s.technique || '') + stanceTag + '</div>'
+      + '<div class="ce-step-phase">' + (s.phase || '') + (isDef ? ' · Defense' : '') + '</div>'
+      + '<textarea class="ce-note" data-step="' + i + '" placeholder="Add a note — how do you get here?">' + (s.note || '') + '</textarea>'
+      + '</div></div>';
+  }).join('');
+
+  function isTagSelected(tag){
+    var tl = tag.toLowerCase();
+    return tagSet.has(tl) || usedPhases.includes(tag) || (tag === archName) || (tag === 'Defense' && hasDef);
+  }
+
+  editor.innerHTML = '<div class="ce-back" onclick="closeChainCardEditor()">'
+    + '<span class="ce-back-arrow">\u2190</span>'
+    + '<span class="ce-back-label">Edit Chain</span>'
+    + '</div>'
+    + '<div class="ce-body">'
+    + '<input class="ce-title-input" id="ce-title" placeholder="Name your attack chain..." value="' + title.replace(/"/g, '&quot;') + '" />'
+    + '<input id="ce-video-url" placeholder="Video link — YouTube, Instagram, or TikTok" value="' + (videoUrl || '').replace(/"/g, '&quot;') + '" style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:Crimson Pro,serif;font-size:11px;padding:8px 12px;outline:none;margin-bottom:10px" oninput="updateVideoPreview()" />'
+    + '<div id="ce-video-preview"></div>'
+    + '<div class="ce-tags" id="ce-tags">'
+    + allPhases.map(function(p){ return '<span class="ce-tag' + (isTagSelected(p) ? ' selected' : '') + '" onclick="toggleCeTag(this)">' + p + '</span>'; }).join('')
+    + ['Berserker','Rogue','Battlerager','Warlock'].map(function(a){ return '<span class="ce-tag' + (isTagSelected(a) ? ' selected' : '') + '" onclick="toggleCeTag(this)">' + a + '</span>'; }).join('')
+    + levels.map(function(l){ return '<span class="ce-tag' + (isTagSelected(l) ? ' selected' : '') + '" onclick="toggleCeTag(this)">' + l + '</span>'; }).join('')
+    + defTags.map(function(d){ return '<span class="ce-tag' + (isTagSelected(d) ? ' selected' : '') + '" onclick="toggleCeTag(this)">' + d + '</span>'; }).join('')
+    + '<span style="display:inline-flex;align-items:center"><input class="ce-custom-tag-input" placeholder="+ add tag" onkeydown="handleTagKeydown(event)" style="width:72px;font-size:9px;padding:4px 8px;border-radius:16px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:#f4ead8;font-family:Crimson Pro,serif;outline:none" /></span>'
+    + '</div>'
+    + '<div class="ce-section-label">Sequence + notes</div>'
+    + '<div style="margin-bottom:16px">' + stepsHtml + '</div>'
+    + '</div>'
+    + '<div class="ce-save-row">'
+    + '<button class="ce-btn-save" onclick="saveChainEditFromGrimoire()">Save Changes</button>'
+    + '<button class="ce-btn-share" onclick="addGrimChainEditToQuest()">+ Add to Quest</button>'
+    + '</div>';
+
+  editor.style.display = 'block';
+  editor.scrollTop = 0;
+
+  // Render video preview if URL exists
+  if(videoUrl) setTimeout(function(){ if(typeof updateVideoPreview === 'function') updateVideoPreview(); }, 50);
+}
+
+function _getGrimChainEditorData(){
+  if(!_grimEditChain) return null;
+  var title = (document.getElementById('ce-title')?.value || '').trim();
+  var tags = [...document.querySelectorAll('#ce-tags .ce-tag.selected')].map(function(t){ return t.textContent.trim(); });
+  var notes = [...document.querySelectorAll('.ce-note')].map(function(n){ return {step: parseInt(n.dataset.step), note: n.value.trim()}; });
+  var steps = _grimEditChain.steps.slice();
+  notes.forEach(function(n){ if(steps[n.step]) steps[n.step].note = n.note; });
+  var video_url = (document.getElementById('ce-video-url')?.value || '').trim();
+  return {title: title, tags: tags, steps: steps, video_url: video_url};
+}
+
+async function saveChainEditFromGrimoire(){
+  var data = _getGrimChainEditorData();
+  if(!data || !data.title){ showToast('Please name your attack chain'); return; }
+  if(!sbClient){ showToast('Not connected to community'); return; }
+
+  var game = _grimEditChain.game;
+  var gameId = game.id;
+
+  var gameData = {
+    card_type: 'attack_chain',
+    game_name: data.title,
+    chain_name: data.title,
+    steps: data.steps,
+    video_url: data.video_url || ''
+  };
+
+  try {
+    if(gameId && typeof gameId === 'string' && gameId.length > 8){
+      // Update existing Supabase row
+      var { error } = await sbClient.from('community_games').update({
+        technique: data.steps.map(function(s){ return s.technique; }).join(' \u2192 '),
+        tags: data.tags.map(function(t){ return t.toLowerCase(); }),
+        game_data: gameData
+      }).eq('id', gameId);
+      if(error){ showToast('Save error: ' + error.message); return; }
+      showToast('Chain updated');
+    } else {
+      // Insert new if no Supabase ID
+      var ad = stCurrentArchData || AD.BERSERKER;
+      var profile = stUserProfile || {};
+      var { error } = await sbClient.from('community_games').insert({
+        technique: data.steps.map(function(s){ return s.technique; }).join(' \u2192 '),
+        phase: data.steps[0]?.phase || 'General',
+        tags: data.tags.map(function(t){ return t.toLowerCase(); }),
+        game_data: gameData,
+        creator_name: profile.name || ad.name + ' Player',
+        creator_belt: profile.belt || 'white',
+        creator_archetype: ad.name,
+        creator_chain: (stCurrentResultData?.chain || []).map(function(c){ return c.technique; }),
+        upvotes: 0, usage_count: 0
+      });
+      if(error){ showToast('Save error: ' + error.message); return; }
+      showToast('Chain saved to Grimoire');
+    }
+    closeChainCardEditor();
+    _grimEditChain = null;
+  } catch(e){
+    showToast('Error: ' + (e.message || e));
+  }
+}
+
+function addGrimChainEditToQuest(){
+  var data = _getGrimChainEditorData();
+  if(!data || !data.title){ showToast('Please name your chain first'); return; }
+
+  var alreadyHas = stChainCards.some(function(c){ return c.title === data.title; });
+  if(!alreadyHas){
+    stChainCards.push({ title: data.title, tags: data.tags, steps: data.steps, video_url: data.video_url || '' });
+  }
+  renderChainCardList();
+  updateSaveBtn();
+  closeChainCardEditor();
+  _grimEditChain = null;
+  stDrillType = 'chain';
+  switchSTTab(2);
 }
 
 function openGrimoireCreate(){
@@ -9994,7 +10994,8 @@ function addChainCardToQuest(type){
       stChainCards.push({
         title: data.title,
         tags: data.tags,
-        steps: data.steps
+        steps: data.steps,
+        video_url: data.video_url || ''
       });
     }
     renderChainCardList();
@@ -10044,7 +11045,7 @@ function awardXp(amount, reason){
 }
 
 // --- ACTIVE QUESTS SYSTEM ---
-let stActiveQuests = []; // up to 3
+// stActiveQuests declared earlier (quest setup section)
 let stCompletedQuests = [];
 
 function loadQuests(){
@@ -12015,6 +13016,8 @@ function updateOracleButton(){
       });
       countEl.textContent = edgeLabels.join(' \u00b7 ');
     }
+    // Contextual tip: first time making a connection — explain Oracle eco game generation
+    setTimeout(()=>{ if(cta) showContextTip('chain_connected', cta); }, 500);
   } else if(graphState.selected && gn[graphState.selected]){
     // Single node selected, no edges — show single focus label
     const n = gn[graphState.selected];

@@ -1410,6 +1410,12 @@ function showApiKeyModal(){
         <input type="password" id="api-key-direct" placeholder="sk-ant-..." style="width:100%;background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:#f4ead8;font-size:11px;padding:8px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px;box-sizing:border-box"/>
         <button onclick="saveDirectKey()" style="width:100%;padding:8px;background:none;border:0.5px solid rgba(255,255,255,0.08);font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.3);cursor:pointer">Save own key</button>
       </div>
+      <div style="margin-top:10px;border-top:0.5px solid rgba(255,255,255,0.05);padding-top:10px">
+        <div style="font-size:8px;color:rgba(198,196,223,0.25);margin-bottom:2px">Voice input (optional):</div>
+        <div style="font-size:7px;color:rgba(198,196,223,0.15);margin-bottom:6px;line-height:1.4">Add an OpenAI key for accurate voice-to-text using Whisper. Works much better on mobile.</div>
+        <input type="password" id="openai-key-input" placeholder="sk-..." value="${localStorage.getItem('grimoire_openai_key')||''}" style="width:100%;background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:#f4ead8;font-size:11px;padding:8px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px;box-sizing:border-box"/>
+        <button onclick="saveOpenAIKey()" style="width:100%;padding:8px;background:none;border:0.5px solid rgba(255,255,255,0.08);font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.3);cursor:pointer">Save voice key</button>
+      </div>
     </div>`;
   document.body.appendChild(modal);
 }
@@ -1448,6 +1454,157 @@ function saveDirectKey(){
 function clearApiKey(){
   localStorage.removeItem('grimoire_api_key');
   showToast('Oracle key cleared');
+}
+
+function saveOpenAIKey(){
+  var input = document.getElementById('openai-key-input');
+  if(!input) return;
+  var key = input.value.trim();
+  if(!key){
+    localStorage.removeItem('grimoire_openai_key');
+    showToast('Voice key removed');
+    return;
+  }
+  if(!key.startsWith('sk-')){
+    input.style.border = '0.5px solid #c0392b';
+    return;
+  }
+  localStorage.setItem('grimoire_openai_key', key);
+  showToast('Voice key saved — Whisper enabled');
+}
+
+function getOpenAIKey(){
+  return localStorage.getItem('grimoire_openai_key') || null;
+}
+
+// ─── WHISPER VOICE TRANSCRIPTION (MediaRecorder + OpenAI) ────
+let _whisperRecorder = null;
+let _whisperChunks = [];
+let _whisperActive = false;
+let _whisperTimerIv = null;
+let _whisperStart = 0;
+
+function hasWhisper(){ return !!getOpenAIKey(); }
+
+async function whisperTranscribe(audioBlob){
+  var key = getOpenAIKey();
+  if(!key) return null;
+
+  var formData = new FormData();
+  formData.append('file', audioBlob, 'voice.webm');
+  formData.append('model', 'whisper-1');
+  formData.append('language', 'en');
+  // BJJ-specific prompt helps Whisper with terminology
+  formData.append('prompt', 'BJJ jiu-jitsu grappling guard mount submission armbar kimura triangle choke sweep pass underhook overhook collar tie double leg single leg takedown half guard closed guard open guard butterfly guard de la riva berimbolo');
+
+  try {
+    var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key },
+      body: formData
+    });
+    if(!r.ok){
+      var errData = await r.json().catch(function(){ return {}; });
+      console.error('[Whisper] API error:', r.status, errData);
+      return null;
+    }
+    var data = await r.json();
+    return data.text || null;
+  } catch(e){
+    console.error('[Whisper] transcription error:', e);
+    return null;
+  }
+}
+
+function startWhisperRecording(onComplete, overlayConfig){
+  if(_whisperActive){ stopWhisperRecording(); return; }
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showToast('Microphone not available in this browser');
+    return;
+  }
+
+  _whisperActive = true;
+  _whisperChunks = [];
+  _whisperStart = Date.now();
+
+  // Update UI if overlay config provided
+  if(overlayConfig){
+    var micBtn = document.getElementById(overlayConfig.micBtnId);
+    var statusEl = document.getElementById(overlayConfig.statusId);
+    var timerEl = document.getElementById(overlayConfig.timerId);
+    if(micBtn){ micBtn.style.borderColor = '#e84747'; micBtn.style.animation = 'voicePulse 1.5s ease-in-out infinite'; }
+    if(statusEl) statusEl.innerHTML = '<span style="color:#e9c349">Recording... tap mic to stop</span>';
+    if(timerEl) timerEl.textContent = '0:00';
+
+    _whisperTimerIv = setInterval(function(){
+      var secs = Math.floor((Date.now() - _whisperStart) / 1000);
+      var m = Math.floor(secs / 60);
+      var s = secs % 60;
+      if(timerEl) timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    }, 1000);
+  }
+
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+    // Prefer webm/opus, fall back to whatever is available
+    var mimeType = 'audio/webm;codecs=opus';
+    if(!MediaRecorder.isTypeSupported(mimeType)){
+      mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+    }
+
+    _whisperRecorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : {});
+    _whisperRecorder.ondataavailable = function(e){
+      if(e.data.size > 0) _whisperChunks.push(e.data);
+    };
+    _whisperRecorder.onstop = async function(){
+      // Stop all tracks to release mic
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      if(_whisperTimerIv){ clearInterval(_whisperTimerIv); _whisperTimerIv = null; }
+
+      if(_whisperChunks.length === 0){
+        if(onComplete) onComplete(null);
+        return;
+      }
+
+      var blob = new Blob(_whisperChunks, { type: mimeType || 'audio/webm' });
+      _whisperChunks = [];
+
+      // Update UI to show transcribing state
+      if(overlayConfig){
+        var statusEl = document.getElementById(overlayConfig.statusId);
+        if(statusEl) statusEl.innerHTML = '<span style="color:#e9c349"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;animation:voicePulse 1s ease-in-out infinite">sync</span> Transcribing...</span>';
+      }
+
+      var text = await whisperTranscribe(blob);
+      if(onComplete) onComplete(text);
+    };
+
+    _whisperRecorder.start(1000); // collect chunks every second
+
+    // Auto-stop after 60 seconds
+    setTimeout(function(){
+      if(_whisperActive) stopWhisperRecording();
+    }, 60000);
+
+  }).catch(function(e){
+    console.error('[Whisper] mic access error:', e);
+    _whisperActive = false;
+    if(overlayConfig){
+      var statusEl = document.getElementById(overlayConfig.statusId);
+      if(statusEl) statusEl.innerHTML = '<span style="color:#e84747">Mic access denied. Use the text box instead.</span>';
+      var micBtn = document.getElementById(overlayConfig.micBtnId);
+      if(micBtn){ micBtn.style.borderColor = ''; micBtn.style.animation = 'none'; }
+    }
+    showToast('Microphone access denied');
+  });
+}
+
+function stopWhisperRecording(){
+  _whisperActive = false;
+  if(_whisperRecorder && _whisperRecorder.state !== 'inactive'){
+    try { _whisperRecorder.stop(); } catch(e){}
+  }
+  _whisperRecorder = null;
 }
 
 function showProfileEditor(){
@@ -6584,6 +6741,10 @@ let _oracleVoiceTranscript = '';
 let _oracleVoiceContext = null;
 let _oracleVoiceTimerIv = null;
 let _oracleVoiceStart = 0;
+let _oracleVoiceUsingWhisper = false;
+let _oracleWhisperRecorder = null;
+let _oracleWhisperStream = null;
+let _oracleWhisperMime = '';
 
 function oracleVoiceRecord(source, techName, arch, phase){
   if(_oracleVoiceActive){
@@ -6591,23 +6752,13 @@ function oracleVoiceRecord(source, techName, arch, phase){
     return;
   }
 
-  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRec){
-    showToast('Speech recognition not supported. Try Chrome.');
-    return;
-  }
-
   _oracleVoiceContext = {source:source, techName:techName, arch:arch, phase:phase};
   _oracleVoiceTranscript = '';
   _oracleVoiceActive = true;
   _oracleVoiceStart = Date.now();
+  _oracleVoiceUsingWhisper = false;
 
-  _oracleVoiceRec = new SpeechRec();
-  _oracleVoiceRec.continuous = true;
-  _oracleVoiceRec.interimResults = true;
-  _oracleVoiceRec.lang = 'en-US';
-
-  // Show overlay — ensure it's a direct child of body (it may be inside div.app which is display:none)
+  // Show overlay — ensure it's a direct child of body
   var overlay = document.getElementById('oracle-voice-overlay');
   if(overlay && overlay.parentElement !== document.body) document.body.appendChild(overlay);
   var interimEl = document.getElementById('oracle-voice-interim');
@@ -6616,13 +6767,124 @@ function oracleVoiceRecord(source, techName, arch, phase){
   if(interimEl) interimEl.textContent = 'Speak your request...';
   if(timerEl) timerEl.textContent = '0:00';
 
-  // Timer
+  // Timer (shared by both paths)
   _oracleVoiceTimerIv = setInterval(function(){
     var secs = Math.floor((Date.now() - _oracleVoiceStart) / 1000);
     var m = Math.floor(secs / 60);
     var s = secs % 60;
     if(timerEl) timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
   }, 1000);
+
+  // === WHISPER PATH (preferred) ===
+  if(hasWhisper()){
+    _oracleVoiceUsingWhisper = true;
+    if(interimEl) interimEl.textContent = 'Recording with Whisper... tap mic to stop';
+
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      showToast('Microphone not available in this browser');
+      _oracleVoiceActive = false;
+      if(overlay) overlay.style.display = 'none';
+      if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
+      return;
+    }
+
+    _whisperActive = true;
+    _whisperChunks = [];
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+      var mimeType = 'audio/webm;codecs=opus';
+      if(!MediaRecorder.isTypeSupported(mimeType)){
+        mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+      }
+
+      _oracleWhisperRecorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : {});
+      _oracleWhisperStream = stream;
+      _oracleWhisperMime = mimeType;
+
+      _oracleWhisperRecorder.ondataavailable = function(e){
+        if(e.data.size > 0) _whisperChunks.push(e.data);
+      };
+
+      _oracleWhisperRecorder.onstop = async function(){
+        stream.getTracks().forEach(function(t){ t.stop(); });
+
+        if(_whisperChunks.length === 0){
+          _oracleVoiceTranscript = '';
+          _oracleVoiceActive = false;
+          _whisperActive = false;
+          if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
+          if(overlay) overlay.style.display = 'none';
+          showToast('No audio captured. Try again.');
+          return;
+        }
+
+        var blob = new Blob(_whisperChunks, { type: mimeType || 'audio/webm' });
+        _whisperChunks = [];
+        _whisperActive = false;
+
+        // Show transcribing state
+        if(interimEl) interimEl.innerHTML = '<span style="animation:voicePulse 1s ease-in-out infinite">Transcribing with Whisper...</span>';
+
+        var text = await whisperTranscribe(blob);
+        _oracleVoiceTranscript = text || '';
+
+        // Process like normal stopOracleVoice
+        _oracleVoiceActive = false;
+        if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
+        if(overlay) overlay.style.display = 'none';
+
+        if(!_oracleVoiceTranscript.trim()){
+          showToast('No speech detected. Try again.');
+          return;
+        }
+
+        showToast('The Oracle received your words...');
+        var ctx = _oracleVoiceContext;
+        if(!ctx) return;
+        if(ctx.source === 'chain' || ctx.source === 'eco'){
+          oracleVoiceBuildChain(ctx.source, _oracleVoiceTranscript.trim());
+        } else if(ctx.source === 'chain-detail'){
+          askOracleChainWithVoice(ctx.techName, ctx.arch, ctx.phase, _oracleVoiceTranscript.trim());
+        } else if(ctx.source === 'grimoire-detail'){
+          askOracleWithVoice(ctx.techName, ctx.arch, ctx.phase, _oracleVoiceTranscript.trim());
+        }
+      };
+
+      _oracleWhisperRecorder.start(1000);
+
+      // Auto-stop after 60 seconds
+      setTimeout(function(){
+        if(_oracleVoiceActive && _oracleVoiceUsingWhisper){
+          stopOracleVoice();
+        }
+      }, 60000);
+
+    }).catch(function(e){
+      console.error('[OracleWhisper] mic access error:', e);
+      _oracleVoiceActive = false;
+      _whisperActive = false;
+      if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
+      if(overlay) overlay.style.display = 'none';
+      showToast('Microphone access denied');
+    });
+
+    return; // Whisper path set up, exit
+  }
+
+  // === WEB SPEECH API FALLBACK ===
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRec){
+    showToast('Speech recognition not supported. Try Chrome, or add an OpenAI key in Settings for Whisper.');
+    _oracleVoiceActive = false;
+    if(overlay) overlay.style.display = 'none';
+    if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
+    return;
+  }
+
+  _oracleVoiceRec = new SpeechRec();
+  _oracleVoiceRec.continuous = true;
+  _oracleVoiceRec.interimResults = true;
+  _oracleVoiceRec.lang = 'en-US';
 
   var _oracleTimeout = setTimeout(function(){ stopOracleVoice(); }, 20000);
 
@@ -6637,7 +6899,6 @@ function oracleVoiceRecord(source, techName, arch, phase){
       }
     }
     if(final) _oracleVoiceTranscript += final;
-    // Show live text in overlay
     var displayText = _oracleVoiceTranscript + (interim ? interim : '');
     if(interimEl && displayText.trim()) interimEl.textContent = displayText.trim();
   };
@@ -6648,7 +6909,6 @@ function oracleVoiceRecord(source, techName, arch, phase){
       showToast('Microphone access denied.');
       stopOracleVoice();
     }
-    // no-speech, network, aborted — just let onend handle restart
   };
 
   _oracleVoiceRec.onend = function(){
@@ -6667,10 +6927,22 @@ function oracleVoiceRecord(source, techName, arch, phase){
     showToast('Could not start recording: ' + e.message);
     _oracleVoiceActive = false;
     if(overlay) overlay.style.display = 'none';
+    if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
   }
 }
 
 function stopOracleVoice(){
+  // Whisper path: stop the MediaRecorder — onstop handler does the rest
+  if(_oracleVoiceUsingWhisper){
+    _oracleVoiceActive = false;
+    if(_oracleWhisperRecorder && _oracleWhisperRecorder.state !== 'inactive'){
+      try { _oracleWhisperRecorder.stop(); } catch(e){}
+    }
+    // onstop callback handles cleanup, transcription, and routing
+    return;
+  }
+
+  // Web Speech API path
   _oracleVoiceActive = false;
   if(_oracleVoiceRec){
     try { _oracleVoiceRec.stop(); } catch(e){}
@@ -6678,7 +6950,6 @@ function stopOracleVoice(){
   }
   if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
 
-  // Hide overlay
   var overlay = document.getElementById('oracle-voice-overlay');
   if(overlay) overlay.style.display = 'none';
 
@@ -9650,8 +9921,988 @@ function addGrimChainEditToQuest(){
 }
 
 function openGrimoireCreate(){
-  // For now, route to the eco game builder
-  showToast('Content creation coming soon — use Quest tab to create eco games');
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const overlay = document.createElement('div');
+  overlay.id = 'create-content-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0;animation:tourTipIn 0.25s ease-out';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="max-width:420px;width:100%;background:#0e0e0e;border-top:1px solid ${ad.color}33;padding:24px 20px 32px;border-radius:18px 18px 0 0">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 auto 18px"></div>
+      <div style="font-family:'Cinzel',serif;font-size:14px;letter-spacing:0.12em;text-transform:uppercase;color:#f4ead8;margin-bottom:4px;text-align:center">Create Content</div>
+      <div style="font-size:11px;color:rgba(198,196,223,0.3);text-align:center;margin-bottom:20px;font-family:serif;font-style:italic">Share your knowledge with the community</div>
+
+      <div onclick="document.getElementById('create-content-overlay').remove();openVideoToCardFlow()" style="display:flex;align-items:center;gap:14px;padding:16px 14px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);margin-bottom:8px;cursor:pointer;transition:border-color 0.15s" onmouseenter="this.style.borderColor='${ad.color}44'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">
+        <span class="material-symbols-outlined" style="font-size:24px;color:${ad.color}">videocam</span>
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:#f4ead8;letter-spacing:0.06em">From Video Link</div>
+          <div style="font-size:10px;color:rgba(198,196,223,0.3);margin-top:2px">Paste a YouTube, Instagram, or TikTok link — the Oracle generates a training card</div>
+        </div>
+      </div>
+
+      <div onclick="document.getElementById('create-content-overlay').remove();openVoiceCreateFlow()" style="display:flex;align-items:center;gap:14px;padding:16px 14px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);margin-bottom:8px;cursor:pointer;transition:border-color 0.15s" onmouseenter="this.style.borderColor='${ad.color}44'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">
+        <span class="material-symbols-outlined" style="font-size:24px;color:${ad.color}">mic</span>
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:#f4ead8;letter-spacing:0.06em">Describe with Voice</div>
+          <div style="font-size:10px;color:rgba(198,196,223,0.3);margin-top:2px">Tell the Oracle what kind of game or drill you want — it designs the card</div>
+        </div>
+      </div>
+
+      <div onclick="document.getElementById('create-content-overlay').remove();openEcoGameEditorBlank()" style="display:flex;align-items:center;gap:14px;padding:16px 14px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer;transition:border-color 0.15s" onmouseenter="this.style.borderColor='${ad.color}44'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">
+        <span class="material-symbols-outlined" style="font-size:24px;color:rgba(198,196,223,0.4)">edit_note</span>
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:#f4ead8;letter-spacing:0.06em">Write Manually</div>
+          <div style="font-size:10px;color:rgba(198,196,223,0.3);margin-top:2px">Fill out the card fields yourself — full control over every detail</div>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ─── VIDEO-TO-CARD FLOW ─────────────────────────────────────
+function openVideoToCardFlow(){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const overlay = document.createElement('div');
+  overlay.id = 'video-card-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:10000;overflow-y:auto;animation:tourTipIn 0.25s ease-out';
+  overlay.innerHTML = `
+    <div style="max-width:420px;margin:0 auto;padding:20px 16px 80px">
+      <div onclick="document.getElementById('video-card-overlay').remove()" style="display:flex;align-items:center;gap:8px;margin-bottom:20px;cursor:pointer">
+        <span style="font-size:11px;color:${ad.color}">←</span>
+        <span style="font-size:10px;color:rgba(198,196,223,0.3);letter-spacing:0.06em">Back</span>
+      </div>
+
+      <div style="text-align:center;margin-bottom:24px">
+        <span class="material-symbols-outlined" style="font-size:36px;color:${ad.color};margin-bottom:8px;display:block">videocam</span>
+        <div style="font-family:'Cinzel',serif;font-size:18px;color:#f4ead8;margin-bottom:4px">Paste a Video Link</div>
+        <div style="font-size:12px;color:rgba(198,196,223,0.35);font-family:serif;font-style:italic">The Oracle will watch it and generate training cards for you</div>
+      </div>
+
+      <input id="vtc-video-url" placeholder="Paste YouTube, Instagram, or TikTok URL here..." oninput="vtcOnUrlInput()"
+        style="width:100%;box-sizing:border-box;background:#131313;border:1px solid rgba(255,255,255,0.12);color:#f4ead8;font-family:'Crimson Pro',serif;font-size:14px;padding:14px 16px;outline:none;margin-bottom:8px;text-align:center" />
+      <div id="vtc-video-preview" style="margin-bottom:8px"></div>
+      <div id="vtc-status" style="font-size:10px;color:rgba(198,196,223,0.3);margin-bottom:14px;min-height:18px;text-align:center"></div>
+
+      <!-- YouTube: auto-fetch happens automatically, this is the main action -->
+      <button id="vtc-generate-btn" onclick="vtcGenerateCard()" style="width:100%;padding:16px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;opacity:0.4;pointer-events:none">
+        <span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span> Generate Training Cards
+      </button>
+
+      <!-- Instagram/TikTok guided quick-fill (hidden by default, shown for short-form) -->
+      <div id="vtc-quickfill" style="display:none;margin-top:16px">
+        <div style="font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.3);margin-bottom:8px;font-family:'Cinzel',serif">Quick Describe</div>
+        <div style="font-size:10px;color:rgba(198,196,223,0.25);margin-bottom:10px">Short videos work best with a few details. Answer what you can:</div>
+        <input id="vtc-qf-technique" placeholder="What technique or skill is shown?" style="width:100%;box-sizing:border-box;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:'Crimson Pro',serif;font-size:12px;padding:10px 12px;outline:none;margin-bottom:6px" />
+        <input id="vtc-qf-position" placeholder="What position does it start from?" style="width:100%;box-sizing:border-box;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:'Crimson Pro',serif;font-size:12px;padding:10px 12px;outline:none;margin-bottom:6px" />
+        <input id="vtc-qf-detail" placeholder="Anything else? (key details, what to focus on)" style="width:100%;box-sizing:border-box;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:'Crimson Pro',serif;font-size:12px;padding:10px 12px;outline:none;margin-bottom:6px" />
+      </div>
+
+      <!-- Collapsible extra context area -->
+      <div style="margin-top:14px">
+        <div onclick="var ta=document.getElementById('vtc-extra-wrap');var arr=document.getElementById('vtc-extra-arrow');if(ta.style.display==='none'){ta.style.display='block';arr.textContent='expand_less'}else{ta.style.display='none';arr.textContent='expand_more'}" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 0">
+          <span class="material-symbols-outlined" id="vtc-extra-arrow" style="font-size:16px;color:rgba(198,196,223,0.25)">expand_more</span>
+          <span style="font-size:9px;color:rgba(198,196,223,0.25);letter-spacing:0.08em;text-transform:uppercase;font-family:'Cinzel',serif">Add extra context (optional)</span>
+        </div>
+        <div id="vtc-extra-wrap" style="display:none">
+          <textarea id="vtc-transcript" rows="5" placeholder="Paste transcript, AI summary, or description for better results..."
+            style="width:100%;box-sizing:border-box;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:'Crimson Pro',serif;font-size:11px;padding:10px 12px;outline:none;resize:none;line-height:1.6;margin-top:6px"></textarea>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// Auto-detect platform and trigger fetch on URL input
+let _vtcFetchTimeout = null;
+function vtcOnUrlInput(){
+  var url = (document.getElementById('vtc-video-url')?.value || '').trim();
+  var previewEl = document.getElementById('vtc-video-preview');
+  var statusEl = document.getElementById('vtc-status');
+  var genBtn = document.getElementById('vtc-generate-btn');
+  var quickFill = document.getElementById('vtc-quickfill');
+
+  if(!url){
+    if(previewEl) previewEl.innerHTML = '';
+    if(genBtn){ genBtn.style.opacity = '0.4'; genBtn.style.pointerEvents = 'none'; }
+    if(quickFill) quickFill.style.display = 'none';
+    if(statusEl) statusEl.textContent = '';
+    return;
+  }
+
+  // Show video preview
+  var vid = parseVideoUrl(url);
+  if(vid && previewEl) previewEl.innerHTML = renderVideoThumb(url);
+
+  if(!vid) return;
+
+  // Enable generate button
+  if(genBtn){ genBtn.style.opacity = '1'; genBtn.style.pointerEvents = 'auto'; }
+
+  // Platform-specific behavior
+  if(vid.platform === 'youtube' && vid.id){
+    // YouTube: auto-fetch transcript after a brief pause (debounce)
+    if(quickFill) quickFill.style.display = 'none';
+    if(_vtcFetchTimeout) clearTimeout(_vtcFetchTimeout);
+    _vtcFetchTimeout = setTimeout(function(){ vtcAutoFetchYouTube(vid.id); }, 500);
+  } else if(vid.platform === 'instagram' || vid.platform === 'tiktok'){
+    // Short-form: show guided quick-fill
+    if(quickFill) quickFill.style.display = 'block';
+    if(statusEl) statusEl.innerHTML = '<span style="font-size:10px;color:rgba(198,196,223,0.3)">Short-form video — answer a few questions to help the Oracle</span>';
+  } else {
+    if(quickFill) quickFill.style.display = 'none';
+  }
+}
+
+async function vtcAutoFetchYouTube(videoId){
+  var statusEl = document.getElementById('vtc-status');
+  if(statusEl) statusEl.innerHTML = '<span style="color:#e9c349"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;animation:voicePulse 1s ease-in-out infinite">sync</span> Fetching video content...</span>';
+
+  // Try transcript first, then fall back to video description via oEmbed
+  var transcript = await fetchYouTubeTranscript(videoId);
+  if(transcript){
+    // Store transcript internally (don't force user to see it)
+    window._vtcAutoTranscript = transcript;
+    if(statusEl) statusEl.innerHTML = '<span style="color:#2e8b57"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">check_circle</span> Video content loaded — ready to generate!</span>';
+    return;
+  }
+
+  // Fallback: try oEmbed for title + description
+  try {
+    var oembedUrl = 'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=' + videoId + '&format=json';
+    var r = await fetch(oembedUrl, {signal: AbortSignal.timeout(5000)});
+    if(r.ok){
+      var data = await r.json();
+      if(data.title){
+        window._vtcAutoTranscript = 'Video title: ' + data.title + (data.author_name ? '. Channel: ' + data.author_name : '');
+        if(statusEl) statusEl.innerHTML = '<span style="color:#e9c349"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">info</span> Got video info — add extra context below for better results</span>';
+        // Auto-expand the extra context area since we only got basic info
+        var extraWrap = document.getElementById('vtc-extra-wrap');
+        var arrow = document.getElementById('vtc-extra-arrow');
+        if(extraWrap) extraWrap.style.display = 'block';
+        if(arrow) arrow.textContent = 'expand_less';
+        return;
+      }
+    }
+  } catch(e){}
+
+  // Both failed
+  window._vtcAutoTranscript = null;
+  if(statusEl) statusEl.innerHTML = '<span style="color:rgba(198,196,223,0.4)"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">info</span> Couldn\'t auto-fetch — add context below for best results</span>';
+  var extraWrap = document.getElementById('vtc-extra-wrap');
+  var arrow = document.getElementById('vtc-extra-arrow');
+  if(extraWrap) extraWrap.style.display = 'block';
+  if(arrow) arrow.textContent = 'expand_less';
+}
+
+async function fetchYouTubeTranscript(videoId){
+  // Try fetching via YouTube's innertube captions — multiple fallback endpoints
+  var endpoints = [
+    'https://yt.lemnoslife.com/noKey/captions?videoId=' + videoId + '&lang=en',
+    'https://deserving-harmony-production.up.railway.app/transcript/' + videoId
+  ];
+
+  for(var i = 0; i < endpoints.length; i++){
+    try {
+      var r = await fetch(endpoints[i], {signal: AbortSignal.timeout(8000)});
+      if(!r.ok) continue;
+      var data = await r.json();
+      // Different APIs return different formats — normalize
+      if(Array.isArray(data)){
+        return data.map(function(seg){ return seg.text || seg.content || ''; }).join(' ').trim();
+      }
+      if(data.transcript) return data.transcript;
+      if(data.captions && Array.isArray(data.captions)){
+        return data.captions.map(function(c){ return c.text || ''; }).join(' ').trim();
+      }
+      if(typeof data === 'string' && data.length > 20) return data;
+    } catch(e){ continue; }
+  }
+  return null;
+}
+
+async function vtcGenerateCard(){
+  var url = (document.getElementById('vtc-video-url')?.value || '').trim();
+  var manualTranscript = (document.getElementById('vtc-transcript')?.value || '').trim();
+  var autoTranscript = window._vtcAutoTranscript || '';
+  var statusEl = document.getElementById('vtc-status');
+  var genBtn = document.getElementById('vtc-generate-btn');
+
+  // Build content from best available source
+  var transcript = manualTranscript || autoTranscript;
+
+  // For Instagram/TikTok, build from quick-fill inputs
+  var vid = parseVideoUrl(url);
+  if(vid && (vid.platform === 'instagram' || vid.platform === 'tiktok')){
+    var qfTech = (document.getElementById('vtc-qf-technique')?.value || '').trim();
+    var qfPos = (document.getElementById('vtc-qf-position')?.value || '').trim();
+    var qfDetail = (document.getElementById('vtc-qf-detail')?.value || '').trim();
+    if(qfTech || qfPos || qfDetail){
+      var qfText = '';
+      if(qfTech) qfText += 'Technique shown: ' + qfTech + '. ';
+      if(qfPos) qfText += 'Starting position: ' + qfPos + '. ';
+      if(qfDetail) qfText += 'Details: ' + qfDetail + '. ';
+      transcript = qfText + (transcript ? '\n\nAdditional context: ' + transcript : '');
+    }
+  }
+
+  if(!transcript){
+    if(statusEl) statusEl.innerHTML = '<span style="color:#e84747">No content to work with. Paste a YouTube link (auto-fetches) or add context below.</span>';
+    var extraWrap = document.getElementById('vtc-extra-wrap');
+    if(extraWrap) extraWrap.style.display = 'block';
+    return;
+  }
+
+  var apiKey = getAnthropicKey();
+  if(!apiKey) return;
+
+  if(genBtn){ genBtn.style.opacity = '0.5'; genBtn.style.pointerEvents = 'none'; }
+  if(statusEl) statusEl.innerHTML = '<span style="color:#e9c349">The Oracle is analyzing the video content...</span>';
+
+  var archName = stCurrentResultData?.archetype || 'Berserker';
+  var prompt = `You design ecological BJJ training games in the style of Greg Souders / Standard Jiu-Jitsu. His framework: start with a PROBLEM not a technique. Use invariants — managing distance through connection, segmentation, immobilization, isolation, destabilization.
+
+A user shared video content from a BJJ instructional. Analyze it and extract EVERY distinct game or drill described. Many Souders videos contain 3-6+ progressive games — extract ALL of them as separate cards.
+
+VIDEO CONTENT:
+"""
+${transcript.substring(0, 6000)}
+"""
+${url ? '\nVideo URL: ' + url : ''}
+
+For EACH game found in the video, create a Souders-style ecological game card. Return ONLY a JSON array — one object per game:
+[
+  {
+    "game_name": "short descriptive name (max 6 words)",
+    "game_number": 1,
+    "timestamp": "start time if mentioned (e.g. 1:24)",
+    "phase": "one of: Standing, Takedown, Guard, Passing, Pinning, Submission",
+    "problem": "overview of what skill this develops (1-2 sentences)",
+    "player_a_start": "Player A starting position",
+    "player_b_start": "Player B / partner starting position",
+    "continuous_goal": "what Player A should keep doing throughout",
+    "player_b_goal": "how the partner resists or responds",
+    "constraints": "rules that shape behavior — what's NOT allowed or what's restricted",
+    "win_condition": "clear objective end state for the round",
+    "attention_cue": "what to focus on perceptually (feel, see, sense)",
+    "skill_emerges": "the skill that naturally develops from playing this game",
+    "round_length": "suggested round length",
+    "tags": ["phase", "difficulty level", "other relevant tags"]
+  }
+]
+
+IMPORTANT: If the video describes multiple games (e.g. Game 1, Game 2, etc.), return ALL of them as separate objects in the array. Each game should have distinct start positions, constraints, and goals that reflect the video's progression. If only one game is described, return a single-element array.`;
+
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+    var d = await r.json();
+    var raw = d.content && d.content[0] && d.content[0].text || '';
+
+    // Try to parse as array first, then fall back to single object
+    var games = [];
+    try {
+      var jsonMatch = raw.match(/\[[\s\S]*\]/);
+      if(jsonMatch) games = JSON.parse(jsonMatch[0]);
+    } catch(e){}
+
+    // Fallback: try single object
+    if(!games.length){
+      var parsed = extractAndParseJSON(raw);
+      if(parsed && parsed.game_name) games = [parsed];
+    }
+
+    if(games.length > 0){
+      // Attach video URL and bot type to all games
+      games.forEach(function(g){ g.video_url = url; g.bot_type = 'Oracle'; });
+
+      if(games.length === 1){
+        // Single game — go straight to editor
+        var vtcOverlay = document.getElementById('video-card-overlay');
+        if(vtcOverlay) vtcOverlay.remove();
+        openEcoGameEditorBlank(games[0]);
+        showToast('Card generated — review and save!');
+      } else {
+        // Multiple games — show review carousel
+        var vtcOverlay = document.getElementById('video-card-overlay');
+        if(vtcOverlay) vtcOverlay.remove();
+        openMultiCardReview(games, url);
+      }
+    } else {
+      if(statusEl) statusEl.innerHTML = '<span style="color:#e84747">The Oracle couldn\'t parse the content. Try adding more detail to the transcript.</span>';
+    }
+  } catch(e){
+    console.error('[VTC] generate error:', e);
+    if(statusEl) statusEl.innerHTML = '<span style="color:#e84747">Oracle error: ' + (e.message || 'Try again') + '</span>';
+  }
+  if(genBtn){ genBtn.style.opacity = '1'; genBtn.style.pointerEvents = 'auto'; }
+}
+
+// ─── MULTI-CARD REVIEW CAROUSEL ─────────────────────────────
+let _vtcCards = [];
+let _vtcCardIdx = 0;
+let _vtcSavedFlags = [];
+
+function openMultiCardReview(games, videoUrl){
+  _vtcCards = games;
+  _vtcCardIdx = 0;
+  _vtcSavedFlags = games.map(function(){ return false; });
+
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var overlay = document.createElement('div');
+  overlay.id = 'multi-card-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:10000;overflow-y:auto;animation:tourTipIn 0.25s ease-out';
+
+  overlay.innerHTML = `
+    <div style="max-width:420px;margin:0 auto;padding:16px 16px 100px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div onclick="document.getElementById('multi-card-overlay').remove()" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <span style="font-size:11px;color:${ad.color}">←</span>
+          <span style="font-size:10px;color:rgba(198,196,223,0.3);letter-spacing:0.06em">Back</span>
+        </div>
+        <div style="font-size:9px;color:rgba(198,196,223,0.25);font-family:'Cinzel',serif;letter-spacing:0.1em">
+          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px">auto_awesome</span>
+          ${games.length} GAMES FOUND
+        </div>
+      </div>
+
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#f4ead8;margin-bottom:4px">Review Generated Cards</div>
+      <div style="font-size:11px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:16px">The Oracle found ${games.length} games in this video. Review each one and save the ones you want.</div>
+
+      <!-- Card counter / navigation -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <button id="vtc-prev" onclick="vtcNavCard(-1)" style="padding:8px 14px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:rgba(198,196,223,0.4);font-size:10px;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.06em">← Prev</button>
+        <div id="vtc-counter" style="font-family:'Cinzel',serif;font-size:12px;color:${ad.color};letter-spacing:0.08em">Game 1 of ${games.length}</div>
+        <button id="vtc-next" onclick="vtcNavCard(1)" style="padding:8px 14px;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:rgba(198,196,223,0.4);font-size:10px;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.06em">Next →</button>
+      </div>
+
+      <!-- Dot indicators -->
+      <div id="vtc-dots" style="display:flex;justify-content:center;gap:6px;margin-bottom:16px">
+        ${games.map(function(g,i){ return '<div class="vtc-dot" style="width:8px;height:8px;border-radius:50%;background:'+(i===0?ad.color:'rgba(255,255,255,0.12)')+';transition:background 0.2s"></div>'; }).join('')}
+      </div>
+
+      <!-- Card preview area -->
+      <div id="vtc-card-preview" style="background:#131313;border:0.5px solid rgba(255,255,255,0.08);padding:16px;margin-bottom:14px"></div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button id="vtc-save-btn" onclick="vtcSaveCurrentCard()" style="flex:1;padding:12px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <span class="material-symbols-outlined" style="font-size:14px">save</span> Save to Grimoire
+        </button>
+        <button onclick="vtcEditCurrentCard()" style="padding:12px 16px;background:#131313;border:0.5px solid ${ad.color}44;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <span class="material-symbols-outlined" style="font-size:14px">edit</span> Edit
+        </button>
+      </div>
+
+      <button onclick="vtcSaveAllCards(false)" style="width:100%;padding:12px;background:none;border:0.5px solid rgba(255,255,255,0.1);font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(198,196,223,0.4);cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span class="material-symbols-outlined" style="font-size:14px">done_all</span> Save All ${games.length} Cards
+      </button>
+
+      <button onclick="vtcSaveAllCards(true)" style="width:100%;padding:12px;background:none;border:0.5px solid ${ad.color}33;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:${ad.color}aa;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span class="material-symbols-outlined" style="font-size:14px">playlist_add</span> Save All as Collection
+      </button>
+    </div>`;
+
+  // Store video URL for collection naming
+  window._vtcVideoUrl = videoUrl;
+  document.body.appendChild(overlay);
+  vtcRenderCardPreview(0);
+}
+
+function vtcRenderCardPreview(idx){
+  var g = _vtcCards[idx];
+  if(!g) return;
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var saved = _vtcSavedFlags[idx];
+
+  var fieldStyle = 'font-size:10px;color:rgba(198,196,223,0.3);margin-bottom:2px;font-family:"Cinzel",serif;letter-spacing:0.08em;text-transform:uppercase';
+  var valStyle = 'font-size:12px;color:#f4ead8;font-family:"Crimson Pro",serif;line-height:1.5;margin-bottom:10px';
+
+  var previewEl = document.getElementById('vtc-card-preview');
+  if(!previewEl) return;
+
+  var timestampBadge = g.timestamp ? '<span style="font-size:9px;background:rgba(255,255,255,0.06);padding:2px 8px;color:rgba(198,196,223,0.4);margin-left:8px;font-family:monospace">⏱ '+g.timestamp+'</span>' : '';
+
+  previewEl.innerHTML = `
+    ${saved ? '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:6px 10px;background:rgba(46,139,87,0.1);border:0.5px solid rgba(46,139,87,0.3)"><span class="material-symbols-outlined" style="font-size:14px;color:#2e8b57">check_circle</span><span style="font-size:9px;color:#2e8b57;letter-spacing:0.08em;text-transform:uppercase;font-family:\'Cinzel\',serif">Saved</span></div>' : ''}
+    <div style="display:flex;align-items:center;margin-bottom:12px">
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:#f4ead8;font-weight:700">${g.game_name || 'Untitled Game'}</div>
+      ${timestampBadge}
+    </div>
+    ${g.video_url ? '<div style="margin-bottom:10px">'+renderVideoThumb(g.video_url, true)+'</div>' : ''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${g.phase ? '<span style="font-size:8px;padding:3px 8px;background:'+ad.color+'15;border:0.5px solid '+ad.color+'33;color:'+ad.color+';font-family:\'Cinzel\',serif;letter-spacing:0.06em">'+g.phase+'</span>' : ''}
+      ${(g.tags||[]).filter(function(t){ return t !== g.phase; }).map(function(t){ return '<span style="font-size:8px;padding:3px 8px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);color:rgba(198,196,223,0.4);font-family:\'Cinzel\',serif;letter-spacing:0.06em">'+t+'</span>'; }).join('')}
+    </div>
+    <div style="${fieldStyle}">Overview</div>
+    <div style="${valStyle}">${g.problem || '—'}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><div style="${fieldStyle}">Player A Start</div><div style="${valStyle}">${g.player_a_start || '—'}</div></div>
+      <div><div style="${fieldStyle}">Player B Start</div><div style="${valStyle}">${g.player_b_start || '—'}</div></div>
+    </div>
+    <div style="${fieldStyle}">Continuous Goal</div>
+    <div style="${valStyle}">${g.continuous_goal || '—'}</div>
+    <div style="${fieldStyle}">Partner's Resistance</div>
+    <div style="${valStyle}">${g.player_b_goal || '—'}</div>
+    <div style="${fieldStyle}">Constraints</div>
+    <div style="${valStyle}">${g.constraints || '—'}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><div style="${fieldStyle}">Win Condition</div><div style="${valStyle}">${g.win_condition || '—'}</div></div>
+      <div><div style="${fieldStyle}">Attention Cue</div><div style="${valStyle}">${g.attention_cue || '—'}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div><div style="${fieldStyle}">Skill Emerges</div><div style="${valStyle}">${g.skill_emerges || '—'}</div></div>
+      <div><div style="${fieldStyle}">Round Length</div><div style="${valStyle}">${g.round_length || '—'}</div></div>
+    </div>`;
+
+  // Update counter + dots
+  var counter = document.getElementById('vtc-counter');
+  if(counter) counter.textContent = 'Game ' + (idx+1) + ' of ' + _vtcCards.length;
+  document.querySelectorAll('#vtc-dots .vtc-dot').forEach(function(dot,i){
+    dot.style.background = i === idx ? ad.color : (_vtcSavedFlags[i] ? 'rgba(46,139,87,0.5)' : 'rgba(255,255,255,0.12)');
+  });
+
+  // Update save button state
+  var saveBtn = document.getElementById('vtc-save-btn');
+  if(saveBtn){
+    if(saved){
+      saveBtn.style.opacity = '0.5';
+      saveBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">check</span> Saved';
+    } else {
+      saveBtn.style.opacity = '1';
+      saveBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px">save</span> Save to Grimoire';
+    }
+  }
+
+  // Update prev/next button states
+  var prevBtn = document.getElementById('vtc-prev');
+  var nextBtn = document.getElementById('vtc-next');
+  if(prevBtn) prevBtn.style.opacity = idx === 0 ? '0.3' : '1';
+  if(nextBtn) nextBtn.style.opacity = idx === _vtcCards.length - 1 ? '0.3' : '1';
+}
+
+function vtcNavCard(dir){
+  var newIdx = _vtcCardIdx + dir;
+  if(newIdx < 0 || newIdx >= _vtcCards.length) return;
+  _vtcCardIdx = newIdx;
+  vtcRenderCardPreview(newIdx);
+}
+
+async function vtcSaveCurrentCard(){
+  if(_vtcSavedFlags[_vtcCardIdx]) return;
+  var g = _vtcCards[_vtcCardIdx];
+  if(!g) return;
+
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var profile = stUserProfile || {};
+
+  try {
+    var cardData = {
+      game_name: g.game_name,
+      phase: g.phase || '',
+      problem: g.problem || '',
+      player_a_start: g.player_a_start || '',
+      player_b_start: g.player_b_start || '',
+      continuous_goal: g.continuous_goal || '',
+      player_b_goal: g.player_b_goal || '',
+      constraints: g.constraints || '',
+      win_condition: g.win_condition || '',
+      attention_cue: g.attention_cue || '',
+      skill_emerges: g.skill_emerges || '',
+      round_length: g.round_length || '3 minutes',
+      video_url: g.video_url || '',
+      bot_type: 'Oracle',
+      card_type: 'eco_game'
+    };
+
+    var tags = (g.tags || []).map(function(t){ return t.toLowerCase(); });
+    if(g.phase && !tags.includes(g.phase.toLowerCase())) tags.unshift(g.phase.toLowerCase());
+
+    var { data: insertData, error } = await sbClient.from('community_games').insert({
+      technique: g.game_name,
+      phase: g.phase || '',
+      tags: tags,
+      game_data: cardData,
+      creator_name: profile.name || 'Anonymous',
+      creator_belt: profile.belt || 'white',
+      creator_archetype: (stCurrentResultData?.archetype || ad.name).toLowerCase(),
+      upvotes: 0,
+      usage_count: 0
+    }).select('id');
+
+    if(error) throw error;
+
+    var insertedId = insertData && insertData[0] && insertData[0].id;
+    if(insertedId) g._savedId = insertedId;
+    _vtcSavedFlags[_vtcCardIdx] = true;
+    vtcRenderCardPreview(_vtcCardIdx);
+    showToast('Game ' + (_vtcCardIdx+1) + ' saved!');
+
+    // Award XP
+    var xp = (typeof XP_REWARDS !== 'undefined' && XP_REWARDS.share_game) || 30;
+    if(g.video_url) xp += (typeof XP_REWARDS !== 'undefined' && XP_REWARDS.video_bonus) || 10;
+    awardXp(xp, 'Shared: ' + g.game_name);
+
+    // Auto-advance to next unsaved card
+    if(_vtcCardIdx < _vtcCards.length - 1){
+      setTimeout(function(){ vtcNavCard(1); }, 400);
+    }
+  } catch(e){
+    console.error('[VTC] save error:', e);
+    showToast('Save error: ' + (e.message || 'Try again'));
+  }
+}
+
+function vtcEditCurrentCard(){
+  var g = _vtcCards[_vtcCardIdx];
+  if(!g) return;
+  var overlay = document.getElementById('multi-card-overlay');
+  if(overlay) overlay.remove();
+  openEcoGameEditorBlank(g);
+}
+
+async function vtcSaveAllCards(createCollection){
+  var unsaved = _vtcSavedFlags.filter(function(s){ return !s; }).length;
+  if(unsaved === 0 && !createCollection){ showToast('All cards already saved!'); return; }
+
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var profile = stUserProfile || {};
+  var savedCount = 0;
+  var savedIds = [];
+
+  for(var i = 0; i < _vtcCards.length; i++){
+    var g = _vtcCards[i];
+
+    // If already saved, collect its ID but don't re-insert
+    if(_vtcSavedFlags[i]){
+      if(g._savedId) savedIds.push(g._savedId);
+      continue;
+    }
+
+    try {
+      var cardData = {
+        game_name: g.game_name,
+        phase: g.phase || '',
+        problem: g.problem || '',
+        player_a_start: g.player_a_start || '',
+        player_b_start: g.player_b_start || '',
+        continuous_goal: g.continuous_goal || '',
+        player_b_goal: g.player_b_goal || '',
+        constraints: g.constraints || '',
+        win_condition: g.win_condition || '',
+        attention_cue: g.attention_cue || '',
+        skill_emerges: g.skill_emerges || '',
+        round_length: g.round_length || '3 minutes',
+        video_url: g.video_url || '',
+        bot_type: 'Oracle',
+        card_type: 'eco_game'
+      };
+
+      var tags = (g.tags || []).map(function(t){ return t.toLowerCase(); });
+      if(g.phase && !tags.includes(g.phase.toLowerCase())) tags.unshift(g.phase.toLowerCase());
+
+      var { data, error } = await sbClient.from('community_games').insert({
+        technique: g.game_name,
+        phase: g.phase || '',
+        tags: tags,
+        game_data: cardData,
+        creator_name: profile.name || 'Anonymous',
+        creator_belt: profile.belt || 'white',
+        creator_archetype: (stCurrentResultData?.archetype || ad.name).toLowerCase(),
+        upvotes: 0,
+        usage_count: 0
+      }).select('id');
+
+      if(!error){
+        _vtcSavedFlags[i] = true;
+        savedCount++;
+        var insertedId = data && data[0] && data[0].id;
+        if(insertedId){
+          savedIds.push(insertedId);
+          g._savedId = insertedId;
+        }
+        var xp = (typeof XP_REWARDS !== 'undefined' && XP_REWARDS.share_game) || 30;
+        if(g.video_url) xp += (typeof XP_REWARDS !== 'undefined' && XP_REWARDS.video_bonus) || 10;
+        awardXp(xp, 'Shared: ' + g.game_name);
+      }
+    } catch(e){
+      console.error('[VTC] save all error for game ' + i + ':', e);
+    }
+  }
+
+  vtcRenderCardPreview(_vtcCardIdx);
+
+  if(createCollection && savedIds.length > 0){
+    // Auto-create a collection with all the saved cards
+    await vtcCreateCollectionFromCards(savedIds);
+  } else {
+    showToast(savedCount + ' of ' + unsaved + ' cards saved to Grimoire!');
+  }
+}
+
+async function vtcCreateCollectionFromCards(gameIds){
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var profile = stUserProfile || {};
+
+  // Build a smart collection name from the first card's game name or video title
+  var firstName = _vtcCards[0]?.game_name || 'Video Games';
+  // Try to extract a common theme (e.g. "Mounted Arm-Lock" from individual game names)
+  var phases = [...new Set(_vtcCards.map(function(g){ return g.phase; }).filter(Boolean))];
+  var collTitle = firstName.length < 30 ? firstName + ' Series' : firstName;
+  // If all games share the same phase, include it
+  if(phases.length === 1) collTitle = phases[0] + ': ' + collTitle;
+
+  var collDesc = _vtcCards.length + ' ecological games from a single video progression. ';
+  if(window._vtcVideoUrl) collDesc += 'Source: ' + window._vtcVideoUrl;
+
+  var tags = [];
+  _vtcCards.forEach(function(g){
+    (g.tags || []).forEach(function(t){
+      var lower = t.toLowerCase();
+      if(!tags.includes(lower)) tags.push(lower);
+    });
+  });
+
+  try {
+    var { data, error } = await sbClient.from('collections').insert({
+      title: collTitle,
+      description: collDesc,
+      tags: tags.slice(0, 10),
+      belt_level: 'all',
+      cover_archetype: ad.name,
+      creator_id: profile.userId || 'anonymous',
+      creator_name: profile.name || 'Anonymous',
+      game_ids: gameIds
+    }).select();
+
+    if(error){
+      showToast('Cards saved! Collection error: ' + error.message);
+      return;
+    }
+
+    showToast(_vtcCards.length + ' cards saved as collection "' + collTitle + '"!');
+    awardXp((typeof XP_REWARDS !== 'undefined' && XP_REWARDS.publish_chain) || 20, 'Collection: ' + collTitle);
+
+    // Close the review overlay and go back to Grimoire
+    setTimeout(function(){
+      var overlay = document.getElementById('multi-card-overlay');
+      if(overlay) overlay.remove();
+      loadCollections();
+    }, 800);
+
+  } catch(e){
+    console.error('[VTC] collection error:', e);
+    showToast('Cards saved! Collection error: ' + (e.message || 'Try again'));
+  }
+}
+
+// ─── STANDALONE ECO GAME EDITOR (no chain required) ─────────
+function openEcoGameEditorBlank(prefill){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const editor = document.getElementById('chain-editor-screen');
+  if(!editor) return;
+
+  var pf = prefill || {};
+  var allPhases = ['Standing','Takedown','Guard','Passing','Pinning','Submission'];
+  var archName = stCurrentResultData?.archetype || ad.name;
+  var levels = ['Beginner','Intermediate','Advanced'];
+  var defTags = ['Defense','Escape','Retention','Guard Recovery'];
+  var prefillTags = (pf.tags || []).map(function(t){ return t.toLowerCase(); });
+
+  var fieldStyle = 'width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:"Crimson Pro",serif;padding:10px 12px;outline:none;transition:border-color 0.15s;margin-bottom:8px;';
+  var labelStyle = 'font-size:7px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.3);margin-bottom:4px;font-family:"Cinzel",serif;';
+  var inputStyle = fieldStyle + 'font-size:12px;';
+  var textareaStyle = fieldStyle + 'font-size:11px;resize:none;line-height:1.5;';
+
+  // Check which tags should be pre-selected
+  function isTagSelected(tag){
+    if(pf.phase && tag === pf.phase) return true;
+    return prefillTags.includes(tag.toLowerCase());
+  }
+
+  editor.innerHTML = `
+    <div class="ce-back" onclick="closeChainCardEditor()">
+      <span class="ce-back-arrow">←</span>
+      <span class="ce-back-label">Back</span>
+    </div>
+    <div class="ce-body">
+      <input class="ce-title-input" id="eco-ed-name" placeholder="Name your eco game..." value="${(pf.game_name||'').replace(/"/g,'&quot;')}" />
+      <input id="eco-ed-video-url" placeholder="Video link — YouTube, Instagram, or TikTok" value="${(pf.video_url||'').replace(/"/g,'&quot;')}" style="width:100%;background:#1c1b1b;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:'Crimson Pro',serif;font-size:11px;padding:8px 12px;outline:none;margin-bottom:10px" oninput="updateVideoPreview()" />
+      <div id="eco-ed-video-preview"></div>
+
+      <div class="ce-tags" id="ce-tags">
+        ${allPhases.map(function(p){ return '<span class="ce-tag'+(isTagSelected(p)?' selected':'')+'" onclick="toggleCeTag(this)">'+p+'</span>'; }).join('')}
+        ${['Berserker','Rogue','Battlerager','Warlock'].map(function(a){ return '<span class="ce-tag'+(a===archName?' selected':'')+'" onclick="toggleCeTag(this)">'+a+'</span>'; }).join('')}
+        ${levels.map(function(l){ return '<span class="ce-tag'+(isTagSelected(l)?' selected':'')+'" onclick="toggleCeTag(this)">'+l+'</span>'; }).join('')}
+        ${defTags.map(function(d){ return '<span class="ce-tag'+(isTagSelected(d)?' selected':'')+'" onclick="toggleCeTag(this)">'+d+'</span>'; }).join('')}
+        <span style="display:inline-flex;align-items:center"><input class="ce-custom-tag-input" placeholder="+ add tag" onkeydown="handleTagKeydown(event)" style="width:72px;font-size:9px;padding:4px 8px;border-radius:16px;background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:#f4ead8;font-family:'Crimson Pro',serif;outline:none" /></span>
+      </div>
+
+      ${pf.game_name ? '<div style="font-size:9px;color:rgba(198,196,223,0.2);font-family:serif;font-style:italic;margin:12px 0 8px;padding:8px 10px;border-left:2px solid '+ad.color+'44;background:rgba(0,0,0,0.15)"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;margin-right:4px">auto_awesome</span>Generated by the Oracle — review and edit before saving</div>' : ''}
+
+      <div style="${labelStyle}">Overview — What does this game develop?</div>
+      <textarea id="eco-ed-problem" rows="2" placeholder="e.g. Foundations to open guard, connection building..." style="${textareaStyle}">${pf.problem||''}</textarea>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="${labelStyle}">Player A Start</div>
+          <input id="eco-ed-start-a" placeholder="e.g. Closed guard" value="${(pf.player_a_start||'').replace(/"/g,'&quot;')}" style="${inputStyle}"/>
+        </div>
+        <div>
+          <div style="${labelStyle}">Player B Start</div>
+          <input id="eco-ed-start-b" placeholder="Partner's starting position..." value="${(pf.player_b_start||'').replace(/"/g,'&quot;')}" style="${inputStyle}"/>
+        </div>
+      </div>
+
+      <div style="${labelStyle}">Continuous Goal — What should Player A keep doing?</div>
+      <textarea id="eco-ed-continuous" rows="2" placeholder="e.g. Maintain pressure and chain transitions without stalling..." style="${textareaStyle}">${pf.continuous_goal||''}</textarea>
+
+      <div style="${labelStyle}">Partner's Resistance — How does Player B respond?</div>
+      <textarea id="eco-ed-resistance" rows="2" placeholder="e.g. 50% resistance, defending transitions but not fully countering..." style="${textareaStyle}">${pf.player_b_goal||''}</textarea>
+
+      <div style="${labelStyle}">Constraints</div>
+      <input id="eco-ed-constraints" placeholder="e.g. No jumping guard, must chain in order" value="${(pf.constraints||'').replace(/"/g,'&quot;')}" style="${inputStyle}"/>
+
+      <div style="${labelStyle}">Win Condition</div>
+      <input id="eco-ed-win" placeholder="e.g. Complete chain to final position" value="${(pf.win_condition||'').replace(/"/g,'&quot;')}" style="${inputStyle}"/>
+
+      <div style="${labelStyle}">Attention Cue — What to focus on</div>
+      <input id="eco-ed-cue" placeholder="e.g. Feel the weight shift before each transition" value="${(pf.attention_cue||'').replace(/"/g,'&quot;')}" style="${inputStyle}"/>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="${labelStyle}">Round Length</div>
+          <input id="eco-ed-round" value="${pf.round_length||'3 minutes'}" style="${inputStyle}"/>
+        </div>
+        <div>
+          <div style="${labelStyle}">Skill That Emerges</div>
+          <input id="eco-ed-skill" placeholder="e.g. Chain fluency" value="${(pf.skill_emerges||'').replace(/"/g,'&quot;')}" style="${inputStyle}"/>
+        </div>
+      </div>
+    </div>
+    <div class="ce-save-row">
+      <button class="ce-btn-save" onclick="saveEcoGameFromEditor()">Save to Grimoire</button>
+      <button class="ce-btn-share" onclick="addEcoGameFromEditor()">+ Add to Quest</button>
+    </div>`;
+
+  editor.style.display = 'block';
+  editor.scrollTop = 0;
+
+  // Trigger video preview if URL was pre-filled
+  if(pf.video_url) setTimeout(function(){ updateVideoPreview(); }, 100);
+}
+
+// ─── VOICE CREATE FLOW ──────────────────────────────────────
+function openVoiceCreateFlow(){
+  const ad = stCurrentArchData || AD.BERSERKER;
+  const overlay = document.createElement('div');
+  overlay.id = 'voice-create-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:10000;overflow-y:auto;animation:tourTipIn 0.25s ease-out';
+  overlay.innerHTML = `
+    <div style="max-width:420px;margin:0 auto;padding:20px 16px 80px">
+      <div onclick="document.getElementById('voice-create-overlay').remove()" style="display:flex;align-items:center;gap:8px;margin-bottom:20px;cursor:pointer">
+        <span style="font-size:11px;color:${ad.color}">←</span>
+        <span style="font-size:10px;color:rgba(198,196,223,0.3);letter-spacing:0.06em">Back</span>
+      </div>
+
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#f4ead8;margin-bottom:4px">Describe Your Game</div>
+      <div style="font-size:11px;color:rgba(198,196,223,0.3);font-family:serif;font-style:italic;margin-bottom:20px">Tell the Oracle what kind of training game you want, or type it out below.</div>
+
+      <div style="display:flex;justify-content:center;margin-bottom:20px">
+        <button id="vc-mic-btn" onclick="vcToggleVoice()" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(145deg,#1a1535,#221c44);border:2px solid ${ad.color}44;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s">
+          <span class="material-symbols-outlined" style="font-size:32px;color:${ad.color}">mic</span>
+        </button>
+      </div>
+      <div id="vc-mic-status" style="text-align:center;font-size:10px;color:rgba(198,196,223,0.3);margin-bottom:16px">Tap to start speaking</div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div>
+        <span style="font-size:8px;color:rgba(198,196,223,0.2);letter-spacing:0.1em;text-transform:uppercase">or type it out</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div>
+      </div>
+
+      <textarea id="vc-text-input" rows="4" placeholder="e.g. I want a guard retention game where Player A works on recovering guard when the passer is halfway through. Focus on hip movement and framing..."
+        style="width:100%;box-sizing:border-box;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-family:'Crimson Pro',serif;font-size:11px;padding:10px 12px;outline:none;resize:none;line-height:1.6;margin-bottom:14px"></textarea>
+
+      <div id="vc-status" style="font-size:10px;color:rgba(198,196,223,0.3);margin-bottom:14px;min-height:18px"></div>
+
+      <button id="vc-generate-btn" onclick="vcGenerateFromText()" style="width:100%;padding:14px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span> Generate Training Card
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+let _vcRecording = false;
+let _vcRecognition = null;
+let _vcTranscript = '';
+
+function vcToggleVoice(){
+  // If Whisper is available, use it (better accuracy, especially on mobile)
+  if(hasWhisper()){
+    if(_whisperActive){
+      stopWhisperRecording();
+      return;
+    }
+    startWhisperRecording(function(text){
+      var ad = stCurrentArchData || AD.BERSERKER;
+      var micBtn = document.getElementById('vc-mic-btn');
+      var statusEl = document.getElementById('vc-mic-status');
+      var textArea = document.getElementById('vc-text-input');
+      if(micBtn){ micBtn.style.borderColor = ad.color + '44'; micBtn.style.animation = 'none'; }
+      if(text && text.trim()){
+        if(textArea) textArea.value = text.trim();
+        if(statusEl) statusEl.innerHTML = '<span style="color:#2e8b57">Got it! Edit the text if needed, then hit Generate.</span>';
+      } else {
+        if(statusEl) statusEl.innerHTML = '<span style="color:rgba(198,196,223,0.4)">No speech detected. Try again or type below.</span>';
+      }
+    }, { micBtnId: 'vc-mic-btn', statusId: 'vc-mic-status', timerId: null });
+    return;
+  }
+
+  // Fallback: Web Speech API
+  if(_vcRecording){
+    vcStopVoice();
+    return;
+  }
+
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRec){
+    var statusEl = document.getElementById('vc-mic-status');
+    if(statusEl) statusEl.innerHTML = '<span style="color:#e84747">Speech not supported in this browser. Use the text box below instead.</span>';
+    return;
+  }
+
+  _vcRecording = true;
+  _vcTranscript = '';
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var micBtn = document.getElementById('vc-mic-btn');
+  var statusEl = document.getElementById('vc-mic-status');
+  if(micBtn){ micBtn.style.borderColor = '#e84747'; micBtn.style.animation = 'voicePulse 1.5s ease-in-out infinite'; }
+  if(statusEl) statusEl.innerHTML = '<span style="color:#e9c349">Listening... tap mic to stop</span>';
+
+  _vcRecognition = new SpeechRec();
+  _vcRecognition.continuous = true;
+  _vcRecognition.interimResults = true;
+  _vcRecognition.lang = 'en-US';
+
+  var _vcTimeout = setTimeout(function(){ vcStopVoice(); }, 30000);
+
+  _vcRecognition.onresult = function(e){
+    var final = '';
+    var interim = '';
+    for(var i = e.resultIndex; i < e.results.length; i++){
+      if(e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    if(final) _vcTranscript += final;
+    var textArea = document.getElementById('vc-text-input');
+    if(textArea) textArea.value = _vcTranscript + interim;
+  };
+
+  _vcRecognition.onerror = function(e){
+    console.warn('[VC] speech error:', e.error);
+    if(e.error === 'not-allowed' || e.error === 'audio-capture'){
+      vcStopVoice();
+      var s = document.getElementById('vc-mic-status');
+      if(s) s.innerHTML = '<span style="color:#e84747">Mic access denied. Use the text box below.</span>';
+    }
+  };
+
+  _vcRecognition.onend = function(){
+    clearTimeout(_vcTimeout);
+    if(_vcRecording && _vcTranscript.trim().length < 3){
+      try { _vcRecognition.start(); } catch(e){}
+      _vcTimeout = setTimeout(function(){ vcStopVoice(); }, 30000);
+    } else if(_vcRecording){
+      vcStopVoice();
+    }
+  };
+
+  try { _vcRecognition.start(); } catch(e){
+    if(statusEl) statusEl.innerHTML = '<span style="color:#e84747">Could not start: ' + e.message + '. Use the text box.</span>';
+    _vcRecording = false;
+  }
+}
+
+function vcStopVoice(){
+  _vcRecording = false;
+  if(_vcRecognition){ try { _vcRecognition.stop(); } catch(e){} _vcRecognition = null; }
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var micBtn = document.getElementById('vc-mic-btn');
+  var statusEl = document.getElementById('vc-mic-status');
+  if(micBtn){ micBtn.style.borderColor = ad.color + '44'; micBtn.style.animation = 'none'; }
+  var text = (_vcTranscript || '').trim();
+  var textArea = document.getElementById('vc-text-input');
+  if(textArea && text) textArea.value = text;
+  if(statusEl){
+    if(text) statusEl.innerHTML = '<span style="color:#2e8b57">Got it! Edit the text if needed, then hit Generate.</span>';
+    else statusEl.textContent = 'Tap to start speaking';
+  }
+}
+
+async function vcGenerateFromText(){
+  var text = (document.getElementById('vc-text-input')?.value || '').trim();
+  var statusEl = document.getElementById('vc-status');
+  var genBtn = document.getElementById('vc-generate-btn');
+  if(!text){
+    if(statusEl) statusEl.textContent = 'Describe what kind of game you want first.';
+    return;
+  }
+
+  var apiKey = getAnthropicKey();
+  if(!apiKey) return;
+
+  if(genBtn){ genBtn.style.opacity = '0.5'; genBtn.style.pointerEvents = 'none'; }
+  if(statusEl) statusEl.innerHTML = '<span style="color:#e9c349">The Oracle is designing your game...</span>';
+
+  var archName = stCurrentResultData?.archetype || 'Berserker';
+  var prompt = 'You design ecological BJJ training games (Greg Souders / Standard Jiu-Jitsu). A ' + archName + ' player described what they want:\n\n"' + text.substring(0, 3000).replace(/"/g,'\\"') + '"\n\nDesign ONE ecological game based on their request. Return ONLY JSON:\n{"game_name":"short name (max 6 words)","phase":"one of Standing/Takedown/Guard/Passing/Pinning/Submission","problem":"overview","player_a_start":"...","player_b_start":"...","continuous_goal":"...","player_b_goal":"...","constraints":"...","win_condition":"...","attention_cue":"...","skill_emerges":"...","round_length":"3 minutes","tags":["phase","level","other"]}';
+
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 800,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+    var d = await r.json();
+    var raw = d.content && d.content[0] && d.content[0].text || '';
+    var parsed = extractAndParseJSON(raw);
+
+    if(parsed && parsed.game_name){
+      parsed.bot_type = 'Oracle';
+      var vcOverlay = document.getElementById('voice-create-overlay');
+      if(vcOverlay) vcOverlay.remove();
+      openEcoGameEditorBlank(parsed);
+      showToast('Card generated — review and save!');
+    } else {
+      if(statusEl) statusEl.innerHTML = '<span style="color:#e84747">Couldn\'t generate card. Try being more specific.</span>';
+    }
+  } catch(e){
+    console.error('[VC] generate error:', e);
+    if(statusEl) statusEl.innerHTML = '<span style="color:#e84747">Oracle error: ' + (e.message || 'Try again') + '</span>';
+  }
+  if(genBtn){ genBtn.style.opacity = '1'; genBtn.style.pointerEvents = 'auto'; }
 }
 
 function backToGrimoireHome(){

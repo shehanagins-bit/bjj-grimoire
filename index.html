@@ -6364,6 +6364,9 @@ let _voiceRecording = false;
 let _voiceTranscript = '';
 let _voiceStartTime = 0;
 let _voiceDurationIv = null;
+let _voiceUsingWhisper = false;
+let _voiceWhisperRecorder = null;
+let _voiceWhisperStream = null;
 
 function toggleVoiceRecording(){
   if(_voiceRecording){
@@ -6374,22 +6377,12 @@ function toggleVoiceRecording(){
 }
 
 function startVoiceRecording(){
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRec){
-    showToast('Speech recognition not supported in this browser. Try Chrome.');
-    return;
-  }
-
-  _voiceRecognition = new SpeechRec();
-  _voiceRecognition.continuous = true;
-  _voiceRecognition.interimResults = true;
-  _voiceRecognition.lang = 'en-US';
-
   _voiceTranscript = '';
   _voiceRecording = true;
   _voiceStartTime = Date.now();
+  _voiceUsingWhisper = false;
 
-  // UI updates
+  // UI updates (shared by both paths)
   const btn = document.getElementById('voice-record-btn');
   const indicator = document.getElementById('voice-recording-indicator');
   const label = document.getElementById('voice-btn-label');
@@ -6401,7 +6394,7 @@ function startVoiceRecording(){
   const prompts = document.getElementById('voice-guided-prompts');
   if(prompts) prompts.style.display = 'block';
 
-  // Duration timer
+  // Duration timer (shared)
   _voiceDurationIv = setInterval(() => {
     const secs = Math.floor((Date.now() - _voiceStartTime) / 1000);
     const m = Math.floor(secs / 60);
@@ -6409,6 +6402,92 @@ function startVoiceRecording(){
     const el = document.getElementById('voice-duration');
     if(el) el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
   }, 1000);
+
+  // === WHISPER PATH (preferred — works reliably on mobile) ===
+  if(hasWhisper()){
+    _voiceUsingWhisper = true;
+    const interimEl = document.getElementById('voice-interim');
+    if(interimEl) interimEl.textContent = 'Recording with Whisper... tap stop when done';
+
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      showToast('Microphone not available in this browser');
+      _voiceRecording = false;
+      if(indicator) indicator.style.display = 'none';
+      if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
+      return;
+    }
+
+    _whisperChunks = [];
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+      var mimeType = 'audio/webm;codecs=opus';
+      if(!MediaRecorder.isTypeSupported(mimeType)){
+        mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+      }
+
+      _voiceWhisperRecorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : {});
+      _voiceWhisperStream = stream;
+
+      _voiceWhisperRecorder.ondataavailable = function(e){
+        if(e.data.size > 0) _whisperChunks.push(e.data);
+      };
+
+      _voiceWhisperRecorder.onstop = async function(){
+        stream.getTracks().forEach(function(t){ t.stop(); });
+
+        // UI: show transcribing state
+        if(interimEl) interimEl.innerHTML = '<span style="animation:voicePulse 1s ease-in-out infinite">Transcribing with Whisper...</span>';
+
+        if(_whisperChunks.length === 0){
+          _voiceTranscript = '';
+          _finishVoiceStop('No audio captured. Try again.');
+          return;
+        }
+
+        var blob = new Blob(_whisperChunks, { type: mimeType || 'audio/webm' });
+        _whisperChunks = [];
+
+        var text = await whisperTranscribe(blob);
+        _voiceTranscript = text || '';
+        _finishVoiceStop(_voiceTranscript ? null : 'No speech detected. Try again.');
+      };
+
+      _voiceWhisperRecorder.start(1000);
+
+      // Auto-stop after 5 minutes for quest recordings (longer than oracle)
+      setTimeout(function(){
+        if(_voiceRecording && _voiceUsingWhisper) stopVoiceRecording();
+      }, 300000);
+
+    }).catch(function(e){
+      console.error('[QuestWhisper] mic access error:', e);
+      showToast('Microphone access denied. Check browser permissions.');
+      _voiceRecording = false;
+      _voiceUsingWhisper = false;
+      if(btn){ btn.style.background = 'rgba(233,195,73,0.06)'; btn.style.borderColor = 'rgba(233,195,73,0.2)'; btn.style.color = '#e9c349'; }
+      if(label) label.textContent = 'Talk through your session';
+      if(icon) icon.textContent = '🎙';
+      if(indicator) indicator.style.display = 'none';
+      if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
+    });
+
+    return; // Whisper path set up
+  }
+
+  // === WEB SPEECH API FALLBACK ===
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRec){
+    showToast('Speech recognition not supported. Try Chrome, or add an OpenAI key in Settings for Whisper.');
+    _voiceRecording = false;
+    if(indicator) indicator.style.display = 'none';
+    if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
+    return;
+  }
+
+  _voiceRecognition = new SpeechRec();
+  _voiceRecognition.continuous = true;
+  _voiceRecognition.interimResults = true;
+  _voiceRecognition.lang = 'en-US';
 
   _voiceRecognition.onresult = function(e){
     let interim = '';
@@ -6436,7 +6515,6 @@ function startVoiceRecording(){
   };
 
   _voiceRecognition.onend = function(){
-    // Auto-restart if still recording (browser sometimes stops after silence)
     if(_voiceRecording){
       try { _voiceRecognition.start(); } catch(e){}
     }
@@ -6452,24 +6530,45 @@ function startVoiceRecording(){
 
 function stopVoiceRecording(){
   _voiceRecording = false;
+
+  // Whisper path: stop the MediaRecorder — onstop handler does the rest
+  if(_voiceUsingWhisper){
+    if(_voiceWhisperRecorder && _voiceWhisperRecorder.state !== 'inactive'){
+      try { _voiceWhisperRecorder.stop(); } catch(e){}
+    }
+    // onstop callback calls _finishVoiceStop
+    return;
+  }
+
+  // Web Speech API path
   if(_voiceRecognition){
     try { _voiceRecognition.stop(); } catch(e){}
     _voiceRecognition = null;
   }
-  if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
+  _finishVoiceStop(_voiceTranscript.trim() ? null : 'No speech detected. Try again.');
+}
 
-  // UI updates
+function _finishVoiceStop(errorMsg){
+  if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
+  _voiceRecording = false;
+  _voiceUsingWhisper = false;
+
+  // Reset UI
   const btn = document.getElementById('voice-record-btn');
   const indicator = document.getElementById('voice-recording-indicator');
   const label = document.getElementById('voice-btn-label');
   const icon = document.getElementById('voice-mic-icon');
-  const ad = stCurrentArchData || AD.BERSERKER;
   if(btn){ btn.style.background = 'rgba(233,195,73,0.06)'; btn.style.borderColor = 'rgba(233,195,73,0.2)'; btn.style.color = '#e9c349'; }
   if(label) label.textContent = 'Talk through your session';
   if(icon) icon.textContent = '🎙';
   if(indicator) indicator.style.display = 'none';
   const prompts = document.getElementById('voice-guided-prompts');
   if(prompts) prompts.style.display = 'none';
+
+  if(errorMsg){
+    showToast(errorMsg);
+    return;
+  }
 
   // Show transcript
   const text = _voiceTranscript.trim();
@@ -6478,8 +6577,6 @@ function stopVoiceRecording(){
     const textEl = document.getElementById('voice-transcript');
     if(wrapEl) wrapEl.style.display = 'block';
     if(textEl) textEl.textContent = text;
-  } else {
-    showToast('No speech detected. Try again.');
   }
 }
 
@@ -11978,10 +12075,11 @@ function getEditorData(type){
 async function chainConsultOracle(type){
   const ad = stCurrentArchData || AD.BERSERKER;
   const steps = buildChainSequence();
-  if(steps.length === 0){ showToast('Add techniques to your chain first'); return; }
+  if(steps.length === 0){ showToast('Add techniques to your chain first, then consult the Oracle'); return; }
 
   const detail = document.getElementById('st-detail');
-  const apiKey = getAnthropicKey(); if(!apiKey) return;
+  const apiKey = getAnthropicKey();
+  if(!apiKey){ showToast('Set up your Oracle key first'); return; }
   const apiHeaders = {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
   const chainDesc = steps.map(s=>s.technique+' ('+s.phase+')').join(' → ');
   const fullChain = (stCurrentResultData?.chain||[]).map(c=>c.phase+': '+c.technique).join(' → ');
@@ -12147,7 +12245,7 @@ function openChainCardEditorPrefilled(type, title, oracleSteps){
 async function chainEditorConsultOracle(type){
   const data = getEditorData(type);
   const ad = stCurrentArchData || AD.BERSERKER;
-  const apiKey = getAnthropicKey(); if(!apiKey) return;
+  const apiKey = getAnthropicKey(); if(!apiKey){ showToast('Set up your Oracle key first'); return; }
   const apiHeaders = {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
 
   const chainDesc = data.steps.map(s=>s.technique+' ('+s.phase+')').join(' → ');

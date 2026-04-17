@@ -1411,10 +1411,7 @@ function showApiKeyModal(){
         <button onclick="saveDirectKey()" style="width:100%;padding:8px;background:none;border:0.5px solid rgba(255,255,255,0.08);font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.5);cursor:pointer">Save own key</button>
       </div>
       <div style="margin-top:10px;border-top:0.5px solid rgba(255,255,255,0.05);padding-top:10px">
-        <div style="font-size:8px;color:rgba(198,196,223,0.6);margin-bottom:2px">Voice input (optional):</div>
-        <div style="font-size:7px;color:rgba(198,196,223,0.55);margin-bottom:6px;line-height:1.4">Add an OpenAI key for accurate voice-to-text using Whisper. Works much better on mobile.</div>
-        <input type="password" id="openai-key-input" placeholder="sk-..." value="${localStorage.getItem('grimoire_openai_key')||''}" style="width:100%;background:#131313;border:0.5px solid rgba(255,255,255,0.06);color:#f4ead8;font-size:11px;padding:8px;outline:none;font-family:'Crimson Pro',serif;margin-bottom:6px;box-sizing:border-box"/>
-        <button onclick="saveOpenAIKey()" style="width:100%;padding:8px;background:none;border:0.5px solid rgba(255,255,255,0.08);font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.5);cursor:pointer">Save voice key</button>
+        <div style="font-size:8px;color:rgba(198,196,223,0.5);line-height:1.4">🎤 Voice input is built in — no setup needed.</div>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -1474,134 +1471,36 @@ function saveOpenAIKey(){
 }
 
 function getOpenAIKey(){
-  return localStorage.getItem('grimoire_openai_key') || null;
+  // Check for user-provided key first, then fall back to embedded key
+  var userKey = localStorage.getItem('grimoire_openai_key');
+  if(userKey) return userKey;
+  return _decVoiceK();
 }
 
-// ─── VOICE TRANSCRIPTION (MediaRecorder + Local Whisper / OpenAI API) ────
+// Embedded OpenAI key (obfuscated — will move to Edge Function with auth in Tier 3)
+const _VK = 'FBlEHQUOEEwJRxgxCAgcS1JTBgtBHSIcDT1YCyxYIw9XB39XcWEfEw4ZQiQIJigmCAUIEGZzVkBZVEMrLzlSHQltRT8wDBM0eFN1dANHKFoDJi5SHRoNAiUvMwVyRnBRSihaOQRMGxxPXDY6Ky9qAVtlJSszDiALDiwcGSEDGiNoZVdTTB0ABx4kMB0IPRVCURcEaVl9UGkWSwscJDIQTAY0Vyg=';
+function _decVoiceK(){
+  try {
+    var salt = 'grimwaza_voice_2026';
+    var d = atob(_VK);
+    var r = '';
+    for(var i=0;i<d.length;i++) r += String.fromCharCode(d.charCodeAt(i) ^ salt.charCodeAt(i % salt.length));
+    return r.startsWith('sk-') ? r : null;
+  } catch(e){ return null; }
+}
+
+// ─── VOICE TRANSCRIPTION (MediaRecorder + OpenAI Whisper API) ────
 let _whisperRecorder = null;
 let _whisperChunks = [];
 let _whisperActive = false;
 let _whisperTimerIv = null;
 let _whisperStart = 0;
 
-// Local Whisper (Transformers.js — runs entirely in-browser, no API key needed)
-let _localWhisperPipeline = null;
-let _localWhisperLoading = false;
-let _localWhisperReady = false;
-
-// hasWhisper now always returns true — local Whisper is always available as fallback
 function hasWhisper(){ return !!(getOpenAIKey() || typeof navigator !== 'undefined'); }
 
-// Show/update the model download progress overlay
-function _showWhisperProgress(pct, label){
-  var el = document.getElementById('whisper-download-overlay');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'whisper-download-overlay';
-    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1919;border:0.5px solid rgba(233,195,73,0.3);padding:12px 20px;z-index:99999;min-width:260px;text-align:center;pointer-events:none';
-    el.innerHTML = '<div id="whisper-dl-label" style="font-size:10px;color:rgba(198,196,223,0.5);font-family:serif;font-style:italic;margin-bottom:6px">Setting up voice...</div><div style="width:100%;height:4px;background:rgba(255,255,255,0.06);overflow:hidden"><div id="whisper-dl-bar" style="height:100%;background:linear-gradient(90deg,#e9c349,#c8900a);width:0%;transition:width 0.3s ease"></div></div>';
-    document.body.appendChild(el);
-  }
-  var bar = document.getElementById('whisper-dl-bar');
-  var lbl = document.getElementById('whisper-dl-label');
-  if(bar) bar.style.width = Math.min(100, pct) + '%';
-  if(lbl && label) lbl.textContent = label;
-}
-
-function _hideWhisperProgress(){
-  var el = document.getElementById('whisper-download-overlay');
-  if(el) el.remove();
-}
-
-async function getLocalWhisper(){
-  if(_localWhisperPipeline) return _localWhisperPipeline;
-  if(_localWhisperLoading) {
-    // Wait for the existing load to finish
-    while(_localWhisperLoading) await new Promise(function(r){ setTimeout(r, 200); });
-    return _localWhisperPipeline;
-  }
-
-  _localWhisperLoading = true;
-  _showWhisperProgress(5, 'Loading voice engine...');
-
-  try {
-    var mod = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3');
-    _showWhisperProgress(15, 'Downloading voice model (~40MB, one-time)...');
-
-    var fileProgress = {};
-    _localWhisperPipeline = await mod.pipeline('automatic-speech-recognition', 'onnx-community/whisper-tiny.en', {
-      dtype: 'q8',
-      progress_callback: function(p){
-        if(p.status === 'progress' && p.total > 0){
-          fileProgress[p.file || p.name || 'model'] = (p.loaded / p.total) * 100;
-          var vals = Object.values(fileProgress);
-          var avg = vals.reduce(function(a,b){ return a+b; }, 0) / Math.max(vals.length, 1);
-          var overall = 15 + (avg * 0.8); // 15-95% range
-          _showWhisperProgress(overall, 'Downloading voice model... ' + Math.round(avg) + '%');
-        } else if(p.status === 'done'){
-          _showWhisperProgress(95, 'Preparing voice model...');
-        }
-      }
-    });
-
-    _localWhisperReady = true;
-    _localWhisperLoading = false;
-    _showWhisperProgress(100, 'Voice ready!');
-    setTimeout(_hideWhisperProgress, 1200);
-    return _localWhisperPipeline;
-  } catch(e){
-    console.error('[LocalWhisper] Failed to load:', e);
-    _localWhisperLoading = false;
-    _hideWhisperProgress();
-    showToast('Voice model failed to load: ' + (e.message || e));
-    return null;
-  }
-}
-
-// Convert webm/opus audio blob to 16kHz Float32Array for Whisper
-async function convertAudioTo16kFloat32(blob){
-  var arrayBuffer = await blob.arrayBuffer();
-  // Decode to raw audio using AudioContext
-  var ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-  try {
-    var audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-    // Resample to 16kHz if needed
-    if(audioBuffer.sampleRate !== 16000){
-      var offCtx = new OfflineAudioContext(1, audioBuffer.duration * 16000, 16000);
-      var source = offCtx.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(offCtx.destination);
-      source.start(0);
-      var resampled = await offCtx.startRendering();
-      ctx.close();
-      return resampled.getChannelData(0);
-    }
-    var data = audioBuffer.getChannelData(0);
-    ctx.close();
-    return data;
-  } catch(e){
-    ctx.close();
-    throw e;
-  }
-}
-
-async function localWhisperTranscribe(audioBlob){
-  var transcriber = await getLocalWhisper();
-  if(!transcriber) return null;
-
-  try {
-    var audioData = await convertAudioTo16kFloat32(audioBlob);
-    var result = await transcriber(audioData, { language: 'en' });
-    return (result && result.text) ? result.text.trim() : null;
-  } catch(e){
-    console.error('[LocalWhisper] transcription error:', e);
-    return null;
-  }
-}
-
-// Smart transcribe: tries OpenAI API first (if key), falls back to local Whisper
+// Transcribe via OpenAI Whisper API, fall back to Web Speech API
 async function whisperTranscribe(audioBlob){
-  // Path 1: OpenAI API (fastest, if key exists)
+  // Path 1: OpenAI Whisper API
   var key = getOpenAIKey();
   if(key){
     try {
@@ -1620,15 +1519,16 @@ async function whisperTranscribe(audioBlob){
         var data = await r.json();
         if(data.text) return data.text;
       } else {
-        console.warn('[Whisper] API error:', r.status, '— falling back to local Whisper');
+        console.warn('[Whisper] API error:', r.status);
       }
     } catch(e){
-      console.warn('[Whisper] API failed:', e.message, '— falling back to local Whisper');
+      console.warn('[Whisper] API failed:', e.message);
     }
   }
 
-  // Path 2: Local Whisper (free, no key needed)
-  return await localWhisperTranscribe(audioBlob);
+  // Path 2: No key available
+  showToast('Voice transcription unavailable');
+  return null;
 }
 
 function startWhisperRecording(onComplete, overlayConfig){
@@ -3386,8 +3286,16 @@ function buildSkillTreeHTML(data, ad) {
         <!-- MODE HEADER (changes per mode) -->
         <!-- ═══════════════════════════════ -->
         <div id="quest-mode-header">
-          <div id="quest-mode-title" style="font-size:18px;color:#f4ead8;margin-bottom:2px;font-family:'Cinzel',serif">Quest Card</div>
-          <div id="quest-mode-subtitle" style="font-size:11px;color:rgba(198,196,223,0.55);font-family:serif;font-style:italic;margin-bottom:18px">Your game plan — what to focus on today</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div id="quest-mode-title" style="font-size:18px;color:#f4ead8;margin-bottom:2px;font-family:'Cinzel',serif">Quest Card</div>
+              <div id="quest-mode-subtitle" style="font-size:11px;color:rgba(198,196,223,0.55);font-family:serif;font-style:italic">Your game plan — what to focus on today</div>
+            </div>
+            <button onclick="showQuestCardBrowser()" style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:none;border:0.5px solid rgba(255,255,255,0.1);font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.55);cursor:pointer;flex-shrink:0" title="Load a saved quest card">
+              <span class="material-symbols-outlined" style="font-size:14px">folder_open</span> Load
+            </button>
+          </div>
+          <div style="height:18px"></div>
         </div>
 
         <!-- ═══ VOICE INPUT — HERO FEATURE (both Prepare & Reflect) ═══ -->
@@ -4503,12 +4411,12 @@ function saveAndShareGame(mode, technique, phase, share = false) {
   document.querySelector('.game-editor-overlay')?.remove();
 }
 
-function showToast(msg) {
+function showToast(msg, duration) {
   const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#0e0e0e;border:1px solid #c8960a;color:#f4ead8;padding:12px 16px;border-radius:2px;font-size:12px;z-index:10000;animation:slideIn 0.3s ease;font-family:"Cinzel",serif';
+  toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#0e0e0e;border:1px solid #c8960a;color:#f4ead8;padding:12px 16px;border-radius:2px;font-size:12px;z-index:10000;animation:slideIn 0.3s ease;font-family:"Cinzel",serif;max-width:320px;line-height:1.4';
   toast.textContent = msg;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  setTimeout(() => toast.remove(), duration || 3000);
 }
 
 function openGameEditorFromOracle(game) {
@@ -4790,6 +4698,22 @@ function openSkillTree(){
       switchSTTab(1);
       // Start guided tour for first-time users (after a short delay for DOM to render)
       setTimeout(function(){ startGrimoireTour(); }, 600);
+
+      // Check for shared quest card link (?load_quest=UUID)
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var loadQuestId = params.get('load_quest');
+        if(loadQuestId){
+          // Clear the URL param so it doesn't reload on refresh
+          var cleanUrl = window.location.pathname + window.location.hash;
+          window.history.replaceState({}, '', cleanUrl);
+          // Switch to quest tab and load the card
+          setTimeout(function(){
+            switchSTTab(2); // Quest tab
+            loadQuestCardFromBrowser(loadQuestId);
+          }, 400);
+        }
+      } catch(e){ console.warn('URL param check error:', e); }
     }
   }, 100);
 }
@@ -5080,17 +5004,52 @@ function removeChainCardFromQuest(idx){
 }
 
 async function saveQuestCardToGrimoire(){
+  // Show naming modal first
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var existing = document.getElementById('quest-name-modal');
+  if(existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'quest-name-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var defaultTitle = 'Quest Card — ' + new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  var summary = [];
+  if(stEcoGames.length > 0) summary.push(stEcoGames.length + ' eco game' + (stEcoGames.length>1?'s':''));
+  if(stChainCards.length > 0) summary.push(stChainCards.length + ' chain' + (stChainCards.length>1?'s':''));
+  if(stRollFocusItems.length > 0) summary.push(stRollFocusItems.length + ' focus');
+  var summaryText = summary.length > 0 ? summary.join(' · ') : 'Empty quest card';
+  modal.innerHTML = '<div style="background:#1a1919;border:0.5px solid rgba(255,255,255,0.1);padding:24px;max-width:360px;width:100%">'
+    + '<div style="font-size:14px;color:#f4ead8;font-family:Cinzel,serif;margin-bottom:6px">Name Your Quest Card</div>'
+    + '<div style="font-size:10px;color:rgba(198,196,223,0.5);margin-bottom:4px">'+summaryText+'</div>'
+    + '<div style="font-size:10px;color:rgba(198,196,223,0.6);line-height:1.5;margin-bottom:14px">Give it a name so you can find and reuse it later.</div>'
+    + '<input id="quest-name-input" value="'+defaultTitle.replace(/"/g,'&quot;')+'" placeholder="e.g. Guard Retention Day, Competition Prep..." style="width:100%;background:#131313;border:0.5px solid rgba(255,255,255,0.1);color:#f4ead8;font-size:13px;padding:10px;outline:none;font-family:Cinzel,serif;margin-bottom:14px;box-sizing:border-box"/>'
+    + '<textarea id="quest-desc-save" rows="2" placeholder="Optional description..." style="width:100%;background:#131313;border:0.5px solid rgba(255,255,255,0.08);color:#f4ead8;font-size:11px;font-family:Crimson Pro,serif;padding:8px 10px;resize:none;outline:none;margin-bottom:14px;box-sizing:border-box"></textarea>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button onclick="_doSaveQuestCard()" style="flex:1;padding:10px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:Cinzel,serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer">Save to Grimoire</button>'
+    + '<button onclick="document.getElementById(\'quest-name-modal\').remove()" style="padding:10px 14px;background:none;border:0.5px solid rgba(255,255,255,0.1);font-family:Cinzel,serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.5);cursor:pointer">Cancel</button>'
+    + '</div></div>';
+  document.body.appendChild(modal);
+  setTimeout(function(){ var inp = document.getElementById('quest-name-input'); if(inp) inp.select(); }, 100);
+}
+
+async function _doSaveQuestCard(){
+  var nameInput = document.getElementById('quest-name-input');
+  var descInput = document.getElementById('quest-desc-save');
+  var questTitle = (nameInput && nameInput.value.trim()) || 'Quest Card — ' + new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  var questDesc = descInput ? descInput.value.trim() : '';
+  var modal = document.getElementById('quest-name-modal');
+  if(modal) modal.remove();
+
   const btn = document.getElementById('quest-save-grimoire-btn');
   if(btn){ btn.textContent = 'Saving...'; btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; }
 
   try {
     const ad = stCurrentArchData || AD.BERSERKER;
     const profile = stUserProfile || {};
-    const questTitle = 'Quest Card — ' + new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
     const gameData = {
       card_type: 'quest_card',
       game_name: questTitle,
+      description: questDesc,
       archetype: ad.name,
       eco_games: stEcoGames.map(g => {
         const gd = g.game_data || {};
@@ -5143,6 +5102,196 @@ async function saveQuestCardToGrimoire(){
   } finally {
     if(btn){ btn.textContent = '+ Save Quest Card to Grimoire'; btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
   }
+}
+
+// ============================
+// QUEST CARD BROWSER & LOADER
+// ============================
+
+async function showQuestCardBrowser(){
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var existing = document.getElementById('quest-browser-modal');
+  if(existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'quest-browser-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:10000;overflow-y:auto;padding:20px';
+  modal.innerHTML = '<div style="max-width:480px;margin:0 auto">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+    + '<div style="font-family:Cinzel,serif;font-size:16px;color:#f4ead8">Load Quest Card</div>'
+    + '<button onclick="document.getElementById(\'quest-browser-modal\').remove()" style="background:none;border:none;color:rgba(198,196,223,0.5);font-size:20px;cursor:pointer;padding:4px">×</button>'
+    + '</div>'
+    + '<div id="quest-browser-list" style="display:flex;flex-direction:column;gap:10px">'
+    + '<div style="font-size:10px;color:rgba(198,196,223,0.5);font-style:italic;font-family:serif;text-align:center;padding:20px">Loading quest cards...</div>'
+    + '</div></div>';
+  document.body.appendChild(modal);
+
+  // Fetch quest cards from Supabase
+  try {
+    var { data, error } = await sbClient
+      .from('community_games')
+      .select('*')
+      .contains('tags', ['quest_card'])
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if(error) throw error;
+    var listEl = document.getElementById('quest-browser-list');
+    if(!listEl) return;
+
+    if(!data || data.length === 0){
+      listEl.innerHTML = '<div style="text-align:center;padding:30px"><div style="font-size:11px;color:rgba(198,196,223,0.5);font-family:serif;font-style:italic;margin-bottom:10px">No quest cards saved yet.</div><div style="font-size:10px;color:rgba(198,196,223,0.4)">Build a session plan on the Quest tab and save it to the Grimoire to see it here.</div></div>';
+      return;
+    }
+
+    listEl.innerHTML = data.map(function(row){
+      var gd = row.game_data || {};
+      var name = gd.game_name || row.technique || 'Quest Card';
+      var desc = gd.description || '';
+      var ecoCount = (gd.eco_games||[]).length;
+      var chainCount = (gd.attack_chains||[]).length;
+      var focusCount = (gd.roll_focus||[]).length;
+      var chips = [];
+      if(ecoCount > 0) chips.push(ecoCount + ' eco game' + (ecoCount>1?'s':''));
+      if(chainCount > 0) chips.push(chainCount + ' chain' + (chainCount>1?'s':''));
+      if(focusCount > 0) chips.push(focusCount + ' focus');
+      var creator = row.creator_name || '';
+      var date = row.created_at ? new Date(row.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      var rowId = row.id;
+
+      return '<div style="background:#1c1b1b;padding:14px;border-left:2px solid '+ad.color+'44">'
+        + '<div style="font-family:Cinzel,serif;font-size:13px;color:#f4ead8;margin-bottom:3px">'+name+'</div>'
+        + (desc ? '<div style="font-size:10px;color:rgba(198,196,223,0.5);margin-bottom:5px;line-height:1.4">'+desc+'</div>' : '')
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">'
+        + chips.map(function(c){ return '<span style="font-size:8px;color:rgba(198,196,223,0.5);background:#131313;padding:2px 8px;border-radius:8px">'+c+'</span>'; }).join('')
+        + (creator ? '<span style="font-size:8px;color:rgba(198,196,223,0.4)">by '+creator+'</span>' : '')
+        + (date ? '<span style="font-size:8px;color:rgba(198,196,223,0.35)">'+date+'</span>' : '')
+        + '</div>'
+        + '<div style="display:flex;gap:6px">'
+        + '<button onclick="loadQuestCardFromBrowser(\''+rowId+'\')" style="flex:1;padding:8px;background:'+ad.color+'15;border:0.5px solid '+ad.color+'33;font-family:Cinzel,serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:'+ad.color+';cursor:pointer">Use This</button>'
+        + '<button onclick="shareQuestCard(\''+rowId+'\',\''+name.replace(/'/g,"\\'")+'\')" style="padding:8px 12px;background:none;border:0.5px solid rgba(255,255,255,0.08);font-family:Cinzel,serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.5);cursor:pointer;display:flex;align-items:center;gap:4px"><span class="material-symbols-outlined" style="font-size:12px">share</span>Share</button>'
+        + '</div></div>';
+    }).join('');
+
+  } catch(e){
+    console.error('Quest browser error:', e);
+    var listEl = document.getElementById('quest-browser-list');
+    if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;font-size:10px;color:#e84747">Error loading quest cards. Check your connection.</div>';
+  }
+}
+
+async function loadQuestCardFromBrowser(rowId){
+  try {
+    var { data, error } = await sbClient
+      .from('community_games')
+      .select('*')
+      .eq('id', rowId)
+      .single();
+
+    if(error) throw error;
+    loadQuestCardData(data.game_data || {});
+
+    // Increment usage count
+    sbClient.from('community_games').update({ usage_count: (data.usage_count||0) + 1 }).eq('id', rowId).then(function(){});
+
+    // Close modal
+    var modal = document.getElementById('quest-browser-modal');
+    if(modal) modal.remove();
+    showToast('Quest card loaded!');
+  } catch(e){
+    console.error('Load quest card error:', e);
+    showToast('Error loading quest card');
+  }
+}
+
+function loadQuestCardData(gd){
+  // Reset current quest state
+  resetQuestFlow();
+
+  // Load eco games
+  if(gd.eco_games && gd.eco_games.length > 0){
+    stEcoGames = gd.eco_games.map(function(g){
+      return {
+        game_name: g.game_name || 'Eco Game',
+        phase: g.phase || '',
+        player_a_start: g.player_a_start || '',
+        player_b_start: g.player_b_start || '',
+        constraints: g.constraints || '',
+        win_condition: g.win_condition || '',
+        attention_cue: g.attention_cue || '',
+        skill_emerges: g.skill_emerges || ''
+      };
+    });
+    stDrillType = 'eco';
+  }
+
+  // Load attack chains
+  if(gd.attack_chains && gd.attack_chains.length > 0){
+    stChainCards = gd.attack_chains.map(function(c){
+      return {
+        title: c.title || 'Attack Chain',
+        tags: c.tags || [],
+        steps: (c.steps||[]).map(function(s){ return {technique:s.technique, phase:s.phase, note:s.note||''}; }),
+        video_url: c.video_url || ''
+      };
+    });
+    if(stEcoGames.length === 0) stDrillType = 'chain';
+  }
+
+  // Load roll focus items
+  if(gd.roll_focus && gd.roll_focus.length > 0){
+    stRollFocusItems = gd.roll_focus.map(function(f){
+      stRollFocusIdCounter++;
+      return {
+        technique: f.technique || '',
+        phase: f.phase || '',
+        cue: f.cue || '',
+        icon: '',
+        source: 'loaded',
+        landed: 0,
+        attempted: 0,
+        escaped: 0,
+        survived: 0,
+        id: 'rf_loaded_' + stRollFocusIdCounter
+      };
+    });
+  }
+
+  // Re-render the Quest tab
+  renderQuestTab();
+
+  // Switch to prepare mode
+  switchQuestMode('prepare');
+}
+
+function shareQuestCard(rowId, name){
+  var shareUrl = window.location.origin + window.location.pathname + '?load_quest=' + rowId;
+  if(navigator.share){
+    navigator.share({
+      title: name || 'Quest Card',
+      text: 'Check out this BJJ training session plan: ' + (name || 'Quest Card'),
+      url: shareUrl
+    }).catch(function(){});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(shareUrl).then(function(){
+      showToast('Quest card link copied!');
+    }).catch(function(){
+      _fallbackCopyShare(shareUrl);
+    });
+  } else {
+    _fallbackCopyShare(shareUrl);
+  }
+}
+
+function _fallbackCopyShare(url){
+  var ta = document.createElement('textarea');
+  ta.value = url;
+  ta.style.cssText = 'position:fixed;left:-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  ta.remove();
+  showToast('Quest card link copied!');
 }
 
 function changeSTScore(tech, d){
@@ -6591,24 +6740,8 @@ function startVoiceRecording(){
     });
     }; // end doStartRecording
 
-    // Pre-load model if needed, THEN start recording
-    if(_localWhisperReady || getOpenAIKey()){
-      doStartRecording();
-    } else {
-      if(interimEl) interimEl.textContent = 'Preparing voice engine...';
-      getLocalWhisper().then(function(pipeline){
-        if(!pipeline){
-          _voiceRecording = false;
-          if(indicator) indicator.style.display = 'none';
-          if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
-          if(btn){ btn.style.background = 'rgba(233,195,73,0.06)'; btn.style.borderColor = 'rgba(233,195,73,0.2)'; btn.style.color = '#e9c349'; }
-          if(label) label.textContent = 'Talk through your session';
-          if(icon) icon.textContent = '🎙';
-          return;
-        }
-        doStartRecording();
-      });
-    }
+    // Start recording immediately (Whisper API, no local model needed)
+    doStartRecording();
 
     return; // Whisper path set up
   }
@@ -7110,23 +7243,8 @@ function oracleVoiceRecord(source, techName, arch, phase){
     });
     }; // end startRecording
 
-    // Pre-load model if needed, THEN start recording
-    if(_localWhisperReady || getOpenAIKey()){
-      // Model already cached or using API — start immediately
-      startRecording();
-    } else {
-      // First time: download model first, then start recording
-      if(interimEl) interimEl.textContent = 'Preparing voice engine...';
-      getLocalWhisper().then(function(pipeline){
-        if(!pipeline){
-          _oracleVoiceActive = false;
-          if(overlay) overlay.style.display = 'none';
-          if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
-          return;
-        }
-        startRecording();
-      });
-    }
+    // Start recording immediately (Whisper API, no local model needed)
+    startRecording();
 
     return; // Whisper path set up, exit
   }
@@ -9722,9 +9840,16 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
 
   let addBtnHtml;
   let removeBtnHtml = '';
+  let useQuestBtnHtml = '';
   // Hide "Add to Grimoire" if game already exists in the Grimoire (has a Supabase UUID id)
   const alreadyInGrimoire = !!(game.id && typeof game.id === 'string' && game.id.length > 8);
   let saveBtnHtml = alreadyInGrimoire ? '' : `<button class="eco-quest-btn" onclick="event.stopPropagation();saveOracleGameToGrimoire(${id})" style="background:rgba(200,150,10,0.15);border-color:rgba(200,150,10,0.3);color:#c8a84b">+ Grimoire</button>`;
+
+  // "Use This" button for quest cards — loads the full quest card into the Quest tab
+  if(effectiveCardType === 'quest_card' && game.id){
+    useQuestBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();loadQuestCardFromBrowser('${game.id}')" style="background:rgba(40,168,216,0.15);border-color:rgba(40,168,216,0.3);color:#28a8d8">▶ Use This</button>`;
+  }
+
   if(mode === 'quest' && questIdx !== null){
     addBtnHtml = `<button class="eco-quest-btn" onclick="event.stopPropagation();removeEcoGame(${questIdx})" style="background:rgba(200,50,50,0.15);border-color:rgba(200,50,50,0.3);color:#e05555">✕ Remove</button>`;
     saveBtnHtml = '';
@@ -9851,6 +9976,7 @@ function renderGrimoireCard(game, showAddToSession=false, mode='default', questI
             <button class="eco-collapse-btn" onclick="collapseEcoCard(${id})">Collapse ↑</button>
             ${saveBtnHtml}
             ${addBtnHtml}
+            ${useQuestBtnHtml}
           </div>
         </div>
       </div>
@@ -12600,19 +12726,33 @@ function saveQuests(){
   localStorage.setItem('grimoire_quests_done', JSON.stringify(stCompletedQuests));
 }
 
-function createQuest(technique, phase){
+function createQuest(technique, phase, opts){
   if(stActiveQuests.length >= 3){ showToast('Max 3 active quests'); return; }
   if(stActiveQuests.some(q => q.technique.toLowerCase() === technique.toLowerCase())){ showToast('Quest already active'); return; }
+  opts = opts || {};
+  // Build related techniques list from technique graph
+  var relatedTechniques = [];
+  if(typeof _techGraph !== 'undefined' && _techGraph){
+    var neighbors = _techGraph[technique.toLowerCase()] || [];
+    relatedTechniques = neighbors.slice(0, 8); // top 8 related
+  }
   var quest = {
     id: 'q_' + Date.now(),
     technique: technique,
+    quest_name: opts.quest_name || technique,
+    description: opts.description || '',
     phase: phase || '',
+    phases: opts.phases || (phase ? [phase] : []),  // array of phases that count
+    techniques: opts.techniques || relatedTechniques,  // related techniques that also match
+    suggested_games: opts.suggested_games || [],
+    sessions_target: opts.sessions_target || 8,
     created: Date.now(),
-    sessions: [],  // array of {date, landed, attempted, escaped, survived, timestamp}
+    sessions: [],  // array of {date, landed, attempted, escaped, survived, ecoGamesPlayed, timestamp}
     totalLanded: 0,
     totalAttempted: 0,
     totalEscaped: 0,
-    totalSurvived: 0
+    totalSurvived: 0,
+    ecoGamesPlayed: 0
   };
   stActiveQuests.push(quest);
   saveQuests();
@@ -12626,11 +12766,15 @@ function completeQuest(questId){
   var quest = stActiveQuests.splice(idx, 1)[0];
   quest.completed = Date.now();
   quest.sessionsCount = quest.sessions.length;
+  var landRate = quest.totalAttempted > 0 ? Math.round((quest.totalLanded / quest.totalAttempted) * 100) + '% land rate' : '';
   stCompletedQuests.unshift(quest);
   if(stCompletedQuests.length > 50) stCompletedQuests = stCompletedQuests.slice(0, 50);
   saveQuests();
   renderActiveQuests();
-  showToast('Quest complete: ' + quest.technique);
+  var name = quest.quest_name || quest.technique;
+  var msg = 'Quest complete: ' + name + ' — ' + quest.sessionsCount + ' sessions';
+  if(landRate) msg += ', ' + landRate;
+  showToast(msg, 4000);
 }
 
 function removeQuest(questId){
@@ -12639,48 +12783,194 @@ function removeQuest(questId){
   renderActiveQuests();
 }
 
+// Tokenize a technique name into meaningful words for matching
+function _questTokenize(str){
+  if(!str) return [];
+  return str.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(function(w){ return w.length > 2; });
+}
+
+// Check if technique B is related to technique A (token overlap or graph neighbor)
+function _questTechMatch(questTech, sessionTech){
+  if(!questTech || !sessionTech) return false;
+  var a = questTech.toLowerCase().trim();
+  var b = sessionTech.toLowerCase().trim();
+  // Exact match
+  if(a === b) return true;
+  // Containment (but only if the shorter string is 4+ chars to avoid "arm" matching everything)
+  if(a.length >= 4 && b.includes(a)) return true;
+  if(b.length >= 4 && a.includes(b)) return true;
+  // Token overlap — at least 50% of the shorter's tokens must appear in the longer
+  var tokA = _questTokenize(a), tokB = _questTokenize(b);
+  if(tokA.length === 0 || tokB.length === 0) return false;
+  var shorter = tokA.length <= tokB.length ? tokA : tokB;
+  var longer = tokA.length <= tokB.length ? tokB : tokA;
+  var hits = shorter.filter(function(t){ return longer.indexOf(t) >= 0; }).length;
+  return hits > 0 && hits >= Math.ceil(shorter.length * 0.5);
+}
+
+// Check if a technique is in the quest's related techniques list
+function _questRelatedMatch(quest, techName){
+  if(!techName || !quest.techniques || quest.techniques.length === 0) return false;
+  var t = techName.toLowerCase().trim();
+  return quest.techniques.some(function(rt){ return _questTechMatch(rt, t); });
+}
+
 function linkSessionToQuests(session){
   if(!session || stActiveQuests.length === 0) return;
+  var matchedQuestNames = [];
+
+  // Collect all session techniques
   var sessionTechniques = [];
-  (session.rollFocusItems||[]).forEach(function(i){ if(i.technique) sessionTechniques.push(i.technique.toLowerCase()); });
-  (session.drillTechniques||[]).forEach(function(t){ sessionTechniques.push(t.toLowerCase()); });
-  (session.lessons||[]).forEach(function(l){ if(l.technique) sessionTechniques.push(l.technique.toLowerCase()); });
+  (session.rollFocusItems||[]).forEach(function(i){ if(i.technique) sessionTechniques.push(i.technique); });
+  (session.drillTechniques||[]).forEach(function(t){ sessionTechniques.push(t); });
+  (session.lessons||[]).forEach(function(l){ if(l.technique) sessionTechniques.push(l.technique); });
+
+  // Collect session phases (from drills + roll focus)
+  var sessionPhases = [];
+  (session.drillPhases||[]).forEach(function(p){ sessionPhases.push(p); });
+  (session.rollFocusItems||[]).forEach(function(i){ if(i.phase) sessionPhases.push(i.phase); });
+
+  // Collect eco games played and their phases/techniques
+  var sessionEcoPhases = [];
+  var sessionEcoTechniques = [];
+  (session.ecoGames||[]).forEach(function(g){
+    if(g.phase) sessionEcoPhases.push(g.phase);
+    if(g.game_name) sessionEcoTechniques.push(g.game_name);
+  });
 
   stActiveQuests.forEach(function(quest){
-    var qTech = quest.technique.toLowerCase();
-    var matched = sessionTechniques.some(function(t){ return t.includes(qTech) || qTech.includes(t); });
+    var qTech = quest.technique;
+    var qPhases = quest.phases || (quest.phase ? [quest.phase] : []);
+    var matched = false;
+    var matchReason = '';
+
+    // 1. Direct technique match (tokenized, not just .includes)
+    if(sessionTechniques.some(function(t){ return _questTechMatch(qTech, t); })){
+      matched = true;
+      matchReason = 'technique';
+    }
+
+    // 2. Related technique match (from quest.techniques array or tech graph)
+    if(!matched && sessionTechniques.some(function(t){ return _questRelatedMatch(quest, t); })){
+      matched = true;
+      matchReason = 'related technique';
+    }
+
+    // 3. Phase match — if quest has phases and session drilled/rolled those phases
+    if(!matched && qPhases.length > 0){
+      var phaseHit = sessionPhases.some(function(p){ return qPhases.indexOf(p) >= 0; });
+      if(phaseHit){
+        matched = true;
+        matchReason = 'phase';
+      }
+    }
+
+    // 4. Eco game match — game tagged to quest phase or technique
+    if(!matched && sessionEcoPhases.length > 0 && qPhases.length > 0){
+      if(sessionEcoPhases.some(function(p){ return qPhases.indexOf(p) >= 0; })){
+        matched = true;
+        matchReason = 'eco game phase';
+      }
+    }
+    if(!matched && sessionEcoTechniques.some(function(t){ return _questTechMatch(qTech, t) || _questRelatedMatch(quest, t); })){
+      matched = true;
+      matchReason = 'eco game technique';
+    }
+
     if(matched){
       var landed = 0, attempted = 0, escaped = 0, survived = 0;
+      // Count stats from roll focus items that match
       (session.rollFocusItems||[]).forEach(function(i){
-        if(i.technique && (i.technique.toLowerCase().includes(qTech) || qTech.includes(i.technique.toLowerCase()))){
+        if(i.technique && (_questTechMatch(qTech, i.technique) || _questRelatedMatch(quest, i.technique))){
           landed += (i.landed||0);
           attempted += (i.attempted||0);
           escaped += (i.escaped||0);
           survived += (i.survived||0);
         }
       });
-      // Also check defensive log for matching submissions/passes
+      // Defensive log
       (session.defenseSubmittedTo||[]).forEach(function(sub){
-        if(sub.toLowerCase().includes(qTech) || qTech.includes(sub.toLowerCase())) survived++;
+        if(_questTechMatch(qTech, sub) || _questRelatedMatch(quest, sub)) survived++;
       });
       (session.defensePassesReceived||[]).forEach(function(pass){
-        if(pass.toLowerCase().includes(qTech) || qTech.includes(pass.toLowerCase())) survived++;
+        if(_questTechMatch(qTech, pass) || _questRelatedMatch(quest, pass)) survived++;
       });
+      // Count eco games played for this quest
+      var ecoCount = 0;
+      (session.ecoGames||[]).forEach(function(g){
+        var gPhase = g.phase || '';
+        var gName = g.game_name || '';
+        if((qPhases.length > 0 && qPhases.indexOf(gPhase) >= 0) || _questTechMatch(qTech, gName) || _questRelatedMatch(quest, gName)){
+          ecoCount++;
+        }
+      });
+
       quest.sessions.push({
         date: session.date || new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}),
         landed: landed,
         attempted: attempted,
         escaped: escaped,
         survived: survived,
+        ecoGamesPlayed: ecoCount,
+        matchReason: matchReason,
         timestamp: session.timestamp || Date.now()
       });
       quest.totalLanded += landed;
       quest.totalAttempted += attempted;
       quest.totalEscaped = (quest.totalEscaped||0) + escaped;
       quest.totalSurvived = (quest.totalSurvived||0) + survived;
+      quest.ecoGamesPlayed = (quest.ecoGamesPlayed||0) + ecoCount;
+
+      matchedQuestNames.push({
+        name: quest.quest_name || quest.technique,
+        sessCount: quest.sessions.length,
+        target: quest.sessions_target || 8
+      });
     }
   });
   saveQuests();
+
+  // Post-session quest feedback
+  if(matchedQuestNames.length > 0){
+    var feedbackLines = matchedQuestNames.map(function(mq){
+      return mq.name + ' (' + mq.sessCount + '/' + mq.target + ')';
+    });
+    showToast('Quest progress: ' + feedbackLines.join(', '), 4000);
+
+    // Check for quests that just hit their target
+    stActiveQuests.forEach(function(quest){
+      var target = quest.sessions_target || 8;
+      if(quest.sessions.length === target){
+        setTimeout(function(){ showQuestCompletePrompt(quest); }, 2500);
+      }
+    });
+  }
+}
+
+// Prompt user when a quest hits its session target
+function showQuestCompletePrompt(quest){
+  var ad = stCurrentArchData || AD.BERSERKER;
+  var landRate = quest.totalAttempted > 0 ? Math.round((quest.totalLanded / quest.totalAttempted) * 100) : null;
+  var existing = document.getElementById('quest-complete-prompt');
+  if(existing) existing.remove();
+
+  var statsLine = quest.sessions.length + ' sessions logged';
+  if(landRate !== null) statsLine += ' · ' + landRate + '% land rate';
+  if(quest.ecoGamesPlayed > 0) statsLine += ' · ' + quest.ecoGamesPlayed + ' eco games';
+
+  var modal = document.createElement('div');
+  modal.id = 'quest-complete-prompt';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.88);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.3s ease';
+  modal.innerHTML = '<div style="background:#1a1919;border:1px solid '+ad.color+'44;padding:28px;max-width:360px;width:100%;text-align:center">'
+    + '<div style="font-size:28px;margin-bottom:12px">⚔</div>'
+    + '<div style="font-family:Cinzel,serif;font-size:16px;color:#f4ead8;margin-bottom:6px">Quest Target Reached!</div>'
+    + '<div style="font-family:Cinzel,serif;font-size:13px;color:'+ad.color+';margin-bottom:10px">'+(quest.quest_name||quest.technique)+'</div>'
+    + '<div style="font-size:11px;color:rgba(198,196,223,0.6);margin-bottom:20px;line-height:1.5">'+statsLine+'</div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button onclick="completeQuest(\''+quest.id+'\');document.getElementById(\'quest-complete-prompt\').remove()" style="flex:1;padding:12px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:Cinzel,serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer">Complete Quest</button>'
+    + '<button onclick="document.getElementById(\'quest-complete-prompt\').remove()" style="padding:12px 16px;background:none;border:0.5px solid rgba(255,255,255,0.1);font-family:Cinzel,serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(198,196,223,0.5);cursor:pointer">Keep Going</button>'
+    + '</div></div>';
+  document.body.appendChild(modal);
 }
 
 // --- SVG CHART HELPERS ---
@@ -12781,27 +13071,34 @@ function renderActiveQuests(){
 
   var html = stActiveQuests.map(function(q){
     var sessCount = q.sessions.length;
+    var target = q.sessions_target || 8;
     var landRate = q.totalAttempted > 0 ? Math.round((q.totalLanded / q.totalAttempted) * 100) : 0;
     var sparkData = q.sessions.slice(-10).map(function(s){ return s.attempted > 0 ? Math.round((s.landed/s.attempted)*100) : 0; });
     var sparkHtml = buildSparkline(sparkData, ad.color, 80, 24);
-    var ringPct = Math.min(1, sessCount / 10); // 10 sessions = full ring
+    var ringPct = Math.min(1, sessCount / target);
     var ringHtml = buildProgressRing(ringPct, ad.color, 40);
+    var displayName = q.quest_name || q.technique;
+    var hitTarget = sessCount >= target;
+    var ecoCount = q.ecoGamesPlayed || 0;
 
-    return '<div style="background:#1c1b1b;padding:12px;margin-bottom:8px;border-left:2px solid '+ad.color+'">'
+    return '<div style="background:#1c1b1b;padding:12px;margin-bottom:8px;border-left:2px solid '+(hitTarget ? '#2e8b57' : ad.color)+'">'
       + '<div style="display:flex;align-items:center;gap:10px">'
-      + '<div style="position:relative;flex-shrink:0">'+ringHtml+'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="font-size:9px;font-weight:700;color:'+ad.color+'">'+sessCount+'</span></div></div>'
+      + '<div style="position:relative;flex-shrink:0">'+ringHtml+'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:9px;font-weight:700;color:'+ad.color+'">'+sessCount+'</span><span style="font-size:6px;color:rgba(198,196,223,0.4)">/'+target+'</span></div></div>'
       + '<div style="flex:1;min-width:0">'
-      + '<div style="font-family:Cinzel,serif;font-size:12px;color:#f4ead8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+q.technique+'</div>'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-top:3px">'
+      + '<div style="font-family:Cinzel,serif;font-size:12px;color:#f4ead8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+displayName+'</div>'
+      + (q.description ? '<div style="font-size:9px;color:rgba(198,196,223,0.45);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+q.description+'</div>' : '')
+      + '<div style="display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap">'
       + (q.phase ? '<span style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.5)">'+q.phase+'</span>' : '')
       + (q.totalAttempted > 0 ? '<span style="font-size:8px;color:'+ad.color+'88">'+landRate+'% land rate</span>' : '')
       + (q.totalLanded > 0 ? '<span style="font-size:8px;color:rgba(198,196,223,0.6)">'+q.totalLanded+'/'+q.totalAttempted+'</span>' : '')
-      + ((q.totalEscaped||0) > 0 ? '<span style="font-size:8px;color:#2e8b57">'+(q.totalEscaped)+' escaped</span>' : '')
-      + ((q.totalSurvived||0) > 0 ? '<span style="font-size:8px;color:#8b6fc0">'+(q.totalSurvived)+' survived</span>' : '')
+      + ((q.totalEscaped||0) > 0 ? '<span style="font-size:8px;color:#2e8b57">'+(q.totalEscaped)+' esc</span>' : '')
+      + ((q.totalSurvived||0) > 0 ? '<span style="font-size:8px;color:#8b6fc0">'+(q.totalSurvived)+' surv</span>' : '')
+      + (ecoCount > 0 ? '<span style="font-size:8px;color:rgba(198,196,223,0.5)">'+ecoCount+' games</span>' : '')
       + '</div>'
       + '</div>'
       + '<div style="flex-shrink:0">'+sparkHtml+'</div>'
       + '</div>'
+      + (hitTarget ? '<div style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:6px 8px;background:#2e8b5712;border:0.5px solid #2e8b5733"><span style="font-size:10px">⚔</span><span style="font-size:9px;color:#2e8b57;font-family:Cinzel,serif;letter-spacing:0.06em">Target reached — ready to complete!</span></div>' : '')
       + '<div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end">'
       + '<button onclick="completeQuest(\''+q.id+'\')" style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;background:'+ad.color+'15;border:0.5px solid '+ad.color+'33;color:'+ad.color+';cursor:pointer;font-family:Cinzel,serif">Complete</button>'
       + '<button onclick="removeQuest(\''+q.id+'\')" style="font-size:7px;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;background:none;border:0.5px solid rgba(255,255,255,0.06);color:rgba(198,196,223,0.6);cursor:pointer;font-family:Cinzel,serif">Remove</button>'
@@ -12829,9 +13126,15 @@ function showQuestCreator(){
     + '<div style="font-size:10px;color:rgba(198,196,223,0.6);line-height:1.5;margin-bottom:16px">Set a technique or concept to focus on across sessions. Your progress will be tracked automatically.</div>'
     + '<label style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(198,196,223,0.55);display:block;margin-bottom:4px">Technique / Focus</label>'
     + '<input id="quest-tech-input" placeholder="e.g. Armbar from guard, Back takes, Pressure passing..." style="width:100%;background:#131313;border:0.5px solid rgba(255,255,255,0.1);color:#f4ead8;font-size:12px;padding:10px;outline:none;font-family:Crimson Pro,serif;margin-bottom:12px;box-sizing:border-box"/>'
-    + '<label style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(198,196,223,0.55);display:block;margin-bottom:4px">Phase (optional)</label>'
-    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px" id="quest-phase-row">'
+    + '<label style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(198,196,223,0.55);display:block;margin-bottom:4px">Description (optional)</label>'
+    + '<input id="quest-desc-input" placeholder="e.g. Build grip isolation and finishing mechanics" style="width:100%;background:#131313;border:0.5px solid rgba(255,255,255,0.1);color:#f4ead8;font-size:11px;padding:10px;outline:none;font-family:Crimson Pro,serif;margin-bottom:12px;box-sizing:border-box"/>'
+    + '<label style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(198,196,223,0.55);display:block;margin-bottom:4px">Phase (optional — multiple OK)</label>'
+    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" id="quest-phase-row">'
     + phases.map(function(p){ return '<button onclick="this.classList.toggle(\'qp-sel\');this.style.border=this.classList.contains(\'qp-sel\')?\'0.5px solid '+ad.color+'\':\'0.5px solid rgba(255,255,255,0.08)\';this.style.color=this.classList.contains(\'qp-sel\')?\''+ad.color+'\':\'rgba(198,196,223,0.3)\';this.style.background=this.classList.contains(\'qp-sel\')?\''+ad.color+'15\':\'none\'" data-phase="'+p+'" style="padding:6px 10px;background:none;border:0.5px solid rgba(255,255,255,0.08);font-family:Cinzel,serif;font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(198,196,223,0.5);cursor:pointer">'+p+'</button>'; }).join('')
+    + '</div>'
+    + '<label style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(198,196,223,0.55);display:block;margin-bottom:4px">Session Target</label>'
+    + '<div style="display:flex;gap:4px;margin-bottom:16px" id="quest-target-row">'
+    + [4,6,8,10,12].map(function(n){ return '<button onclick="document.querySelectorAll(\'#quest-target-row button\').forEach(function(b){b.style.border=\'0.5px solid rgba(255,255,255,0.08)\';b.style.color=\'rgba(198,196,223,0.3)\';b.style.background=\'none\'});this.style.border=\'0.5px solid '+ad.color+'\';this.style.color=\''+ad.color+'\';this.style.background=\''+ad.color+'15\'" data-target="'+n+'" style="padding:6px 12px;background:'+(n===8?ad.color+'15':'none')+';border:0.5px solid '+(n===8?ad.color:'rgba(255,255,255,0.08)')+';font-family:Cinzel,serif;font-size:9px;color:'+(n===8?ad.color:'rgba(198,196,223,0.3)')+';cursor:pointer">'+n+'</button>'; }).join('')
     + '</div>'
     + '<div style="display:flex;gap:8px">'
     + '<button onclick="submitQuestCreator()" style="flex:1;padding:10px;background:linear-gradient(135deg,#ffe088,#e9c349,#c8900a);border:none;font-family:Cinzel,serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#1a1000;font-weight:700;cursor:pointer">Start Quest</button>'
@@ -12843,8 +13146,27 @@ function showQuestCreator(){
 function submitQuestCreator(){
   var input = document.getElementById('quest-tech-input');
   if(!input || !input.value.trim()){ showToast('Enter a technique or focus'); return; }
-  var selPhase = document.querySelector('.qp-sel');
-  createQuest(input.value.trim(), selPhase ? selPhase.dataset.phase : '');
+  var descInput = document.getElementById('quest-desc-input');
+  var description = descInput ? descInput.value.trim() : '';
+  // Collect all selected phases (multiple allowed)
+  var selectedPhases = [];
+  document.querySelectorAll('#quest-phase-row .qp-sel').forEach(function(btn){ selectedPhases.push(btn.dataset.phase); });
+  var primaryPhase = selectedPhases[0] || '';
+  // Get session target
+  var targetBtn = document.querySelector('#quest-target-row button[style*="'+((stCurrentArchData||AD.BERSERKER).color)+'"]');
+  // Fallback: find the selected one by checking border color
+  if(!targetBtn){
+    document.querySelectorAll('#quest-target-row button').forEach(function(b){
+      if(b.style.borderColor && b.style.borderColor !== 'rgba(255, 255, 255, 0.08)') targetBtn = b;
+    });
+  }
+  var sessTarget = targetBtn ? parseInt(targetBtn.dataset.target) : 8;
+
+  createQuest(input.value.trim(), primaryPhase, {
+    description: description,
+    phases: selectedPhases,
+    sessions_target: sessTarget
+  });
   document.getElementById('quest-creator-modal').remove();
 }
 

@@ -3318,7 +3318,7 @@ function buildSkillTreeHTML(data, ad) {
         <!-- ═══════════════════════════════════════ -->
 
         <!-- ═══ SECTION 1: DRILL LOG ═══ -->
-        <div style="margin-bottom:20px">
+        <div id="quest-drill-section" style="margin-bottom:20px">
           <div id="quest-drill-header" style="font-size:7px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(198,196,223,0.25);margin-bottom:10px;display:flex;align-items:center;gap:8px">
             <span style="display:inline-block;width:14px;height:1px;background:rgba(198,196,223,0.12)"></span>
             <span id="quest-drill-label">What will you work on?</span>
@@ -4897,6 +4897,8 @@ function switchQuestMode(mode, skipRender){
   // Toggle mode-specific sections
   if(prepEl) prepEl.style.display = mode === 'prepare' ? 'block' : 'none';
   if(refEl) refEl.style.display = mode === 'reflect' ? 'block' : 'none';
+  const drillSection = document.getElementById('quest-drill-section');
+  if(drillSection) drillSection.style.display = mode === 'prepare' ? 'block' : 'none';
   const voiceHero = document.getElementById('voice-session-hero');
   if(voiceHero) voiceHero.style.display = 'block';
   updateVoiceHeroForMode(mode);

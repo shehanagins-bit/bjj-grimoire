@@ -6524,7 +6524,6 @@ function startVoiceRecording(){
   if(hasWhisper()){
     _voiceUsingWhisper = true;
     const interimEl = document.getElementById('voice-interim');
-    if(interimEl) interimEl.textContent = 'Recording with Whisper... tap stop when done';
 
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       showToast('Microphone not available in this browser');
@@ -6534,9 +6533,12 @@ function startVoiceRecording(){
       return;
     }
 
-    _whisperChunks = [];
+    // Wrap mic setup so we can pre-load Whisper model first
+    var doStartRecording = function(){
+      if(interimEl) interimEl.textContent = 'Recording with Whisper... tap stop when done';
+      _whisperChunks = [];
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
       var mimeType = 'audio/webm;codecs=opus';
       if(!MediaRecorder.isTypeSupported(mimeType)){
         mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
@@ -6587,6 +6589,26 @@ function startVoiceRecording(){
       if(indicator) indicator.style.display = 'none';
       if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
     });
+    }; // end doStartRecording
+
+    // Pre-load model if needed, THEN start recording
+    if(_localWhisperReady || getOpenAIKey()){
+      doStartRecording();
+    } else {
+      if(interimEl) interimEl.textContent = 'Preparing voice engine...';
+      getLocalWhisper().then(function(pipeline){
+        if(!pipeline){
+          _voiceRecording = false;
+          if(indicator) indicator.style.display = 'none';
+          if(_voiceDurationIv){ clearInterval(_voiceDurationIv); _voiceDurationIv = null; }
+          if(btn){ btn.style.background = 'rgba(233,195,73,0.06)'; btn.style.borderColor = 'rgba(233,195,73,0.2)'; btn.style.color = '#e9c349'; }
+          if(label) label.textContent = 'Talk through your session';
+          if(icon) icon.textContent = '🎙';
+          return;
+        }
+        doStartRecording();
+      });
+    }
 
     return; // Whisper path set up
   }
@@ -6994,7 +7016,6 @@ function oracleVoiceRecord(source, techName, arch, phase){
   // === WHISPER PATH (preferred) ===
   if(hasWhisper()){
     _oracleVoiceUsingWhisper = true;
-    if(interimEl) interimEl.textContent = 'Recording with Whisper... tap mic to stop';
 
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       showToast('Microphone not available in this browser');
@@ -7004,10 +7025,14 @@ function oracleVoiceRecord(source, techName, arch, phase){
       return;
     }
 
-    _whisperActive = true;
-    _whisperChunks = [];
+    // Pre-load Whisper model BEFORE recording so the download doesn't
+    // happen post-recording (which can crash mobile browsers due to memory)
+    var startRecording = function(){
+      if(interimEl) interimEl.textContent = 'Recording with Whisper... tap mic to stop';
+      _whisperActive = true;
+      _whisperChunks = [];
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
       var mimeType = 'audio/webm;codecs=opus';
       if(!MediaRecorder.isTypeSupported(mimeType)){
         mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
@@ -7083,6 +7108,25 @@ function oracleVoiceRecord(source, techName, arch, phase){
       if(overlay) overlay.style.display = 'none';
       showToast('Microphone access denied');
     });
+    }; // end startRecording
+
+    // Pre-load model if needed, THEN start recording
+    if(_localWhisperReady || getOpenAIKey()){
+      // Model already cached or using API — start immediately
+      startRecording();
+    } else {
+      // First time: download model first, then start recording
+      if(interimEl) interimEl.textContent = 'Preparing voice engine...';
+      getLocalWhisper().then(function(pipeline){
+        if(!pipeline){
+          _oracleVoiceActive = false;
+          if(overlay) overlay.style.display = 'none';
+          if(_oracleVoiceTimerIv){ clearInterval(_oracleVoiceTimerIv); _oracleVoiceTimerIv = null; }
+          return;
+        }
+        startRecording();
+      });
+    }
 
     return; // Whisper path set up, exit
   }

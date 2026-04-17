@@ -1477,43 +1477,158 @@ function getOpenAIKey(){
   return localStorage.getItem('grimoire_openai_key') || null;
 }
 
-// ─── WHISPER VOICE TRANSCRIPTION (MediaRecorder + OpenAI) ────
+// ─── VOICE TRANSCRIPTION (MediaRecorder + Local Whisper / OpenAI API) ────
 let _whisperRecorder = null;
 let _whisperChunks = [];
 let _whisperActive = false;
 let _whisperTimerIv = null;
 let _whisperStart = 0;
 
-function hasWhisper(){ return !!getOpenAIKey(); }
+// Local Whisper (Transformers.js — runs entirely in-browser, no API key needed)
+let _localWhisperPipeline = null;
+let _localWhisperLoading = false;
+let _localWhisperReady = false;
 
-async function whisperTranscribe(audioBlob){
-  var key = getOpenAIKey();
-  if(!key) return null;
+// hasWhisper now always returns true — local Whisper is always available as fallback
+function hasWhisper(){ return !!(getOpenAIKey() || typeof navigator !== 'undefined'); }
 
-  var formData = new FormData();
-  formData.append('file', audioBlob, 'voice.webm');
-  formData.append('model', 'whisper-1');
-  formData.append('language', 'en');
-  // BJJ-specific prompt helps Whisper with terminology
-  formData.append('prompt', 'BJJ jiu-jitsu grappling guard mount submission armbar kimura triangle choke sweep pass underhook overhook collar tie double leg single leg takedown half guard closed guard open guard butterfly guard de la riva berimbolo');
+// Show/update the model download progress overlay
+function _showWhisperProgress(pct, label){
+  var el = document.getElementById('whisper-download-overlay');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'whisper-download-overlay';
+    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1919;border:0.5px solid rgba(233,195,73,0.3);padding:12px 20px;z-index:99999;min-width:260px;text-align:center;pointer-events:none';
+    el.innerHTML = '<div id="whisper-dl-label" style="font-size:10px;color:rgba(198,196,223,0.5);font-family:serif;font-style:italic;margin-bottom:6px">Setting up voice...</div><div style="width:100%;height:4px;background:rgba(255,255,255,0.06);overflow:hidden"><div id="whisper-dl-bar" style="height:100%;background:linear-gradient(90deg,#e9c349,#c8900a);width:0%;transition:width 0.3s ease"></div></div>';
+    document.body.appendChild(el);
+  }
+  var bar = document.getElementById('whisper-dl-bar');
+  var lbl = document.getElementById('whisper-dl-label');
+  if(bar) bar.style.width = Math.min(100, pct) + '%';
+  if(lbl && label) lbl.textContent = label;
+}
+
+function _hideWhisperProgress(){
+  var el = document.getElementById('whisper-download-overlay');
+  if(el) el.remove();
+}
+
+async function getLocalWhisper(){
+  if(_localWhisperPipeline) return _localWhisperPipeline;
+  if(_localWhisperLoading) {
+    // Wait for the existing load to finish
+    while(_localWhisperLoading) await new Promise(function(r){ setTimeout(r, 200); });
+    return _localWhisperPipeline;
+  }
+
+  _localWhisperLoading = true;
+  _showWhisperProgress(5, 'Loading voice engine...');
 
   try {
-    var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + key },
-      body: formData
+    var mod = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3');
+    _showWhisperProgress(15, 'Downloading voice model (~40MB, one-time)...');
+
+    var fileProgress = {};
+    _localWhisperPipeline = await mod.pipeline('automatic-speech-recognition', 'onnx-community/whisper-tiny.en', {
+      dtype: 'q8',
+      progress_callback: function(p){
+        if(p.status === 'progress' && p.total > 0){
+          fileProgress[p.file || p.name || 'model'] = (p.loaded / p.total) * 100;
+          var vals = Object.values(fileProgress);
+          var avg = vals.reduce(function(a,b){ return a+b; }, 0) / Math.max(vals.length, 1);
+          var overall = 15 + (avg * 0.8); // 15-95% range
+          _showWhisperProgress(overall, 'Downloading voice model... ' + Math.round(avg) + '%');
+        } else if(p.status === 'done'){
+          _showWhisperProgress(95, 'Preparing voice model...');
+        }
+      }
     });
-    if(!r.ok){
-      var errData = await r.json().catch(function(){ return {}; });
-      console.error('[Whisper] API error:', r.status, errData);
-      return null;
-    }
-    var data = await r.json();
-    return data.text || null;
+
+    _localWhisperReady = true;
+    _localWhisperLoading = false;
+    _showWhisperProgress(100, 'Voice ready!');
+    setTimeout(_hideWhisperProgress, 1200);
+    return _localWhisperPipeline;
   } catch(e){
-    console.error('[Whisper] transcription error:', e);
+    console.error('[LocalWhisper] Failed to load:', e);
+    _localWhisperLoading = false;
+    _hideWhisperProgress();
+    showToast('Voice model failed to load: ' + (e.message || e));
     return null;
   }
+}
+
+// Convert webm/opus audio blob to 16kHz Float32Array for Whisper
+async function convertAudioTo16kFloat32(blob){
+  var arrayBuffer = await blob.arrayBuffer();
+  // Decode to raw audio using AudioContext
+  var ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+  try {
+    var audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    // Resample to 16kHz if needed
+    if(audioBuffer.sampleRate !== 16000){
+      var offCtx = new OfflineAudioContext(1, audioBuffer.duration * 16000, 16000);
+      var source = offCtx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(offCtx.destination);
+      source.start(0);
+      var resampled = await offCtx.startRendering();
+      ctx.close();
+      return resampled.getChannelData(0);
+    }
+    var data = audioBuffer.getChannelData(0);
+    ctx.close();
+    return data;
+  } catch(e){
+    ctx.close();
+    throw e;
+  }
+}
+
+async function localWhisperTranscribe(audioBlob){
+  var transcriber = await getLocalWhisper();
+  if(!transcriber) return null;
+
+  try {
+    var audioData = await convertAudioTo16kFloat32(audioBlob);
+    var result = await transcriber(audioData, { language: 'en' });
+    return (result && result.text) ? result.text.trim() : null;
+  } catch(e){
+    console.error('[LocalWhisper] transcription error:', e);
+    return null;
+  }
+}
+
+// Smart transcribe: tries OpenAI API first (if key), falls back to local Whisper
+async function whisperTranscribe(audioBlob){
+  // Path 1: OpenAI API (fastest, if key exists)
+  var key = getOpenAIKey();
+  if(key){
+    try {
+      var formData = new FormData();
+      formData.append('file', audioBlob, 'voice.webm');
+      formData.append('model', 'whisper-1');
+      formData.append('language', 'en');
+      formData.append('prompt', 'BJJ jiu-jitsu grappling guard mount submission armbar kimura triangle choke sweep pass underhook overhook collar tie double leg single leg takedown half guard closed guard open guard butterfly guard de la riva berimbolo');
+
+      var r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + key },
+        body: formData
+      });
+      if(r.ok){
+        var data = await r.json();
+        if(data.text) return data.text;
+      } else {
+        console.warn('[Whisper] API error:', r.status, '— falling back to local Whisper');
+      }
+    } catch(e){
+      console.warn('[Whisper] API failed:', e.message, '— falling back to local Whisper');
+    }
+  }
+
+  // Path 2: Local Whisper (free, no key needed)
+  return await localWhisperTranscribe(audioBlob);
 }
 
 function startWhisperRecording(onComplete, overlayConfig){
